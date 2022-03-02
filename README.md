@@ -9,7 +9,7 @@ git clone https://github.com/xujiahuayz/defi-econ.git
 Navigate to the directory of the cloned repo
 
 ```bash
-cd DeFiEcon
+cd defi-econ
 ```
 
 ## Set up the repo
@@ -89,4 +89,21 @@ To pull data files, use
 
 ```
 git lfs pull
+```
+
+
+## Synchronize with the repo
+
+Always pull latest code first
+
+```zsh
+git pull
+```
+
+Make changes locally, save. And then add, commit and push
+
+```zsh
+git add .
+git commit -m "update message"
+git push
 ```
