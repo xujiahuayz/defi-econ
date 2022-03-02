@@ -1,4 +1,4 @@
-# DeFiEcon
+# DeFi Economics
 
 Clone this repository
 
