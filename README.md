@@ -3,7 +3,7 @@
 Clone this repository
 
 ```bash
-git clone https://github.com/xujiahuayz/DeFiEcon.git
+git clone https://github.com/xujiahuayz/defi-econ.git
 ```
 
 Navigate to the directory of the cloned repo
