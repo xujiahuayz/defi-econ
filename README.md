@@ -75,9 +75,15 @@ set -xg WEB3_PROVIDER_URI http://localhost:8545
 
 All files in [`data/`](data/) are stored with `lfs`.
 
+create `data` folder
+
+```zsh
+mkdir data
+```
+
 To initialize Git LFS:
 
-```
+```zsh
 git lfs install
 ```
 
@@ -90,7 +96,6 @@ To pull data files, use
 ```
 git lfs pull
 ```
-
 
 ## Synchronize with the repo
 
@@ -106,4 +111,10 @@ Make changes locally, save. And then add, commit and push
 git add .
 git commit -m "update message"
 git push
+```
+
+## Run scripts
+
+```zsh
+python scripts/fetch-uniswap.py
 ```
