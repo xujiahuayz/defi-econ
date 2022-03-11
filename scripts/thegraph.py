@@ -49,24 +49,25 @@ def graphdata(*q, url: str):
     return response_list
 
 
-spec = """
-    id
-    reserveUSD
-    hourStartUnix
-    pair {
-      id
-      }
-"""
-pair_address = "0xffa98a091331df4600f87c9164cd27e8a5cd2405"
-hour_lt = 1647014400
-final_result = []
+if __name__ == "__main__":
+    spec = """
+        id
+        reserveUSD
+        hourStartUnix
+        pair {
+        id
+        }
+    """
+    pair_address = "0xffa98a091331df4600f87c9164cd27e8a5cd2405"
+    hour_lt = 1647014400
+    final_result = []
 
-for _ in range(3):
-    arg = f'first: {BATCH_SIZE}, orderBy: hourStartUnix, orderDirection: desc, where: {{pair: "{pair_address}", hourStartUnix_lt: {hour_lt}}}'
-    uniswap_result = graphdata(
-        query_structurer(series=SERIES_NAME, spec=spec, arg=arg), url=URL
-    )
-    hour_lt = uniswap_result[-1]["hourStartUnix"]
-    final_result = final_result + uniswap_result
+    for _ in range(3):
+        arg = f'first: {BATCH_SIZE}, orderBy: hourStartUnix, orderDirection: desc, where: {{pair: "{pair_address}", hourStartUnix_lt: {hour_lt}}}'
+        uniswap_result = graphdata(
+            query_structurer(series=SERIES_NAME, spec=spec, arg=arg), url=URL
+        )
+        hour_lt = uniswap_result[-1]["hourStartUnix"]
+        final_result = final_result + uniswap_result
 
-pprint(final_result)
+    pprint(final_result)
