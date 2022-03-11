@@ -1,35 +1,72 @@
+"""
+a parameterized solution to run a query like
+{
+  pairHourDatas(first: 3,orderBy: hourStartUnix, orderDirection: desc, where: {
+    pair: "0xffa98a091331df4600f87c9164cd27e8a5cd2405", hourStartUnix_lt: 1646996400
+  }) {
+    id
+    reserveUSD
+    hourStartUnix
+    pair {id}
+}
+}
+"""
+
 import requests
 import json
 from pprint import pprint
 
-reserves_query = """
-query {
-  reserves (first: 6) {
+URL = "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2"
+BATCH_SIZE = 2  # can go up to 1_000
+SERIES_NAME = "pairHourDatas"
+
+
+def query_structurer(series: str, spec: str, arg: str = "") -> str:
+    """
+    format query arguments
+    """
+    if arg != "":
+        arg = "(" + arg + ")"
+
+    # format query content
+    q = series + arg + "{" + spec + "}"
+    return q
+
+
+def graphdata(*q, url: str):
+    """
+    pack all subqueries into one big query concatenated with linebreak '\n'
+    """
+
+    query = "{" + "\n".join(q) + "}"
+
+    # pretty print out query, can be commented out
+    # pprint(query)
+
+    r = requests.post(url, json={"query": query})
+
+    response_list = json.loads(r.text)["data"][SERIES_NAME]
+    return response_list
+
+
+spec = """
     id
-    symbol
-    name
-    decimals
-    usageAsCollateralEnabled
-    borrowingEnabled
-    price {
-      # id
-      priceInEth
-    }
-    lastUpdateTimestamp
-    baseLTVasCollateral
-    aToken {
-    id
-    # underlyingAssetAddress
-    underlyingAssetDecimals
-  }
-  }
-}
+    reserveUSD
+    hourStartUnix
+    pair {
+      id
+      }
 """
+pair_address = "0xffa98a091331df4600f87c9164cd27e8a5cd2405"
+hour_lt = 1647014400
+final_result = []
 
-api_key = '045ea7d75e95bf4d87943ecc70cd4c31'
-# url = 'https://api.thegraph.com/subgraphs/name/aave/protocol-raw'
-url = f'https://gateway.thegraph.com/api/{api_key}/subgraphs/id/0x0d69090672c1e5a94e9aedfbc59558d18a78e1d3-0'
-r = requests.post(url, json={'query': reserves_query})
-reserves_json = json.loads(r.text)['data']['reserves']
+for _ in range(3):
+    arg = f'first: {BATCH_SIZE}, orderBy: hourStartUnix, orderDirection: desc, where: {{pair: "{pair_address}", hourStartUnix_lt: {hour_lt}}}'
+    uniswap_result = graphdata(
+        query_structurer(series=SERIES_NAME, spec=spec, arg=arg), url=URL
+    )
+    hour_lt = uniswap_result[-1]["hourStartUnix"]
+    final_result = final_result + uniswap_result
 
-pprint(reserves_json)
+pprint(final_result)
