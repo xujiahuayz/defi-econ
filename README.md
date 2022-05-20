@@ -76,7 +76,7 @@ set -xg WEB3_PROVIDER_URI http://localhost:8545
 ## Run scripts
 
 ```zsh
-python scripts/fetch-uniswap.py
+python scripts/thegraph.py
 ```
 
 
