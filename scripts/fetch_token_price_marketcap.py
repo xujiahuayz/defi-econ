@@ -10,10 +10,46 @@ import numpy as np
 from datetime import datetime, timedelta
 import time
 import calendar
+import requests
+
+from web3 import Web3
 
 # Unofficial API python package for CoinGeckoAPI
 # * Attribution required: https://www.coingecko.com/en/api
 from pycoingecko import CoinGeckoAPI
+
+
+# Get the total supply by calling the totalSupply() function from archive node
+def get_total_supply(contract_address, contract_abi, block_number):
+  # Config Infura
+  Infura_HTTP = 'https://mainnet.infura.io/v3/a3ed01a2a4554585b38825e7d166d582'
+  w3 = Web3(Web3.HTTPProvider(Infura_HTTP))
+
+  # Get the contract
+  contract = w3.eth.contract(contract_address, abi=contract_abi)
+
+  # Get the total supply
+  total_supply = contract.functions.totalSupply().call(block_identifier=block_number)
+
+  # Convert Wei to ETH
+  total_supply_eth = w3.fromWei(total_supply, 'ether')
+
+  return total_supply_eth
+
+def get_block_number_by_timestamp(timestamp):
+  etherscan_api = "https://api.etherscan.io/api"
+  get_blockno_by_time_params = {
+      "module": "block",
+      "action": "getblocknobytime", 
+      "timestamp": timestamp,
+      "closest": "before",
+      "apikey": "PDCDPQNE54GYTGPT54DZNWHKXJTUPVI7BF"
+  }
+  query_block_number = requests.get(url = etherscan_api, params=get_blockno_by_time_params)
+  block_number = query_block_number.json()
+
+  # Return type: str
+  return block_number['result']
 
 
 if __name__ == "__main__": 
@@ -98,6 +134,34 @@ if __name__ == "__main__":
     # Store the value
     for mktcap_pair in token_historical_data['market_caps']:
       df_marketcap.loc[mktcap_pair[0]/1000, symbol] = mktcap_pair[1]
+
+  # Calculate the market cap for WETH
+  # Define the constant variable of WETH
+  weth_contract = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+  weth_abi = [{"inputs": [], "name": "totalSupply", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ],"stateMutability": "view","type": "function" }]
+
+  # Do iteration for each day
+  for timestamp in df_price.index:
+    # timestamp of 23:59:59 for each day like the "close price"
+    close_timestamp = timestamp+86400-1
+
+    # Get the block number by the timestamp
+    block_number = int(get_block_number_by_timestamp(close_timestamp))
+    # Limit the API access speed
+    time.sleep(0.03)
+
+    # Get the total supply of token
+    weth_total_supply = float(get_total_supply(weth_contract, weth_abi, block_number))
+
+    # Get the historical WETH price
+    weth_price = float(df_price.loc[timestamp, 'WETH'])
+
+    # Calculate the market cap
+    weth_market_cap = weth_total_supply*weth_price
+
+    # Store value to the dataframe
+    df_marketcap.loc[timestamp, 'WETH'] = weth_market_cap
+
 
   # Write data to csv
   df_price.to_csv("global_data/token_market/primary_token_price.csv")
