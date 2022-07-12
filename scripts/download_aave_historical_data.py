@@ -50,4 +50,4 @@ if __name__ == "__main__":
   # reorder the column
   df_result = df_result[['day', 'symbol', 'deposit', 'borrow']]
 
-  df_result.to_csv("aave_data/aave_top_token_historical_data.csv")
+  df_result.to_csv("data_aave/aave_top_token_historical_data.csv")
