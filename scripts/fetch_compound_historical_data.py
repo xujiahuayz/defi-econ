@@ -107,7 +107,7 @@ if __name__ == "__main__":
     df_compound = pd.concat([df_compound, df_asset_history], ignore_index=True, axis=0)
 
     # Separate file
-    file_name = 'data_compound/compound_'+ctoken_symbol
+    file_name = 'data_compound/compound_'+ctoken_symbol+'.csv'
     df_asset_history.to_csv(file_name)
 
     time.sleep(1)
