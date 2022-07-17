@@ -75,10 +75,16 @@ set -xg WEB3_PROVIDER_URI http://localhost:8545
 
 ## Run scripts
 
+a minimum viable example to fetch data from thegraph and print the result on the screen
+
 ```zsh
 python scripts/thegraph.py
 ```
 
+fetch compound historical data and save in [data/data_compound](data/data_compound)
+```zsh
+python scripts/fetch_compound_historical_data.py
+```
 
 ## Git Large File Storage (Git LFS)
 

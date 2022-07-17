@@ -7,5 +7,4 @@
   "python.linting.pylintPath": "venv/bin/pylint",
   "python.linting.pylintEnabled": true,
   "jupyter.jupyterServerType": "local"
-  
 }

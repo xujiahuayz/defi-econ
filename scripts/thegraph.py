@@ -33,7 +33,7 @@ def query_structurer(series: str, spec: str, arg: str = "") -> str:
     return q
 
 
-def graphdata(*q, url: str):
+def graph_data(*q, url: str) -> list[dict]:
     """
     pack all subqueries into one big query concatenated with linebreak '\n'
     """
@@ -64,7 +64,7 @@ if __name__ == "__main__":
 
     for _ in range(3):
         arg = f'first: {BATCH_SIZE}, orderBy: hourStartUnix, orderDirection: desc, where: {{pair: "{pair_address}", hourStartUnix_lt: {hour_lt}}}'
-        uniswap_result = graphdata(
+        uniswap_result = graph_data(
             query_structurer(series=SERIES_NAME, spec=spec, arg=arg), url=URL
         )
         hour_lt = uniswap_result[-1]["hourStartUnix"]

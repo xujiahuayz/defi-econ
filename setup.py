@@ -3,6 +3,6 @@ from setuptools import setup, find_packages
 setup(
     name="defi_econ",
     packages=find_packages(),
-    install_requires=["numpy", "pandas", "scipy", "requests", "matplotlib", "openpyxl"],
+    install_requires=["numpy", "pandas", "scipy", "requests", "matplotlib", "web3"],
     extras_require={"dev": ["pylint", "black"]},
 )
