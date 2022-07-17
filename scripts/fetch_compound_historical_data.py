@@ -1,17 +1,23 @@
 # -*- coding: utf-8 -*-
-
-
-import requests
-import pandas as pd
-import numpy as np
+"""
+Fetch the compound data by Compound official API
+"""
+from os import path
 import time
 from datetime import datetime, timedelta
 import calendar
-from defi_econ.constants import DATA_PATH
-from os import path
+import requests
+import pandas as pd
+import numpy as np
+from defi_econ.constants import COMPOUND_DATA_PATH
 
 
-def fetch_asset_historical_data(asset_address, min_timestamp, max_timestamp, horizon):
+def fetch_asset_historical_data(
+    asset_address: str, min_timestamp: int, max_timestamp: int, horizon: int
+):
+    """
+    get the snapshot of the asset historical data during the given horizon
+    """
     market_history_url = "https://api.compound.finance/api/v2/market_history/graph"
     ctoken_params = {
         "asset": asset_address,
@@ -123,7 +129,7 @@ if __name__ == "__main__":
         )
 
         # Separate file
-        file_name = path.join(DATA_PATH, "compound_" + ctoken_symbol + ".csv")
+        file_name = path.join(COMPOUND_DATA_PATH, "compound_" + ctoken_symbol + ".csv")
         df_asset_history.to_csv(file_name)
 
         time.sleep(1)

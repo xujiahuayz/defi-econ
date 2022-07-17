@@ -1,16 +1,21 @@
 # -*- coding: utf-8 -*-
-"""# Compute Directional Daily Volume USD for Top 50 Pairs"""
+"""
+Compute Directional Daily Volume USD for Top 50 Pairs
+"""
 
-import pandas as pd
-from tqdm import tqdm
 import datetime
 import calendar
-
+from os import path
+import pandas as pd
+from tqdm import tqdm
 import subgraph_query as subgraph
+from defi_econ.constants import UNISWAP_V3_DATA_PATH
 
 
-
-def get_gross_volume(batch_pair_id, date_timestamp):
+def get_gross_volume(batch_pair_id: str, date_timestamp: int):
+    """
+    fetch the gross daily volume by API
+    """
     # Variables for the query
     params_batch_pair = {"batch_pair": batch_pair_id, "date_timestamp": date_timestamp}
 
@@ -41,7 +46,10 @@ def get_gross_volume(batch_pair_id, date_timestamp):
     return batch_pair_gross_info
 
 
-def count_daily_mints(batch_pair_id, date_timestamp, end_timestamp):
+def count_daily_mints(batch_pair_id: str, date_timestamp: int, end_timestamp: int):
+    """
+    get all mints transactions and count daily mints
+    """
     # Iteration for counting the mints transactions within the date
     # Global variables
     mints_count = 0
@@ -55,22 +63,22 @@ def count_daily_mints(batch_pair_id, date_timestamp, end_timestamp):
         }
         # Get all mints transactions
         mints_batch_query = """
-      query($batch_pair: String!, $last_timestamp_gt: Int!)
-      {
-        mints(first: 1000, 
-          where: {
-            pool: $batch_pair,
-            timestamp_gt: $last_timestamp_gt
-          }, orderBy: timestamp, orderDirection: asc)
+        query($batch_pair: String!, $last_timestamp_gt: Int!)
         {
-          transaction {
-            id
-          }
-          timestamp
-          amountUSD
+            mints(first: 1000, 
+            where: {
+                pool: $batch_pair,
+                timestamp_gt: $last_timestamp_gt
+            }, orderBy: timestamp, orderDirection: asc)
+            {
+            transaction {
+                id
+            }
+            timestamp
+            amountUSD
+            }
         }
-      }
-    """
+        """
         mints_batch = subgraph.run_query_var(
             subgraph.http_v3, mints_batch_query, params_mints_gt
         )
@@ -103,7 +111,10 @@ def count_daily_mints(batch_pair_id, date_timestamp, end_timestamp):
     return mints_count
 
 
-def count_daily_burns(batch_pair_id, date_timestamp, end_timestamp):
+def count_daily_burns(batch_pair_id: str, date_timestamp: int, end_timestamp: int):
+    """
+    get all burns transactions and count daily burns
+    """
     # Iteration for counting the burns transactions within the date
     # Global variables
     burns_count = 0
@@ -166,7 +177,12 @@ def count_daily_burns(batch_pair_id, date_timestamp, end_timestamp):
     return burns_count
 
 
-def compute_daily_directional_volume(batch_pair_id, date_timestamp, end_timestamp):
+def compute_daily_directional_volume(
+    batch_pair_id: str, date_timestamp: int, end_timestamp: int
+):
+    """
+    manually compute the directional volume by iterating each transaction
+    """
     # Iteration for calculating directional daily volume USD
     # by summing swaps of token 0->1 and 1->0
 
@@ -281,7 +297,7 @@ if __name__ == "__main__":
 
     # Load the dataframe from the top 50 pairs of May
     df_top50_pairs_dir_volume = pd.read_csv(
-        "data_uniswap_v3/fetched_data_v3/top50_pairs_avg_daily_volume_v3_MAY2022.csv"
+        UNISWAP_V3_DATA_PATH + "/top50_pairs_avg_daily_volume_v3_MAY2022.csv"
     )
     df_top50_pairs_dir_volume = df_top50_pairs_dir_volume.drop(
         columns=[
@@ -354,10 +370,10 @@ if __name__ == "__main__":
 
     # Data file contains the defined date for the aggregation
     file_date = aggregate_date.date().strftime("%Y%m%d")
-    file_name = (
-        "data_uniswap_v3/fetched_data_v3/top50_pairs_directional_volume_v3_"
-        + file_date
-        + ".csv"
+
+    # Define the file name
+    file_name = path.join(
+        UNISWAP_V3_DATA_PATH, "top50_pairs_directional_volume_v3_" + file_date + ".csv"
     )
     # Write dataframe to csv
     df_top50_pairs_dir_volume.to_csv(file_name)

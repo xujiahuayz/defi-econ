@@ -1,13 +1,19 @@
 # -*- coding: utf-8 -*-
-"""# Fetch all pairs for Uniswap V2"""
+"""
+Fetch all pairs for Uniswap V2
+"""
 
-
-import pandas as pd
 from datetime import date
-
+from os import path
+import pandas as pd
 import subgraph_query as subgraph
+from defi_econ.constants import UNISWAP_V2_DATA_PATH
+
 
 def get_all_pools_v2():
+    """
+    get all liquidity pools from the v2 protocol
+    """
     # Start from fetching 1000 pairs as the initial Batch 0, order by created timestamp
     get_pairs_query_0 = """
   {
@@ -38,7 +44,9 @@ def get_all_pools_v2():
 
     iter_count = 0
     pairs_iter = get_pairs_batch0["data"]["pairs"]  # Pair info list in each batch
-    total_pair_amount = len(pairs_iter)  # Initial the total pair amount by 1000 (in batch 0)
+    total_pair_amount = len(
+        pairs_iter
+    )  # Initial the total pair amount by 1000 (in batch 0)
 
     # Do loop until
     while len(pairs_iter) == 1000:
@@ -96,8 +104,10 @@ def get_all_pools_v2():
 if __name__ == "__main__":
     # File name contains the executing date of this script, the instant snapshot
     file_date = date.today().strftime("%Y%m%d")
-    file_name = (
-        "data_uniswap_v2/fetched_data_v2/uniswap_v2_all_pools_" + file_date + ".csv"
+
+    # Define the file name
+    file_name = path.join(
+        UNISWAP_V2_DATA_PATH, "uniswap_v2_all_pools_" + file_date + ".csv"
     )
 
     # Write dataframe to csv

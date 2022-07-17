@@ -1,16 +1,23 @@
 # -*- coding: utf-8 -*-
-"""# Select Top 50 pairs by the daily average gross volume USD"""
+"""
+Select Top 50 pairs by the daily average gross volume USD
+"""
 
+
+import datetime
+import calendar
+from os import path
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
-import datetime
-import calendar
-
 import subgraph_query as subgraph
+from defi_econ.constants import UNISWAP_V3_DATA_PATH
 
 
-def select_candidate_pools(end_date):
+def select_candidate_pools(end_date: datetime):
+    """
+    select top 500 pairs order by daily volume USD as candidate pairs
+    """
     # Convert the end date to unix timestamp
     # Notice: time.mktime() will get the local time, calendar.timegm() will get the utc time
     end_timestamp = int(calendar.timegm(end_date.timetuple()))
@@ -61,7 +68,12 @@ def select_candidate_pools(end_date):
     return df_top500_pairs
 
 
-def get_avg_volume_candidate_pools(df_top500_pairs, start_date, period):
+def get_avg_volume_candidate_pools(
+    df_top500_pairs: pd.DataFrame, start_date: datetime, period: datetime
+):
+    """
+    get the average daily volume by dividing the sum of each daily volume for the past horizon
+    """
     # The previous date before the start date as the last timestamp gt
     last_date = start_date - datetime.timedelta(days=1)
     last_timestamp = int(calendar.timegm(last_date.timetuple()))
@@ -160,9 +172,12 @@ if __name__ == "__main__":
     # Drop the outdated index
     df_top50_avg_pairs = df_top50_avg_pairs.drop(columns="index")
 
-    # Write dataframe to csv
-    df_top50_avg_pairs.to_csv(
-        "data_uniswap_v3/fetched_data_v3/top50_pairs_avg_daily_volume_v3_MAY2022.csv"
+    # Define the file name
+    file_name = path.join(
+        UNISWAP_V3_DATA_PATH, "top50_pairs_avg_daily_volume_v3_MAY2022.csv"
     )
+
+    # Write dataframe to csv
+    df_top50_avg_pairs.to_csv(file_name)
     print("-------------------------")
     print("Complete write the file")

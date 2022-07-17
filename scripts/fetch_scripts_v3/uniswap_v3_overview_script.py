@@ -1,13 +1,19 @@
-"""# Uniswap V3 Overview"""
-"""Fetch the instant snapshot of Uniswap V3 Factory: Pool Count, Transaction Count"""
+"""
+Fetch the instant snapshot of Uniswap V2 Factory: Pool Count, Transaction Count
+"""
 
-
-import pandas as pd
 from datetime import datetime
-
+from os import path
+import pandas as pd
 import subgraph_query as subgraph
+from defi_econ.constants import UNISWAP_V3_DATA_PATH
 
-def get_factory_overview_v3(factory_address):
+
+def get_factory_overview_v3(factory_address: str):
+    """
+    get the basic statistical overview of the factory
+    """
+
     params_factory_addr = {"factory_id": factory_address}
     # Query instant factory overview
     v3_overview_query = """
@@ -31,6 +37,10 @@ def get_factory_overview_v3(factory_address):
 
 
 def get_instant_eth_price(http):
+    """
+    get the instant ETH price
+    """
+
     # Query instant ETH price
     eth_price_query = """
     {
@@ -46,7 +56,7 @@ def get_instant_eth_price(http):
 
 if __name__ == "__main__":
     # File path
-    overview_file_v3 = "data_uniswap_v3/fetched_data_v3/uniswap_v3_overview.csv"
+    overview_file_v3 = UNISWAP_V3_DATA_PATH + "/uniswap_v3_overview.csv"
 
     # Factory address of Uniswap V3
     factory_address_v3 = "0x1F98431c8aD98523631AE4a59f267346ea31F984"
@@ -80,7 +90,9 @@ if __name__ == "__main__":
     )
 
     # Add a new row to the dataframe
-    df_v3_overview = pd.concat([df_v3_overview, new_overview], ignore_index=True, axis=0)
+    df_v3_overview = pd.concat(
+        [df_v3_overview, new_overview], ignore_index=True, axis=0
+    )
 
     # Update the file with the new query result
     df_v3_overview.to_csv(overview_file_v3)

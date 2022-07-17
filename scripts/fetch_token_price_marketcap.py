@@ -1,26 +1,30 @@
 # -*- coding: utf-8 -*-
 """
 Fetch the historical price and market cap for tokens from coingecko
-Note: the data for market cap of WETH is not available
+Note: the data for market cap of WETH is not available so that it is calculated by FULLY DILUTED MARKET CAP
+Key: Infura key is needed
 """
 
-
-import pandas as pd
-import numpy as np
-from datetime import datetime, timedelta
 import time
 import calendar
+from datetime import datetime, timedelta
+from os import path
 import requests
-
+import pandas as pd
+import numpy as np
 from web3 import Web3
 
 # Unofficial API python package for CoinGeckoAPI
 # * Attribution required: https://www.coingecko.com/en/api
 from pycoingecko import CoinGeckoAPI
+from defi_econ.constants import GLOBAL_DATA_PATH
 
 
 # Get the total supply by calling the totalSupply() function from archive node
-def get_total_supply(contract_address, contract_abi, block_number):
+def get_total_supply(contract_address: str, contract_abi: str, block_number: int):
+    """
+    get the total supply of given token via Infura archive node
+    """
     # Config Infura
     Infura_HTTP = "YOUR_INFURA_HTTP_KEY"
     w3 = Web3(Web3.HTTPProvider(Infura_HTTP))
@@ -37,7 +41,14 @@ def get_total_supply(contract_address, contract_abi, block_number):
     return total_supply_eth
 
 
-def get_block_number_by_timestamp(timestamp):
+def get_block_number_by_timestamp(timestamp: int):
+    """
+    get the closest block number by the given timestamp
+    """
+    # convert timestamp to str
+    timestamp = str(timestamp)
+
+    # Define the api address
     etherscan_api = "https://api.etherscan.io/api"
     get_blockno_by_time_params = {
         "module": "block",
@@ -99,8 +110,8 @@ if __name__ == "__main__":
     }
 
     # Convert the date (UTC) to unix timestamp
-    start_timestamp = str(calendar.timegm(start_date.timetuple()))
-    end_timestamp = str(calendar.timegm(end_date.timetuple()))
+    start_timestamp = int(calendar.timegm(start_date.timetuple()))
+    end_timestamp = int(calendar.timegm(end_date.timetuple()))
 
     # List of candidate dates
     candidate_date = []
@@ -181,5 +192,11 @@ if __name__ == "__main__":
         df_marketcap.loc[timestamp, "WETH"] = weth_market_cap
 
     # Write data to csv
-    df_price.to_csv("global_data/token_market/primary_token_price.csv")
-    df_marketcap.to_csv("global_data/token_market/primary_token_marketcap.csv")
+    price_file_name = path.join(
+        GLOBAL_DATA_PATH, "token_market/primary_token_price.csv"
+    )
+    marketcap_file_name = path.join(
+        GLOBAL_DATA_PATH, "/token_market/primary_token_marketcap.csv"
+    )
+    df_price.to_csv(price_file_name)
+    df_marketcap.to_csv(marketcap_file_name)

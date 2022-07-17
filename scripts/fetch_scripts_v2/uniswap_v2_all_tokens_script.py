@@ -1,14 +1,19 @@
 # -*- coding: utf-8 -*-
-"""# Fetch all tokens for Uniswap V2"""
+"""
+Fetch all tokens for Uniswap V2
+"""
 
-
-import pandas as pd
 from datetime import date
-
+from os import path
+import pandas as pd
 import subgraph_query as subgraph
+from defi_econ.constants import UNISWAP_V2_DATA_PATH
 
 
 def get_all_tokens_v2():
+    """
+    get all tokens from the v2 protocol
+    """
 
     # Start from fetching the initial Batch 0: Query 1000 tokens on UNISWAP V2 order by id (asc)
     get_all_tokens_batch0_query = """
@@ -31,8 +36,12 @@ def get_all_tokens_v2():
     # Start from the last id which is got by batch 0
 
     tokens_iter_count = 0
-    tokens_iter = get_all_tokens_batch0["data"]["tokens"]  # Token info list in each batch
-    total_tokens_amount = len(tokens_iter)  # Initial the total token amount by 1000 (in batch 0)
+    tokens_iter = get_all_tokens_batch0["data"][
+        "tokens"
+    ]  # Token info list in each batch
+    total_tokens_amount = len(
+        tokens_iter
+    )  # Initial the total token amount by 1000 (in batch 0)
 
     # Do loop until
     while len(tokens_iter) == 1000:
@@ -84,8 +93,10 @@ def get_all_tokens_v2():
 if __name__ == "__main__":
     # File name contains the executing date of this script, the instant snapshot
     file_date = date.today().strftime("%Y%m%d")
-    file_name = (
-        "data_uniswap_v2/fetched_data_v2/uniswap_v2_all_tokens_" + file_date + ".csv"
+
+    # Define the file name
+    file_name = path.join(
+        UNISWAP_V2_DATA_PATH, "uniswap_v2_all_tokens_" + file_date + ".csv"
     )
 
     # Write dataframe to csv

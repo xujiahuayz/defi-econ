@@ -1,15 +1,21 @@
 # -*- coding: utf-8 -*-
-"""# Overview of the Top 50 Pairs (All Time): Transaction Count"""
+"""
+Overview of the Top 50 Pairs (All Time) with Transaction Count
+"""
 
-import subgraph_query as subgraph
-
-import pandas as pd
-from tqdm import tqdm
 from datetime import date
 from datetime import datetime
+from os import path
+import pandas as pd
+from tqdm import tqdm
+import subgraph_query as subgraph
+from defi_econ.constants import UNISWAP_V2_DATA_PATH
 
 
-def get_pool_overview(batch_pair_id):
+def get_pool_overview(batch_pair_id: str):
+    """
+    get the basic data of the liquidity pool
+    """
     # Variables for the query
     params_batch_pair = {"batch_pair": batch_pair_id}
 
@@ -37,7 +43,10 @@ def get_pool_overview(batch_pair_id):
     return batch_pair_info
 
 
-def count_mints_transactions(batch_pair_id):
+def count_mints_transactions(batch_pair_id: str):
+    """
+    count the total mints transaction for the pool from it starts
+    """
     # Variables for the query
     params_batch_pair = {"batch_pair": batch_pair_id}
 
@@ -100,7 +109,10 @@ def count_mints_transactions(batch_pair_id):
     return total_mints
 
 
-def count_burns_transactions(batch_pair_id):
+def count_burns_transactions(batch_pair_id: str):
+    """
+    count the total burns transaction for the pool from it starts
+    """
     # Variables for the query
     params_batch_pair = {"batch_pair": batch_pair_id}
 
@@ -166,7 +178,7 @@ def count_burns_transactions(batch_pair_id):
 if __name__ == "__main__":
     # Load the dataframe from the top 50 pairs of May
     df_top50_pairs_overview = pd.read_csv(
-        "data_uniswap_v2/fetched_data_v2/top50_pairs_avg_daily_volume_v2_MAY2022.csv"
+        UNISWAP_V2_DATA_PATH + "/top50_pairs_avg_daily_volume_v2_MAY2022.csv"
     )
     df_top50_pairs_overview = df_top50_pairs_overview.drop(
         columns=[
@@ -190,13 +202,11 @@ if __name__ == "__main__":
         df_top50_pairs_overview.loc[index, "createdDate"] = datetime.fromtimestamp(
             int(batch_pair_info["createdAtTimestamp"])
         )
-        df_top50_pairs_overview.loc[index, "totalSupply"] = batch_pair_info["totalSupply"]
-        df_top50_pairs_overview.loc[index, "pooledToken0"] = batch_pair_info[
-            "reserve0"
+        df_top50_pairs_overview.loc[index, "totalSupply"] = batch_pair_info[
+            "totalSupply"
         ]
-        df_top50_pairs_overview.loc[index, "pooledToken1"] = batch_pair_info[
-            "reserve1"
-        ]
+        df_top50_pairs_overview.loc[index, "pooledToken0"] = batch_pair_info["reserve0"]
+        df_top50_pairs_overview.loc[index, "pooledToken1"] = batch_pair_info["reserve1"]
         df_top50_pairs_overview.loc[index, "totalLiquidityUSD"] = batch_pair_info[
             "reserveUSD"
         ]
@@ -220,8 +230,9 @@ if __name__ == "__main__":
 
     # file name contains the executing date of this script
     file_date = date.today().strftime("%Y%m%d")
-    file_name = (
-        "data_uniswap_v2/fetched_data_v2/top50_pairs_overview_v2_" + file_date + ".csv"
+    # Define the file name
+    file_name = path.join(
+        UNISWAP_V2_DATA_PATH, "top50_pairs_overview_v2_" + file_date + ".csv"
     )
 
     # Write dataframe to csv
