@@ -47,7 +47,8 @@ def get_token_list(token_address=[]):
     return token_list
 
 
-df_compound_tokens = get_token_list()
+if __name__ == "__main__":
+    df_compound_tokens = get_token_list()
 
-file_name = path.join(COMPOUND_DATA_PATH, "all_compound_tokens.csv")
-df_compound_tokens.to_csv(file_name)
+    file_name = path.join(COMPOUND_DATA_PATH, "all_compound_tokens.csv")
+    df_compound_tokens.to_csv(file_name)
