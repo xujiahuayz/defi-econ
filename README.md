@@ -81,7 +81,7 @@ a minimum viable example to fetch data from thegraph and print the result on the
 python scripts/thegraph.py
 ```
 
-fetch compound historical data and save in [data/data_compound](data/data_compound)
+fetch compound historical data and save in [`data/data_compound`](data/data_compound)
 
 ```zsh
 python scripts/fetch_compound_historical_data.py
@@ -91,7 +91,7 @@ python scripts/fetch_compound_historical_data.py
 
 python project documentation is save in [`doc/`](doc/)
 
-index html file as example [doc/scripts/index.html](doc/scripts/index.html)
+index html file as example [`doc/scripts/index.html`](doc/scripts/index.html)
 
 To generate doc by `pdoc`:
 
