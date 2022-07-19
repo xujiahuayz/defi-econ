@@ -5,7 +5,7 @@ Fetch the instant snapshot of Uniswap V2 Factory: Pool Count, Transaction Count
 from datetime import datetime
 from os import path
 import pandas as pd
-import subgraph_query as subgraph
+import scripts.subgraph_query as subgraph
 from defi_econ.constants import UNISWAP_V3_DATA_PATH
 
 

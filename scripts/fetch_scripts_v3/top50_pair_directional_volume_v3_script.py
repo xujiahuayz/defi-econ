@@ -8,7 +8,7 @@ import calendar
 from os import path
 import pandas as pd
 from tqdm import tqdm
-import subgraph_query as subgraph
+import scripts.subgraph_query as subgraph
 from defi_econ.constants import UNISWAP_V3_DATA_PATH
 
 

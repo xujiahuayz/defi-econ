@@ -9,7 +9,7 @@ from os import path
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
-import subgraph_query as subgraph
+import scripts.subgraph_query as subgraph
 from defi_econ.constants import UNISWAP_V2_DATA_PATH
 
 
