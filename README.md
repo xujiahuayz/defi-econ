@@ -82,8 +82,25 @@ python scripts/thegraph.py
 ```
 
 fetch compound historical data and save in [data/data_compound](data/data_compound)
+
 ```zsh
 python scripts/fetch_compound_historical_data.py
+```
+
+## Python Project Documentation
+
+python project documentation is save in [`doc/`](doc/)
+
+index html file as example [doc/scripts/index.html](doc/scripts/index.html)
+
+To generate doc by `pdoc`:
+
+```bash
+pip install pdoc3
+```
+
+```bash
+pdoc --html /your_scripts_path --output-dir /Users/mac/Desktop/defi-econ/defi-econ/doc
 ```
 
 ## Git Large File Storage (Git LFS)
