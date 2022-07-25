@@ -100,7 +100,7 @@ pip install pdoc3
 ```
 
 ```bash
-pdoc --html /your_scripts_path --output-dir /Users/mac/Desktop/defi-econ/defi-econ/doc
+pdoc --html /your_scripts_path --output-dir ./doc
 ```
 
 ## Git Large File Storage (Git LFS)
