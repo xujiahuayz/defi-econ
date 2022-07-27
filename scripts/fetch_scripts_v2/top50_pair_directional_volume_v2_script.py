@@ -33,6 +33,7 @@ def get_gross_volume(batch_pair_id: str, date_timestamp: int) -> list:
           dailyVolumeToken0
           dailyVolumeToken1
           dailyVolumeUSD
+          reserveUSD
         }
       }
   """
@@ -335,6 +336,9 @@ if __name__ == "__main__":
         df_top50_pairs_dir_volume.loc[index, "dailySwapVolumeToken1"] = batch_pair_info[
             0
         ]["dailyVolumeToken1"]
+        df_top50_pairs_dir_volume.loc[index, "reserveUSD"] = batch_pair_info[0][
+            "reserveUSD"
+        ]
 
         # Get the daily count for the mints transactions
         mints_count = count_daily_mints(batch_pair_id, date_timestamp, end_timestamp)
