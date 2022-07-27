@@ -9,7 +9,7 @@ import scripts.subgraph_query as subgraph
 from defi_econ.constants import UNISWAP_V3_DATA_PATH
 
 
-def get_factory_overview_v3(factory_address: str):
+def get_factory_overview_v3(factory_address: str) -> dict:
     """
     get the basic statistical overview of the factory
     """
@@ -36,7 +36,7 @@ def get_factory_overview_v3(factory_address: str):
     return v3_overview
 
 
-def get_instant_eth_price(http):
+def get_instant_eth_price(http) -> dict:
     """
     get the instant ETH price
     """

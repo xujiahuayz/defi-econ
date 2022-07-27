@@ -21,7 +21,9 @@ from defi_econ.constants import GLOBAL_DATA_PATH
 
 
 # Get the total supply by calling the totalSupply() function from archive node
-def get_total_supply(contract_address: str, contract_abi: str, block_number: int):
+def get_total_supply(
+    contract_address: str, contract_abi: str, block_number: int
+) -> str:
     """
     get the total supply of given token via Infura archive node
     """
@@ -41,7 +43,7 @@ def get_total_supply(contract_address: str, contract_abi: str, block_number: int
     return total_supply_eth
 
 
-def get_block_number_by_timestamp(timestamp: int):
+def get_block_number_by_timestamp(timestamp: int) -> str:
     """
     get the closest block number by the given timestamp
     """

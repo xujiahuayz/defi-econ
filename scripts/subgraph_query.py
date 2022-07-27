@@ -8,7 +8,7 @@ http_v2 = "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2"
 http_v3 = "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3"
 
 
-def run_query(http: str, query_scripts: str):
+def run_query(http: str, query_scripts: str) -> None:
     """
     execute query without variable parameters
     """
@@ -24,7 +24,7 @@ def run_query(http: str, query_scripts: str):
         )
 
 
-def run_query_var(http: str, query_scripts: str, var: str):
+def run_query_var(http: str, query_scripts: str, var: str) -> None:
     """
     execute query with variable paramters
     """

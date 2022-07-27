@@ -11,7 +11,7 @@ import scripts.subgraph_query as subgraph
 from defi_econ.constants import UNISWAP_V3_DATA_PATH
 
 
-def get_all_pools_v3():
+def get_all_pools_v3() -> pd.DataFrame:
     """
     get all liquidity pools from the v3 protocol
     """

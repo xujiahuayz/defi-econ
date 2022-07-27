@@ -10,7 +10,7 @@ from duneanalytics import DuneAnalytics
 from defi_econ.constants import AAVE_DATA_PATH
 
 
-def download_dune_data(dune_id: str):
+def download_dune_data(dune_id: int) -> dict:
     """
     download dune data by the given dune id, example: https://dune.com/queries/4494/8769 => 4494
     """

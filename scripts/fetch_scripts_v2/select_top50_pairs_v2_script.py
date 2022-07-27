@@ -13,7 +13,7 @@ import scripts.subgraph_query as subgraph
 from defi_econ.constants import UNISWAP_V2_DATA_PATH
 
 
-def select_candidate_pairs(end_date: datetime):
+def select_candidate_pairs(end_date: datetime) -> pd.DataFrame:
     """
     select top 500 pairs order by daily volume USD as candidate pairs
     """
@@ -57,7 +57,7 @@ def select_candidate_pairs(end_date: datetime):
 
 def get_avg_volume_candidate_pairs(
     df_top500_pairs: pd.DataFrame, start_date: datetime, period: datetime
-):
+) -> pd.DataFrame:
     """
     get the average daily volume by dividing the sum of each daily volume for the past horizon
     """

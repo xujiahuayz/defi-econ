@@ -14,7 +14,7 @@ from defi_econ.constants import COMPOUND_DATA_PATH
 
 def fetch_asset_historical_data(
     asset_address: str, min_timestamp: int, max_timestamp: int, horizon: int
-):
+) -> tuple[dict, dict, dict, dict, dict]:
     """
     get the snapshot of the asset historical data during the given horizon
     """

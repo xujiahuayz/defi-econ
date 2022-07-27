@@ -10,7 +10,7 @@ import scripts.subgraph_query as subgraph
 from defi_econ.constants import UNISWAP_V2_DATA_PATH
 
 
-def get_all_tokens_v2():
+def get_all_tokens_v2() -> pd.DataFrame:
     """
     get all tokens from the v2 protocol
     """

@@ -4,13 +4,12 @@ Fetch the instant snapshot of Uniswap V2 Factory: Pool Count, Transaction Count
 """
 
 from datetime import datetime
-from os import path
 import pandas as pd
 import scripts.subgraph_query as subgraph
 from defi_econ.constants import UNISWAP_V2_DATA_PATH
 
 
-def get_factory_overview_v2(factory_address: str):
+def get_factory_overview_v2(factory_address: str) -> dict:
     """
     get the basic statistical overview of the factory
     """
@@ -36,7 +35,7 @@ def get_factory_overview_v2(factory_address: str):
     return v2_overview
 
 
-def get_instant_eth_price(http: str):
+def get_instant_eth_price(http: str) -> dict:
     """
     get the instant ETH price
     """

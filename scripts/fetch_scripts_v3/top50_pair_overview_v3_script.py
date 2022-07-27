@@ -12,7 +12,7 @@ import scripts.subgraph_query as subgraph
 from defi_econ.constants import UNISWAP_V3_DATA_PATH
 
 
-def get_pool_overview(batch_pair_id: str):
+def get_pool_overview(batch_pair_id: str) -> dict:
     """
     get the basic data of the liquidity pool
     """
@@ -45,7 +45,7 @@ def get_pool_overview(batch_pair_id: str):
     return batch_pair_info
 
 
-def count_mints_transactions(batch_pair_id: str):
+def count_mints_transactions(batch_pair_id: str) -> int:
     """
     count the total mints transaction for the pool from it starts
     """
@@ -111,7 +111,7 @@ def count_mints_transactions(batch_pair_id: str):
     return total_mints
 
 
-def count_burns_transactions(batch_pair_id: str):
+def count_burns_transactions(batch_pair_id: str) -> int:
     """
     count the total burns transaction for the pool from it starts
     """

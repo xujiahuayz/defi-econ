@@ -12,7 +12,7 @@ import scripts.subgraph_query as subgraph
 from defi_econ.constants import UNISWAP_V3_DATA_PATH
 
 
-def get_gross_volume(batch_pair_id: str, date_timestamp: int):
+def get_gross_volume(batch_pair_id: str, date_timestamp: int) -> list:
     """
     fetch the gross daily volume by API
     """
@@ -46,7 +46,9 @@ def get_gross_volume(batch_pair_id: str, date_timestamp: int):
     return batch_pair_gross_info
 
 
-def count_daily_mints(batch_pair_id: str, date_timestamp: int, end_timestamp: int):
+def count_daily_mints(
+    batch_pair_id: str, date_timestamp: int, end_timestamp: int
+) -> int:
     """
     get all mints transactions and count daily mints
     """
@@ -111,7 +113,9 @@ def count_daily_mints(batch_pair_id: str, date_timestamp: int, end_timestamp: in
     return mints_count
 
 
-def count_daily_burns(batch_pair_id: str, date_timestamp: int, end_timestamp: int):
+def count_daily_burns(
+    batch_pair_id: str, date_timestamp: int, end_timestamp: int
+) -> int:
     """
     get all burns transactions and count daily burns
     """
@@ -179,7 +183,7 @@ def count_daily_burns(batch_pair_id: str, date_timestamp: int, end_timestamp: in
 
 def compute_daily_directional_volume(
     batch_pair_id: str, date_timestamp: int, end_timestamp: int
-):
+) -> tuple[int, int, float, int, float]:
     """
     manually compute the directional volume by iterating each transaction
     """

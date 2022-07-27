@@ -9,7 +9,7 @@ import requests
 from defi_econ.constants import COMPOUND_DATA_PATH
 
 
-def get_token_list(token_address=[]):
+def get_token_list(token_address=[]) -> pd.DataFrame:
     """
     get the token list
     """
