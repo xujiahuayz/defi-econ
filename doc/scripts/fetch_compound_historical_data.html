@@ -43,7 +43,7 @@ from defi_econ.constants import COMPOUND_DATA_PATH
 
 def fetch_asset_historical_data(
     asset_address: str, min_timestamp: int, max_timestamp: int, horizon: int
-):
+) -&gt; tuple[dict, dict, dict, dict, dict]:
     &#34;&#34;&#34;
     get the snapshot of the asset historical data during the given horizon
     &#34;&#34;&#34;
@@ -172,7 +172,7 @@ if __name__ == &#34;__main__&#34;:
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="scripts.fetch_compound_historical_data.fetch_asset_historical_data"><code class="name flex">
-<span>def <span class="ident">fetch_asset_historical_data</span></span>(<span>asset_address: str, min_timestamp: int, max_timestamp: int, horizon: int)</span>
+<span>def <span class="ident">fetch_asset_historical_data</span></span>(<span>asset_address: str, min_timestamp: int, max_timestamp: int, horizon: int) ‑> tuple[dict, dict, dict, dict, dict]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>get the snapshot of the asset historical data during the given horizon</p></div>
@@ -182,7 +182,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def fetch_asset_historical_data(
     asset_address: str, min_timestamp: int, max_timestamp: int, horizon: int
-):
+) -&gt; tuple[dict, dict, dict, dict, dict]:
     &#34;&#34;&#34;
     get the snapshot of the asset historical data during the given horizon
     &#34;&#34;&#34;

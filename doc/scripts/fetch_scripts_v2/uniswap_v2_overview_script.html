@@ -33,13 +33,12 @@ Fetch the instant snapshot of Uniswap V2 Factory: Pool Count, Transaction Count
 &#34;&#34;&#34;
 
 from datetime import datetime
-from os import path
 import pandas as pd
 import scripts.subgraph_query as subgraph
 from defi_econ.constants import UNISWAP_V2_DATA_PATH
 
 
-def get_factory_overview_v2(factory_address: str):
+def get_factory_overview_v2(factory_address: str) -&gt; dict:
     &#34;&#34;&#34;
     get the basic statistical overview of the factory
     &#34;&#34;&#34;
@@ -65,7 +64,7 @@ def get_factory_overview_v2(factory_address: str):
     return v2_overview
 
 
-def get_instant_eth_price(http: str):
+def get_instant_eth_price(http: str) -&gt; dict:
     &#34;&#34;&#34;
     get the instant ETH price
     &#34;&#34;&#34;
@@ -134,7 +133,7 @@ if __name__ == &#34;__main__&#34;:
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="scripts.fetch_scripts_v2.uniswap_v2_overview_script.get_factory_overview_v2"><code class="name flex">
-<span>def <span class="ident">get_factory_overview_v2</span></span>(<span>factory_address: str)</span>
+<span>def <span class="ident">get_factory_overview_v2</span></span>(<span>factory_address: str) ‑> dict</span>
 </code></dt>
 <dd>
 <div class="desc"><p>get the basic statistical overview of the factory</p></div>
@@ -142,7 +141,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_factory_overview_v2(factory_address: str):
+<pre><code class="python">def get_factory_overview_v2(factory_address: str) -&gt; dict:
     &#34;&#34;&#34;
     get the basic statistical overview of the factory
     &#34;&#34;&#34;
@@ -169,7 +168,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="scripts.fetch_scripts_v2.uniswap_v2_overview_script.get_instant_eth_price"><code class="name flex">
-<span>def <span class="ident">get_instant_eth_price</span></span>(<span>http: str)</span>
+<span>def <span class="ident">get_instant_eth_price</span></span>(<span>http: str) ‑> dict</span>
 </code></dt>
 <dd>
 <div class="desc"><p>get the instant ETH price</p></div>
@@ -177,7 +176,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_instant_eth_price(http: str):
+<pre><code class="python">def get_instant_eth_price(http: str) -&gt; dict:
     &#34;&#34;&#34;
     get the instant ETH price
     &#34;&#34;&#34;

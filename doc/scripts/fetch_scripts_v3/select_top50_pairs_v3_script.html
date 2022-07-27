@@ -43,7 +43,7 @@ import scripts.subgraph_query as subgraph
 from defi_econ.constants import UNISWAP_V3_DATA_PATH
 
 
-def select_candidate_pools(end_date: datetime):
+def select_candidate_pools(end_date: datetime) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
     select top 500 pairs order by daily volume USD as candidate pairs
     &#34;&#34;&#34;
@@ -99,7 +99,7 @@ def select_candidate_pools(end_date: datetime):
 
 def get_avg_volume_candidate_pools(
     df_top500_pairs: pd.DataFrame, start_date: datetime, period: datetime
-):
+) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
     get the average daily volume by dividing the sum of each daily volume for the past horizon
     &#34;&#34;&#34;
@@ -220,7 +220,7 @@ if __name__ == &#34;__main__&#34;:
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="scripts.fetch_scripts_v3.select_top50_pairs_v3_script.get_avg_volume_candidate_pools"><code class="name flex">
-<span>def <span class="ident">get_avg_volume_candidate_pools</span></span>(<span>df_top500_pairs: pandas.core.frame.DataFrame, start_date: <module 'datetime' from '/opt/anaconda3/envs/DefiEcon/lib/python3.10/datetime.py'>, period: <module 'datetime' from '/opt/anaconda3/envs/DefiEcon/lib/python3.10/datetime.py'>)</span>
+<span>def <span class="ident">get_avg_volume_candidate_pools</span></span>(<span>df_top500_pairs: pandas.core.frame.DataFrame, start_date: <module 'datetime' from '/opt/anaconda3/envs/DefiEcon/lib/python3.10/datetime.py'>, period: <module 'datetime' from '/opt/anaconda3/envs/DefiEcon/lib/python3.10/datetime.py'>) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
 <div class="desc"><p>get the average daily volume by dividing the sum of each daily volume for the past horizon</p></div>
@@ -230,7 +230,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def get_avg_volume_candidate_pools(
     df_top500_pairs: pd.DataFrame, start_date: datetime, period: datetime
-):
+) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
     get the average daily volume by dividing the sum of each daily volume for the past horizon
     &#34;&#34;&#34;
@@ -289,7 +289,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="scripts.fetch_scripts_v3.select_top50_pairs_v3_script.select_candidate_pools"><code class="name flex">
-<span>def <span class="ident">select_candidate_pools</span></span>(<span>end_date: <module 'datetime' from '/opt/anaconda3/envs/DefiEcon/lib/python3.10/datetime.py'>)</span>
+<span>def <span class="ident">select_candidate_pools</span></span>(<span>end_date: <module 'datetime' from '/opt/anaconda3/envs/DefiEcon/lib/python3.10/datetime.py'>) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
 <div class="desc"><p>select top 500 pairs order by daily volume USD as candidate pairs</p></div>
@@ -297,7 +297,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def select_candidate_pools(end_date: datetime):
+<pre><code class="python">def select_candidate_pools(end_date: datetime) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
     select top 500 pairs order by daily volume USD as candidate pairs
     &#34;&#34;&#34;

@@ -38,7 +38,7 @@ import requests
 from defi_econ.constants import COMPOUND_DATA_PATH
 
 
-def get_token_list(token_address=[]):
+def get_token_list(token_address=[]) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
     get the token list
     &#34;&#34;&#34;
@@ -91,7 +91,7 @@ if __name__ == &#34;__main__&#34;:
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="scripts.fetch_compound_token_list.get_token_list"><code class="name flex">
-<span>def <span class="ident">get_token_list</span></span>(<span>token_address=[])</span>
+<span>def <span class="ident">get_token_list</span></span>(<span>token_address=[]) ‑> pandas.core.frame.DataFrame</span>
 </code></dt>
 <dd>
 <div class="desc"><p>get the token list</p></div>
@@ -99,7 +99,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_token_list(token_address=[]):
+<pre><code class="python">def get_token_list(token_address=[]) -&gt; pd.DataFrame:
     &#34;&#34;&#34;
     get the token list
     &#34;&#34;&#34;

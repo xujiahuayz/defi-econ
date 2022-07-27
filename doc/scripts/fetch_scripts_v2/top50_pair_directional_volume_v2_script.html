@@ -41,7 +41,7 @@ import scripts.subgraph_query as subgraph
 from defi_econ.constants import UNISWAP_V2_DATA_PATH
 
 
-def get_gross_volume(batch_pair_id: str, date_timestamp: int):
+def get_gross_volume(batch_pair_id: str, date_timestamp: int) -&gt; list:
     &#34;&#34;&#34;
     fetch the gross daily volume by API
     &#34;&#34;&#34;
@@ -74,7 +74,9 @@ def get_gross_volume(batch_pair_id: str, date_timestamp: int):
     return batch_pair_gross_info
 
 
-def count_daily_mints(batch_pair_id: str, date_timestamp: int, end_timestamp: int):
+def count_daily_mints(
+    batch_pair_id: str, date_timestamp: int, end_timestamp: int
+) -&gt; int:
     &#34;&#34;&#34;
     get all mints transactions and count daily mints
     &#34;&#34;&#34;
@@ -139,7 +141,9 @@ def count_daily_mints(batch_pair_id: str, date_timestamp: int, end_timestamp: in
     return mints_count
 
 
-def count_daily_burns(batch_pair_id: str, date_timestamp: int, end_timestamp: int):
+def count_daily_burns(
+    batch_pair_id: str, date_timestamp: int, end_timestamp: int
+) -&gt; int:
     &#34;&#34;&#34;
     get all burns transactions and count daily burns
     &#34;&#34;&#34;
@@ -207,7 +211,7 @@ def count_daily_burns(batch_pair_id: str, date_timestamp: int, end_timestamp: in
 
 def compute_daily_directional_volume(
     batch_pair_id: str, date_timestamp: int, end_timestamp: int
-):
+) -&gt; tuple[int, int, float, int, float]:
     &#34;&#34;&#34;
     manually compute the directional volume by iterating each transaction
     &#34;&#34;&#34;
@@ -418,7 +422,7 @@ if __name__ == &#34;__main__&#34;:
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="scripts.fetch_scripts_v2.top50_pair_directional_volume_v2_script.compute_daily_directional_volume"><code class="name flex">
-<span>def <span class="ident">compute_daily_directional_volume</span></span>(<span>batch_pair_id: str, date_timestamp: int, end_timestamp: int)</span>
+<span>def <span class="ident">compute_daily_directional_volume</span></span>(<span>batch_pair_id: str, date_timestamp: int, end_timestamp: int) ‑> tuple[int, int, float, int, float]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>manually compute the directional volume by iterating each transaction</p></div>
@@ -428,7 +432,7 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">def compute_daily_directional_volume(
     batch_pair_id: str, date_timestamp: int, end_timestamp: int
-):
+) -&gt; tuple[int, int, float, int, float]:
     &#34;&#34;&#34;
     manually compute the directional volume by iterating each transaction
     &#34;&#34;&#34;
@@ -533,7 +537,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="scripts.fetch_scripts_v2.top50_pair_directional_volume_v2_script.count_daily_burns"><code class="name flex">
-<span>def <span class="ident">count_daily_burns</span></span>(<span>batch_pair_id: str, date_timestamp: int, end_timestamp: int)</span>
+<span>def <span class="ident">count_daily_burns</span></span>(<span>batch_pair_id: str, date_timestamp: int, end_timestamp: int) ‑> int</span>
 </code></dt>
 <dd>
 <div class="desc"><p>get all burns transactions and count daily burns</p></div>
@@ -541,7 +545,9 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def count_daily_burns(batch_pair_id: str, date_timestamp: int, end_timestamp: int):
+<pre><code class="python">def count_daily_burns(
+    batch_pair_id: str, date_timestamp: int, end_timestamp: int
+) -&gt; int:
     &#34;&#34;&#34;
     get all burns transactions and count daily burns
     &#34;&#34;&#34;
@@ -608,7 +614,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="scripts.fetch_scripts_v2.top50_pair_directional_volume_v2_script.count_daily_mints"><code class="name flex">
-<span>def <span class="ident">count_daily_mints</span></span>(<span>batch_pair_id: str, date_timestamp: int, end_timestamp: int)</span>
+<span>def <span class="ident">count_daily_mints</span></span>(<span>batch_pair_id: str, date_timestamp: int, end_timestamp: int) ‑> int</span>
 </code></dt>
 <dd>
 <div class="desc"><p>get all mints transactions and count daily mints</p></div>
@@ -616,7 +622,9 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def count_daily_mints(batch_pair_id: str, date_timestamp: int, end_timestamp: int):
+<pre><code class="python">def count_daily_mints(
+    batch_pair_id: str, date_timestamp: int, end_timestamp: int
+) -&gt; int:
     &#34;&#34;&#34;
     get all mints transactions and count daily mints
     &#34;&#34;&#34;
@@ -682,7 +690,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="scripts.fetch_scripts_v2.top50_pair_directional_volume_v2_script.get_gross_volume"><code class="name flex">
-<span>def <span class="ident">get_gross_volume</span></span>(<span>batch_pair_id: str, date_timestamp: int)</span>
+<span>def <span class="ident">get_gross_volume</span></span>(<span>batch_pair_id: str, date_timestamp: int) ‑> list</span>
 </code></dt>
 <dd>
 <div class="desc"><p>fetch the gross daily volume by API</p></div>
@@ -690,7 +698,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_gross_volume(batch_pair_id: str, date_timestamp: int):
+<pre><code class="python">def get_gross_volume(batch_pair_id: str, date_timestamp: int) -&gt; list:
     &#34;&#34;&#34;
     fetch the gross daily volume by API
     &#34;&#34;&#34;

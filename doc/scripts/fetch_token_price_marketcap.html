@@ -53,7 +53,9 @@ from defi_econ.constants import GLOBAL_DATA_PATH
 
 
 # Get the total supply by calling the totalSupply() function from archive node
-def get_total_supply(contract_address: str, contract_abi: str, block_number: int):
+def get_total_supply(
+    contract_address: str, contract_abi: str, block_number: int
+) -&gt; str:
     &#34;&#34;&#34;
     get the total supply of given token via Infura archive node
     &#34;&#34;&#34;
@@ -73,7 +75,7 @@ def get_total_supply(contract_address: str, contract_abi: str, block_number: int
     return total_supply_eth
 
 
-def get_block_number_by_timestamp(timestamp: int):
+def get_block_number_by_timestamp(timestamp: int) -&gt; str:
     &#34;&#34;&#34;
     get the closest block number by the given timestamp
     &#34;&#34;&#34;
@@ -242,7 +244,7 @@ if __name__ == &#34;__main__&#34;:
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="scripts.fetch_token_price_marketcap.get_block_number_by_timestamp"><code class="name flex">
-<span>def <span class="ident">get_block_number_by_timestamp</span></span>(<span>timestamp: int)</span>
+<span>def <span class="ident">get_block_number_by_timestamp</span></span>(<span>timestamp: int) ‑> str</span>
 </code></dt>
 <dd>
 <div class="desc"><p>get the closest block number by the given timestamp</p></div>
@@ -250,7 +252,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_block_number_by_timestamp(timestamp: int):
+<pre><code class="python">def get_block_number_by_timestamp(timestamp: int) -&gt; str:
     &#34;&#34;&#34;
     get the closest block number by the given timestamp
     &#34;&#34;&#34;
@@ -276,7 +278,7 @@ if __name__ == &#34;__main__&#34;:
 </details>
 </dd>
 <dt id="scripts.fetch_token_price_marketcap.get_total_supply"><code class="name flex">
-<span>def <span class="ident">get_total_supply</span></span>(<span>contract_address: str, contract_abi: str, block_number: int)</span>
+<span>def <span class="ident">get_total_supply</span></span>(<span>contract_address: str, contract_abi: str, block_number: int) ‑> str</span>
 </code></dt>
 <dd>
 <div class="desc"><p>get the total supply of given token via Infura archive node</p></div>
@@ -284,7 +286,9 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_total_supply(contract_address: str, contract_abi: str, block_number: int):
+<pre><code class="python">def get_total_supply(
+    contract_address: str, contract_abi: str, block_number: int
+) -&gt; str:
     &#34;&#34;&#34;
     get the total supply of given token via Infura archive node
     &#34;&#34;&#34;

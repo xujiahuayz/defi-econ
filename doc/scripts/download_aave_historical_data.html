@@ -41,7 +41,7 @@ from duneanalytics import DuneAnalytics
 from defi_econ.constants import AAVE_DATA_PATH
 
 
-def download_dune_data(dune_id: str):
+def download_dune_data(dune_id: int) -&gt; dict:
     &#34;&#34;&#34;
     download dune data by the given dune id, example: https://dune.com/queries/4494/8769 =&gt; 4494
     &#34;&#34;&#34;
@@ -100,7 +100,7 @@ if __name__ == &#34;__main__&#34;:
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="scripts.download_aave_historical_data.download_dune_data"><code class="name flex">
-<span>def <span class="ident">download_dune_data</span></span>(<span>dune_id: str)</span>
+<span>def <span class="ident">download_dune_data</span></span>(<span>dune_id: int) ‑> dict</span>
 </code></dt>
 <dd>
 <div class="desc"><p>download dune data by the given dune id, example: <a href="https://dune.com/queries/4494/8769">https://dune.com/queries/4494/8769</a> =&gt; 4494</p></div>
@@ -108,7 +108,7 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def download_dune_data(dune_id: str):
+<pre><code class="python">def download_dune_data(dune_id: int) -&gt; dict:
     &#34;&#34;&#34;
     download dune data by the given dune id, example: https://dune.com/queries/4494/8769 =&gt; 4494
     &#34;&#34;&#34;

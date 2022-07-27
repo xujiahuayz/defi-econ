@@ -37,7 +37,7 @@ http_v2 = &#34;https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2&#34;
 http_v3 = &#34;https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3&#34;
 
 
-def run_query(http: str, query_scripts: str):
+def run_query(http: str, query_scripts: str) -&gt; None:
     &#34;&#34;&#34;
     execute query without variable parameters
     &#34;&#34;&#34;
@@ -53,7 +53,7 @@ def run_query(http: str, query_scripts: str):
         )
 
 
-def run_query_var(http: str, query_scripts: str, var: str):
+def run_query_var(http: str, query_scripts: str, var: str) -&gt; None:
     &#34;&#34;&#34;
     execute query with variable paramters
     &#34;&#34;&#34;
@@ -77,7 +77,7 @@ def run_query_var(http: str, query_scripts: str, var: str):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="scripts.subgraph_query.run_query"><code class="name flex">
-<span>def <span class="ident">run_query</span></span>(<span>http: str, query_scripts: str)</span>
+<span>def <span class="ident">run_query</span></span>(<span>http: str, query_scripts: str) ‑> None</span>
 </code></dt>
 <dd>
 <div class="desc"><p>execute query without variable parameters</p></div>
@@ -85,7 +85,7 @@ def run_query_var(http: str, query_scripts: str, var: str):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def run_query(http: str, query_scripts: str):
+<pre><code class="python">def run_query(http: str, query_scripts: str) -&gt; None:
     &#34;&#34;&#34;
     execute query without variable parameters
     &#34;&#34;&#34;
@@ -102,7 +102,7 @@ def run_query_var(http: str, query_scripts: str, var: str):
 </details>
 </dd>
 <dt id="scripts.subgraph_query.run_query_var"><code class="name flex">
-<span>def <span class="ident">run_query_var</span></span>(<span>http: str, query_scripts: str, var: str)</span>
+<span>def <span class="ident">run_query_var</span></span>(<span>http: str, query_scripts: str, var: str) ‑> None</span>
 </code></dt>
 <dd>
 <div class="desc"><p>execute query with variable paramters</p></div>
@@ -110,7 +110,7 @@ def run_query_var(http: str, query_scripts: str, var: str):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def run_query_var(http: str, query_scripts: str, var: str):
+<pre><code class="python">def run_query_var(http: str, query_scripts: str, var: str) -&gt; None:
     &#34;&#34;&#34;
     execute query with variable paramters
     &#34;&#34;&#34;
