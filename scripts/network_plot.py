@@ -67,6 +67,23 @@ def plot_network(date) -> None:
 
     plt.savefig(path.join(NETWORK_DATA_PATH, "network_" + date_str + ".jpg"))
 
+    # Compute degree and centraolity
+    df_centrality = node_data.copy()
+    df_centrality["eigenvector_centrality"] = nx.eigenvector_centrality_numpy(
+        G, weight="weight"
+    ).values()
+    df_centrality["weighted_degree"] = [i[1] for i in list(G.degree(weight="weight"))]
+    df_centrality["weighted_in_degree"] = [
+        i[1] for i in list(G.in_degree(weight="weight"))
+    ]
+    df_centrality["weighted_out_degree"] = [
+        i[1] for i in list(G.out_degree(weight="weight"))
+    ]
+
+    df_centrality.to_csv(
+        path.join(NETWORK_DATA_PATH, "centrality_" + date_str + ".csv")
+    )
+
 
 if __name__ == "__main__":
     target_date = datetime.datetime(2022, 5, 31, 0, 0)
