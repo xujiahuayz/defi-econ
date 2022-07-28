@@ -97,7 +97,7 @@ def get_node_flow(date, uni_version) -> pd.DataFrame:
             {
                 "Source": [row_pool["token0"]],
                 "Target": [row_pool["token1"]],
-                "Weight": [row_pool["token0To1VolumeUSD"]],
+                "Volume": [row_pool["token0To1VolumeUSD"]],
             }
         )
 
@@ -105,7 +105,7 @@ def get_node_flow(date, uni_version) -> pd.DataFrame:
             {
                 "Source": [row_pool["token1"]],
                 "Target": [row_pool["token0"]],
-                "Weight": [row_pool["token1To0VolumeUSD"]],
+                "Volume": [row_pool["token1To0VolumeUSD"]],
             }
         )
 
@@ -134,6 +134,6 @@ if __name__ == "__main__":
     edge_file_name = path.join(
         NETWORK_DATA_PATH, "inout_flow_tokens_" + target_date_str + ".csv"
     )
-    df_node_list.to_csv(edge_file_name)
+    df_edge_list.to_csv(edge_file_name)
     print("-------------------------")
     print("Complete write the file: ", edge_file_name)
