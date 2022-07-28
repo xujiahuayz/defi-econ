@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Calculate the volatility by the prices of tokens
+Calc
 """
 
 from os import path
