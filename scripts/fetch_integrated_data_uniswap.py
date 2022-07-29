@@ -27,15 +27,15 @@ if __name__ == "__main__":
         date_list.append(date)
 
     # Step 1: determine the list of monthly top 50 pools as candidates
-    # if uniswap_version == "v2":
-    #     #select_top50_pairs_v2_script.select_top50_pairs_v2(
-    #         end_date, 31, top50_list_label
-    #     )
+    if uniswap_version == "v2":
+        select_top50_pairs_v2_script.select_top50_pairs_v2(
+            end_date, 31, top50_list_label
+        )
 
-    # elif uniswap_version == "v3":
-    #     select_top50_pairs_v3_script.select_top50_pairs_v3(
-    #         end_date, 31, top50_list_label
-    #     )
+    elif uniswap_version == "v3":
+        select_top50_pairs_v3_script.select_top50_pairs_v3(
+            end_date, 31, top50_list_label
+        )
 
     print("------Step 1 Complete: monthly top token list------")
 
