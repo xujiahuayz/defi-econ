@@ -20,6 +20,8 @@
 
 ## Uniswap
 
+**WORK FLOW SCRIPTS AS [`scripts/fetch_integrated_data_uniswap.py`](scripts/fetch_integrated_data_uniswap.py)**
+
 1. **Step 1**: Determine the top 50 pools by the avg daily volume for the given time period: `select_top50_pairs_vX_script.py` `select_top50_pairs_vX(end_date, 31, top50_list_label)`
 
    - example: Monthly top50 pools
