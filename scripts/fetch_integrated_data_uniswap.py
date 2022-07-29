@@ -17,7 +17,7 @@ if __name__ == "__main__":
     top50_list_label = "2022MAY"
 
     # Data output include start_date, exclude end_date
-    start_date = datetime.datetime(2022, 5, 22, 0, 0)
+    start_date = datetime.datetime(2022, 5, 1, 0, 0)
     end_date = datetime.datetime(2022, 6, 1, 0, 0)
 
     # list for multiple dates
