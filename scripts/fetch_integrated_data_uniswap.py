@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Calculate the volatility by the prices of tokens
+Work flow of fetching Uniswap data
 """
 
 
