@@ -24,12 +24,12 @@ def load_volume_dataset(date, uni_version) -> pd.DataFrame:
     if uni_version == "v2":
         data_source = path.join(
             UNISWAP_V2_DATA_PATH,
-            "top50_pairs_directional_volume_v2_" + date_str + ".csv",
+            "top50_directional_volume_v2_" + date_str + ".csv",
         )
     elif uni_version == "v3":
         data_source = path.join(
             UNISWAP_V3_DATA_PATH,
-            "top50_pairs_directional_volume_v3_" + date_str + ".csv",
+            "top50_directional_volume_v3_" + date_str + ".csv",
         )
 
     # Load the dataframe from the top 50 pairs
@@ -116,24 +116,34 @@ def get_node_flow(date, uni_version) -> pd.DataFrame:
     return df_edge
 
 
-if __name__ == "__main__":
-    target_date = datetime.datetime(2022, 5, 31, 0, 0)
+def prepare_network_data(target_date: datetime, uniswap_version: str) -> None:
+    """
+    Prepare the network data and save to file
+    """
 
-    df_node_list = get_primary_token_list(target_date, "v3")
+    df_node_list = get_primary_token_list(target_date, uniswap_version)
     # Write dataframe to csv
     target_date_str = target_date.strftime("%Y%m%d")
     node_file_name = path.join(
-        NETWORK_DATA_PATH, "primary_tokens_" + target_date_str + ".csv"
+        NETWORK_DATA_PATH,
+        "primary_tokens_" + uniswap_version + "_" + target_date_str + ".csv",
     )
     df_node_list.to_csv(node_file_name)
     print("-------------------------")
     print("Complete write the file: ", node_file_name)
 
-    df_edge_list = get_node_flow(target_date, "v3")
+    df_edge_list = get_node_flow(target_date, uniswap_version)
     # Write dataframe to csv
     edge_file_name = path.join(
-        NETWORK_DATA_PATH, "inout_flow_tokens_" + target_date_str + ".csv"
+        NETWORK_DATA_PATH,
+        "inout_flow_tokens_" + uniswap_version + "_" + target_date_str + ".csv",
     )
     df_edge_list.to_csv(edge_file_name)
     print("-------------------------")
     print("Complete write the file: ", edge_file_name)
+
+
+if __name__ == "__main__":
+    date = datetime.datetime(2022, 5, 17, 0, 0)
+    protocol_version = "v3"
+    prepare_network_data(date, protocol_version)

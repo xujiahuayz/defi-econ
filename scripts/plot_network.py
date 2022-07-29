@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from defi_econ.constants import NETWORK_DATA_PATH
 
 
-def plot_network(date) -> None:
+def plot_network(date: datetime, uniswap_version: str) -> None:
     """
     Plot the network by networkx
     """
@@ -22,7 +22,11 @@ def plot_network(date) -> None:
 
     # Node data
     node_data = pd.read_csv(
-        path.join(NETWORK_DATA_PATH, "primary_tokens_" + date_str + ".csv"), index_col=0
+        path.join(
+            NETWORK_DATA_PATH,
+            "primary_tokens_" + uniswap_version + "_" + date_str + ".csv",
+        ),
+        index_col=0,
     )
 
     for index, row in node_data.iterrows():
@@ -32,7 +36,10 @@ def plot_network(date) -> None:
 
     # Edge data
     edge_data = pd.read_csv(
-        path.join(NETWORK_DATA_PATH, "inout_flow_tokens_" + date_str + ".csv"),
+        path.join(
+            NETWORK_DATA_PATH,
+            "inout_flow_tokens_" + uniswap_version + "_" + date_str + ".csv",
+        ),
         index_col=0,
     )
 
@@ -65,7 +72,11 @@ def plot_network(date) -> None:
     )
     nx.draw_networkx_labels(G, pos, font_size=14, verticalalignment="bottom")
 
-    plt.savefig(path.join(NETWORK_DATA_PATH, "network_" + date_str + ".jpg"))
+    plt.savefig(
+        path.join(
+            NETWORK_DATA_PATH, "network_" + uniswap_version + "_" + date_str + ".jpg"
+        )
+    )
 
     # Compute degree and centraolity
     df_centrality = node_data.copy()
@@ -81,10 +92,12 @@ def plot_network(date) -> None:
     ]
 
     df_centrality.to_csv(
-        path.join(NETWORK_DATA_PATH, "centrality_" + date_str + ".csv")
+        path.join(
+            NETWORK_DATA_PATH, "centrality_" + uniswap_version + "_" + date_str + ".csv"
+        )
     )
 
 
 if __name__ == "__main__":
-    target_date = datetime.datetime(2022, 5, 31, 0, 0)
-    plot_network(target_date)
+    target_date = datetime.datetime(2022, 5, 17, 0, 0)
+    plot_network(target_date, "v3")

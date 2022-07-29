@@ -287,14 +287,12 @@ def compute_daily_directional_volume(
     return swaps_count, tx_0to1_count, volume_0to1, tx_1to0_count, volume_1to0
 
 
-if __name__ == "__main__":
-    # Define the date we would aggregate
-    day = 31
-    month = 5
-    year = 2022
-
-    # Convert to datetime
-    aggregate_date = datetime.datetime(year, month, day, 0, 0)
+def top50_pair_directional_volume_v2(
+    aggregate_date: datetime, token_list_label: str
+) -> None:
+    """
+    Get the directional volume and transaction counts, then save to file
+    """
     # Convert the readable date to the unix timestamp
     date_timestamp = int(calendar.timegm(aggregate_date.timetuple()))
     # End timestamp (the next day)
@@ -303,7 +301,7 @@ if __name__ == "__main__":
 
     # Load the dataframe from the top 50 pairs of May
     df_top50_pairs_dir_volume = pd.read_csv(
-        UNISWAP_V2_DATA_PATH + "/top50_pairs_avg_daily_volume_v2_MAY2022.csv"
+        UNISWAP_V2_DATA_PATH + "/top50_pairs_list_v2_" + token_list_label + ".csv"
     )
     df_top50_pairs_dir_volume = df_top50_pairs_dir_volume.drop(
         columns=[
@@ -381,9 +379,16 @@ if __name__ == "__main__":
 
     # Define the file name
     file_name = path.join(
-        UNISWAP_V2_DATA_PATH, "top50_pairs_directional_volume_v2_" + file_date + ".csv"
+        UNISWAP_V2_DATA_PATH, "top50_directional_volume_v2_" + file_date + ".csv"
     )
     # Write dataframe to csv
     df_top50_pairs_dir_volume.to_csv(file_name)
     print("-------------------------")
     print("Complete write the file: ", file_name)
+
+
+if __name__ == "__main__":
+    top50_list_label = "2022MAY"
+    aggregate_target_date = datetime.datetime(2022, 5, 31, 0, 0)
+
+    top50_pair_directional_volume_v2(aggregate_target_date, top50_list_label)

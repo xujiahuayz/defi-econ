@@ -52,7 +52,11 @@ def get_instant_eth_price(http: str) -> dict:
     return eth_price
 
 
-if __name__ == "__main__":
+def uniswap_v2_overview() -> None:
+    """
+    Read and update the uniswap_overview.csv by adding one row snapshot of querying factory information
+    """
+
     # File path
     overview_file_v2 = UNISWAP_V2_DATA_PATH + "/uniswap_v2_overview.csv"
 
@@ -94,3 +98,7 @@ if __name__ == "__main__":
 
     # Update the file with the new query result
     df_v2_overview.to_csv(overview_file_v2)
+
+
+if __name__ == "__main__":
+    uniswap_v2_overview()

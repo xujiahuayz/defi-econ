@@ -175,11 +175,15 @@ def count_burns_transactions(batch_pair_id: str) -> int:
     return total_burns
 
 
-if __name__ == "__main__":
-    # Load the dataframe from the top 50 pairs of May
-    df_top50_pairs_overview = pd.read_csv(
-        UNISWAP_V2_DATA_PATH + "/top50_pairs_avg_daily_volume_v2_MAY2022.csv"
+def top50_pair_overview_v2(list_label: str) -> None:
+    """
+    Get the historical information of top50 pools until the executing time, save to csv
+    """
+    file_source = (
+        UNISWAP_V2_DATA_PATH + "/top50_pairs_avg_daily_volume_v2_" + list_label + ".csv"
     )
+    # Load the dataframe from the top 50 pairs of May
+    df_top50_pairs_overview = pd.read_csv(file_source)
     df_top50_pairs_overview = df_top50_pairs_overview.drop(
         columns=[
             "Unnamed: 0",
@@ -239,3 +243,8 @@ if __name__ == "__main__":
     df_top50_pairs_overview.to_csv(file_name)
     print("-------------------------")
     print("complete write the file: ", file_name)
+
+
+if __name__ == "__main__":
+    data_source_label = "MAY2022"
+    top50_pair_overview_v2(data_source_label)

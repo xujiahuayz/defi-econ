@@ -6,6 +6,7 @@ Select Top 50 pairs by the daily average gross volume USD
 import datetime
 import calendar
 from os import path
+from sqlite3 import Timestamp
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
@@ -56,12 +57,14 @@ def select_candidate_pairs(end_date: datetime) -> pd.DataFrame:
 
 
 def get_avg_volume_candidate_pairs(
-    df_top500_pairs: pd.DataFrame, start_date: datetime, period: datetime
+    df_top500_pairs: pd.DataFrame, start_date: datetime, period: int
 ) -> pd.DataFrame:
     """
     get the average daily volume by dividing the sum of each daily volume for the past horizon
     """
     # The previous date before the start date as the last timestamp gt
+    end_date = start_date + datetime.timedelta(days=period)
+    end_timestamp = int(calendar.timegm(end_date.timetuple()))
     last_date = start_date - datetime.timedelta(days=1)
     last_timestamp = int(calendar.timegm(last_date.timetuple()))
 
@@ -102,9 +105,16 @@ def get_avg_volume_candidate_pairs(
         # Sum up the daily volume
         past_total_volume_usd = 0
         for i in range(valid_days):
-            past_total_volume_usd = past_total_volume_usd + float(
-                candidate_daily_volume["data"]["pairDayDatas"][i]["dailyVolumeUSD"]
-            )
+            # Fix the bug for recent created pools
+            if (
+                int(candidate_daily_volume["data"]["pairDayDatas"][i]["date"])
+                > end_timestamp
+            ):
+                df_top500_pairs.loc[index, "pastValidDays"] = i
+            else:
+                past_total_volume_usd = past_total_volume_usd + float(
+                    candidate_daily_volume["data"]["pairDayDatas"][i]["dailyVolumeUSD"]
+                )
 
         # Complete summing, store the total volume to dataframe
         df_top500_pairs.loc[index, "pastTotalVolumeUSD"] = past_total_volume_usd
@@ -115,11 +125,12 @@ def get_avg_volume_candidate_pairs(
     return df_top500_pairs
 
 
-if __name__ == "__main__":
+def select_top50_pairs_v2(end_date: datetime, period: int, output_label: str) -> None:
+    """
+    Select the top50 pools of v2 by given end date, past period, and output label (eg. MAY2022). Output to the separate data file.
+    """
     # Example of time period: 01/05/2022 -> 31/05/2022
     # 31 days in May
-    period = 31
-    end_date = datetime.datetime(2022, 5, 31, 0, 0)
     start_date = end_date - datetime.timedelta(days=period - 1)
 
     # Filter condition of the new pool
@@ -161,10 +172,18 @@ if __name__ == "__main__":
 
     # Define the file name
     file_name = path.join(
-        UNISWAP_V2_DATA_PATH, "top50_pairs_avg_daily_volume_v2_MAY2022.csv"
+        UNISWAP_V2_DATA_PATH, "top50_pairs_list_v2_" + output_label + ".csv"
     )
 
     # Write dataframe to csv
     df_top50_avg_pairs.to_csv(file_name)
     print("-------------------------")
     print("Complete write the file")
+
+
+if __name__ == "__main__":
+    # Example of time period: 01/05/2022 -> 31/05/2022
+    # 31 days in May
+    period = 31
+    end_date = datetime.datetime(2022, 5, 31, 0, 0)
+    select_top50_pairs_v2(end_date, period, "2022MAY")

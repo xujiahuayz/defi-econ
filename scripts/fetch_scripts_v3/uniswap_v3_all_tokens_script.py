@@ -90,7 +90,10 @@ def get_all_tokens_v3() -> pd.DataFrame:
     return df_all_tokens
 
 
-if __name__ == "__main__":
+def uniswap_v3_all_tokens() -> None:
+    """
+    Fetch all the tokens (snapshot) in V3 and save to file named with executing date
+    """
     # File name contains the executing date of this script, the instant snapshot
     file_date = date.today().strftime("%Y%m%d")
 
@@ -104,3 +107,7 @@ if __name__ == "__main__":
     df_all_tokens.to_csv(file_name)
     print("-------------------------")
     print("complete write the file: ", file_name)
+
+
+if __name__ == "__main__":
+    uniswap_v3_all_tokens()
