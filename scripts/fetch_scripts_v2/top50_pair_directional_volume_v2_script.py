@@ -322,6 +322,19 @@ def top50_pair_directional_volume_v2(
         # Get the daily gross volume from subgraph API
         batch_pair_info = get_gross_volume(batch_pair_id, date_timestamp)
         # Store values for the daily aggregated data
+
+        # # fix the bug of null data
+        # if len(batch_pair_info) == 0:
+        #     batch_pair_info = [
+        #         {
+        #             "dailyTxns": "0",
+        #             "dailyVolumeToken0": "0",
+        #             "dailyVolumeToken1": "0",
+        #             "dailyVolumeUSD": "0",
+        #             "reserveUSD": "0",
+        #         }
+        #     ]
+        #     print("WARNING: Notice the null data at index: ", index)
         df_top50_pairs_dir_volume.loc[index, "dailyTxns"] = batch_pair_info[0][
             "dailyTxns"
         ]
@@ -389,6 +402,6 @@ def top50_pair_directional_volume_v2(
 
 if __name__ == "__main__":
     top50_list_label = "2022MAY"
-    aggregate_target_date = datetime.datetime(2022, 5, 31, 0, 0)
+    aggregate_target_date = datetime.datetime(2022, 5, 7, 0, 0)
 
     top50_pair_directional_volume_v2(aggregate_target_date, top50_list_label)

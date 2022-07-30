@@ -143,3 +143,24 @@ scripts: `scripts/volatility.py`
 - Dataset:
 - Scripts:
 - Results:
+
+### Data Dir of Regression Variables
+
+- **Dependent Variables**
+
+  - **eigencentrality**: main dependent variable, which is calculated from the network `data/data_network/centrality_vX_YYYYMMDD.csv`
+  - **volume_gross**: sum of volume_in and volume_out
+  - **volume_in**: total daily volume USD into the token among top50 pools (sum up all the in-degree edges by weights)
+  - **volume_out**: total daily volume USD out the token among top50 pools (sum up all the out-degree edges by weights)
+
+  Note: eigencentrality would be highly correlated with volume_in and volume_out
+
+- **Potential Independent Variables**
+  - **asset_price**: token price, `data/data_global/token_market/primary_token_price.csv`
+  - **price_volatility**: token price volatility (daily log return, monthly standard deviation), `data/data_global/token_market/primary_token_volatility.csv`
+  - **gas_fee**: Ethereum daily average gas fee (we use unit of `USD`), `data/data_global/gas_fee/avg_gas_fee.csv`
+  - **gas_vol**: gas fee volatility (regard gas fee USD as one kind of 'price', same method with `price_volatility`), `data/data_global/gas_fee/gas_volatility.csv`
+  - **market_cap**: token market capitalization, `data/data_global/token_market/primary_token_marketcap.csv`
+  - **defi_deposit**: [`aave_deposit`](data/data_aave/aave_top_token_historical_data.csv) + [`compound_total_supply`](data/data_compound/compound_USDC.csv)
+  - **defi_borrow**: [`aave_borrow`](data/data_aave/aave_top_token_historical_data.csv) + [`compound_total_borrow`](data/data_compound/compound_USDC.csv)
+    Note: Currently the `defi_deposit` and `defi_borrow` are calculated by simply sum. Weighted average or standardize may be considered in the future.

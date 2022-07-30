@@ -14,11 +14,11 @@ from scripts import prepare_network_data, plot_network
 
 if __name__ == "__main__":
     uniswap_version = "v2"
-    top50_list_label = "2022MAY"
+    top50_list_label = "2021JUN"
 
     # Data output include start_date, exclude end_date
-    start_date = datetime.datetime(2022, 5, 1, 0, 0)
-    end_date = datetime.datetime(2022, 6, 1, 0, 0)
+    start_date = datetime.datetime(2021, 6, 1, 0, 0)
+    end_date = datetime.datetime(2021, 7, 1, 0, 0)
 
     # list for multiple dates
     date_list = []
@@ -29,12 +29,12 @@ if __name__ == "__main__":
     # Step 1: determine the list of monthly top 50 pools as candidates
     if uniswap_version == "v2":
         select_top50_pairs_v2_script.select_top50_pairs_v2(
-            end_date, 31, top50_list_label
+            end_date - datetime.timedelta(1), 30, top50_list_label
         )
 
     elif uniswap_version == "v3":
         select_top50_pairs_v3_script.select_top50_pairs_v3(
-            end_date, 31, top50_list_label
+            end_date - datetime.timedelta(1), 30, top50_list_label
         )
 
     print("------Step 1 Complete: monthly top token list------")
