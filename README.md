@@ -103,6 +103,10 @@ pip install pdoc3
 pdoc --html /your_scripts_path --output-dir ./doc
 ```
 
+## Data Fetch Instructions
+
+Guide in [`fetch_data_instruction.md`](fetch_data_instruction.md)
+
 ## Git Large File Storage (Git LFS)
 
 All files in [`data/`](data/) are stored with `lfs`.
