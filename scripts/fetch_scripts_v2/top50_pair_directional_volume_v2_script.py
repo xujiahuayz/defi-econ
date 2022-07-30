@@ -321,7 +321,6 @@ def top50_pair_directional_volume_v2(
 
         # Get the daily gross volume from subgraph API
         batch_pair_info = get_gross_volume(batch_pair_id, date_timestamp)
-        # Store values for the daily aggregated data
 
         # # fix the bug of null data
         # if len(batch_pair_info) == 0:
@@ -335,6 +334,8 @@ def top50_pair_directional_volume_v2(
         #         }
         #     ]
         #     print("WARNING: Notice the null data at index: ", index)
+
+        # Store values for the daily aggregated data
         df_top50_pairs_dir_volume.loc[index, "dailyTxns"] = batch_pair_info[0][
             "dailyTxns"
         ]

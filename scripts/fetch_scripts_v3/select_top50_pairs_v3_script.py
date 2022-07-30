@@ -119,13 +119,13 @@ def get_avg_volume_candidate_pools(
         for i in range(valid_days):
             # Fix the bug for recent created pools
             if (
-                int(candidate_daily_volume["data"]["pairDayDatas"][i]["date"])
+                int(candidate_daily_volume["data"]["poolDayDatas"][i]["date"])
                 > end_timestamp
             ):
                 df_top500_pairs.loc[index, "pastValidDays"] = i
             else:
                 past_total_volume_usd = past_total_volume_usd + float(
-                    candidate_daily_volume["data"]["pairDayDatas"][i]["dailyVolumeUSD"]
+                    candidate_daily_volume["data"]["poolDayDatas"][i]["volumeUSD"]
                 )
 
         # Complete summing, store the total volume to dataframe
@@ -184,7 +184,7 @@ def select_top50_pairs_v3(end_date: datetime, period: int, output_label: str) ->
 
     # Define the file name
     file_name = path.join(
-        UNISWAP_V3_DATA_PATH, "top50_pairs_avg_daily_volume_v3_" + output_label + ".csv"
+        UNISWAP_V3_DATA_PATH, "top50_pairs_list_v3_" + output_label + ".csv"
     )
 
     # Write dataframe to csv

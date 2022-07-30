@@ -272,7 +272,7 @@ def compute_daily_directional_volume(
                 else:
                     print(
                         "Invest what happens on this transaction: ",
-                        swaps_txs_batch[i]["id"],
+                        swaps_txs_batch[i]["transaction"]["id"],
                     )
 
             # Stop loop when the timestamp exceed the end timestamp
@@ -320,6 +320,20 @@ def top50_pair_directional_volume_v3(
 
         # Get the daily gross volume from subgraph API
         batch_pair_info = get_gross_volume(batch_pair_id, date_timestamp)
+
+        # # fix the bug of null data
+        # if len(batch_pair_info) == 0:
+        #     batch_pair_info = [
+        #         {
+        #             "dailyTxns": "0",
+        #             "dailyVolumeToken0": "0",
+        #             "dailyVolumeToken1": "0",
+        #             "dailyVolumeUSD": "0",
+        #             "reserveUSD": "0",
+        #         }
+        #     ]
+        #     print("WARNING: Notice the null data at index: ", index)
+
         # Store values for the daily aggregated data
         df_top50_pairs_dir_volume.loc[index, "dailyTxns"] = batch_pair_info[0][
             "txCount"

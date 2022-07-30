@@ -13,7 +13,7 @@ from scripts import prepare_network_data, plot_network
 
 
 if __name__ == "__main__":
-    uniswap_version = "v2"
+    uniswap_version = "v3"
     top50_list_label = "2021JUN"
 
     # Data output include start_date, exclude end_date
@@ -61,4 +61,4 @@ if __name__ == "__main__":
         plot_network.plot_network(date, uniswap_version)
         print("------Step 4 Complete: plot network and generate degree")
 
-        print("********Complete task for" + date.strftime("%Y%m%d") + "********")
+        print("********Complete task for " + date.strftime("%Y%m%d") + "********")
