@@ -75,7 +75,7 @@ set -xg WEB3_PROVIDER_URI http://localhost:8545
 
 ## Import Data Folders
 
-Please import the data folder `dominant_defi/data` to the project root path, and overwrite the current `data` folder on Github Repo.
+Please import the data folder `dominant_defi/data` from Dropbox (authorization required) to the project root path, and overwrite the current `data` folder on Github Repo.
 
 ## Run scripts
 
