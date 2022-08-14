@@ -28,7 +28,7 @@ def get_total_supply(
     get the total supply of given token via Infura archive node
     """
     # Config Infura
-    Infura_HTTP = "YOUR_INFURA_HTTP_KEY"
+    Infura_HTTP = "YOUR_INFURA_KEY"
     w3 = Web3(Web3.HTTPProvider(Infura_HTTP))
 
     # Get the contract
@@ -57,7 +57,7 @@ def get_block_number_by_timestamp(timestamp: int) -> str:
         "action": "getblocknobytime",
         "timestamp": timestamp,
         "closest": "before",
-        "apikey": "YOUR_ETHERSCAN_API_KEY",
+        "apikey": "YOUR_ETHERSCAN_KEY",
     }
     query_block_number = requests.get(
         url=etherscan_api, params=get_blockno_by_time_params
@@ -71,7 +71,7 @@ def get_block_number_by_timestamp(timestamp: int) -> str:
 if __name__ == "__main__":
     # Define the horizon of fecting historical data
     start_date = datetime(2020, 1, 1, 0, 0)
-    end_date = datetime(2022, 7, 1, 0, 0)
+    end_date = datetime(2022, 8, 12, 0, 0)
 
     # Define the currency of unit
     target_currency = "usd"
@@ -79,37 +79,42 @@ if __name__ == "__main__":
     # Refer to CoinGecko API Token List
     # https://docs.google.com/spreadsheets/d/1wTTuxXt8n9q7C4NDXqQpI3wpKu1_5bGVmP9Xz0XGSyU/edit#gid=0
     # token symbol is not unique variable, so that manually check from the doc to get id is recommended
-    primary_token_dict = {
-        "USDC": "usd-coin",
-        "WETH": "weth",
-        "DAI": "dai",
-        "WBTC": "wrapped-bitcoin",
-        "USDT": "tether",
-        "FRAX": "frax",
-        "PAX": "paxos-standard",
-        "agEUR": "ageur",
-        "APE": "apecoin",
-        "1INCH": "1inch",
-        "BUSD": "binance-usd",
-        "FEI": "fei-usd",
-        "HEX": "hex",
-        "RAI": "rai",
-        "LOOKS": "looksrare",
-        "renBTC": "renbtc",
-        "MKR": "maker",
-        "LINK": "chainlink",
-        "ETH2x-FLI": "eth-2x-flexible-leverage-index",
-        "MATIC": "matic-network",
-        "TUSD": "true-usd",
-        "EURS": "stasis-eurs",
-        "CRV": "curve-dao-token",
-        "NEXO": "nexo",
-        "FUN": "funfair",
-        "ENS": "ethereum-name-service",
-        "LUNA": "terra-luna-2",
-        "MIM": "magic-internet-money",
-        "LUSD": "liquity-usd",
-    }
+    # primary_token_dict = {
+    #     "ETH": "ethereum",
+    #     "BTC": "bitcoin",
+    #     "USDC": "usd-coin",
+    #     "WETH": "weth",
+    #     "DAI": "dai",
+    #     "WBTC": "wrapped-bitcoin",
+    #     "USDT": "tether",
+    #     "FRAX": "frax",
+    #     "PAX": "paxos-standard",
+    #     "agEUR": "ageur",
+    #     "APE": "apecoin",
+    #     "1INCH": "1inch",
+    #     "BUSD": "binance-usd",
+    #     "FEI": "fei-usd",
+    #     "HEX": "hex",
+    #     "RAI": "rai",
+    #     "LOOKS": "looksrare",
+    #     "renBTC": "renbtc",
+    #     "MKR": "maker",
+    #     "LINK": "chainlink",
+    #     "ETH2x-FLI": "eth-2x-flexible-leverage-index",
+    #     "MATIC": "matic-network",
+    #     "TUSD": "true-usd",
+    #     "EURS": "stasis-eurs",
+    #     "CRV": "curve-dao-token",
+    #     "NEXO": "nexo",
+    #     "FUN": "funfair",
+    #     "ENS": "ethereum-name-service",
+    #     "LUNA": "terra-luna",
+    #     "MIM": "magic-internet-money",
+    #     "LUSD": "liquity-usd",
+    # }
+
+    token_dict_file_name = path.join(GLOBAL_DATA_PATH, "token_market/token_dict_2.csv")
+    token_dict = pd.read_csv(token_dict_file_name, index_col=0)
 
     # Convert the date (UTC) to unix timestamp
     start_timestamp = int(calendar.timegm(start_date.timetuple()))
@@ -131,7 +136,11 @@ if __name__ == "__main__":
     cg = CoinGeckoAPI()
 
     # Iterate for fetching the historical data
-    for symbol, coin_id in primary_token_dict.items():
+    # for symbol, coin_id in primary_token_dict.items():
+    for index, row in token_dict.iterrows():
+        symbol = row[0]
+        coin_id = row[1]
+
         # Fetch the data
         print(coin_id)
         token_historical_data = cg.get_coin_market_chart_range_by_id(
@@ -195,10 +204,10 @@ if __name__ == "__main__":
 
     # Write data to csv
     price_file_name = path.join(
-        GLOBAL_DATA_PATH, "token_market/primary_token_price.csv"
+        GLOBAL_DATA_PATH, "token_market/primary_token_price_2.csv"
     )
     marketcap_file_name = path.join(
-        GLOBAL_DATA_PATH, "/token_market/primary_token_marketcap.csv"
+        GLOBAL_DATA_PATH, "token_market/primary_token_marketcap_2.csv"
     )
     df_price.to_csv(price_file_name)
     df_marketcap.to_csv(marketcap_file_name)

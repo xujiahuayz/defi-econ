@@ -180,7 +180,7 @@ def top50_pair_overview_v2(list_label: str) -> None:
     Get the historical information of top50 pools until the executing time, save to csv
     """
     file_source = (
-        UNISWAP_V2_DATA_PATH + "/top50_pairs_avg_daily_volume_v2_" + list_label + ".csv"
+        UNISWAP_V2_DATA_PATH + "/pool_list/top50_pairs_list_v2_" + list_label + ".csv"
     )
     # Load the dataframe from the top 50 pairs of May
     df_top50_pairs_overview = pd.read_csv(file_source)
@@ -236,7 +236,7 @@ def top50_pair_overview_v2(list_label: str) -> None:
     file_date = date.today().strftime("%Y%m%d")
     # Define the file name
     file_name = path.join(
-        UNISWAP_V2_DATA_PATH, "top50_pairs_overview_v2_" + file_date + ".csv"
+        UNISWAP_V2_DATA_PATH, "overview/top50_pairs_overview_v2_" + file_date + ".csv"
     )
 
     # Write dataframe to csv

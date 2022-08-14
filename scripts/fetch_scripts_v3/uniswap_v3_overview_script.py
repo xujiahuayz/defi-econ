@@ -60,7 +60,7 @@ def uniswap_v3_overview() -> None:
     """
 
     # File path
-    overview_file_v3 = UNISWAP_V3_DATA_PATH + "/uniswap_v3_overview.csv"
+    overview_file_v3 = UNISWAP_V3_DATA_PATH + "/overview/uniswap_v3_overview.csv"
 
     # Factory address of Uniswap V3
     factory_address_v3 = "0x1F98431c8aD98523631AE4a59f267346ea31F984"

@@ -30,7 +30,7 @@ def process_token_price_vol(vol_window) -> None:
     Load the token price dataset and output the price volatility dataset
     """
     # Load the price dataset
-    price_file = path.join(GLOBAL_DATA_PATH, "token_market/primary_token_price.csv")
+    price_file = path.join(GLOBAL_DATA_PATH, "token_market/primary_token_price_2.csv")
     df_token_price = pd.read_csv(price_file, index_col=0)
 
     # Dataframe for the volatility
@@ -46,7 +46,9 @@ def process_token_price_vol(vol_window) -> None:
         df_price_volatility[col] = calculate_volatility(df_token_price[col], vol_window)
 
     # Write to file
-    vol_file = path.join(GLOBAL_DATA_PATH, "token_market/primary_token_volatility.csv")
+    vol_file = path.join(
+        GLOBAL_DATA_PATH, "token_market/primary_token_volatility_2.csv"
+    )
     df_price_volatility.to_csv(vol_file)
 
 

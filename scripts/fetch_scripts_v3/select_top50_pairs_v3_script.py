@@ -184,7 +184,7 @@ def select_top50_pairs_v3(end_date: datetime, period: int, output_label: str) ->
 
     # Define the file name
     file_name = path.join(
-        UNISWAP_V3_DATA_PATH, "top50_pairs_list_v3_" + output_label + ".csv"
+        UNISWAP_V3_DATA_PATH, "pool_list/top50_pairs_list_v3_" + output_label + ".csv"
     )
 
     # Write dataframe to csv

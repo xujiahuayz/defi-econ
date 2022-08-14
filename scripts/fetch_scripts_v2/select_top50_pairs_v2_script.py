@@ -135,7 +135,7 @@ def select_top50_pairs_v2(end_date: datetime, period: int, output_label: str) ->
 
     # Filter condition of the new pool
     # Example: trace back 1 May to 31 May, but pool was created at 15 May, so only 16 valid days
-    valid_threshold = period
+    valid_threshold = 30
 
     # Select the top 500 candidate pairs
     df_top500_pairs = select_candidate_pairs(end_date)
@@ -172,7 +172,7 @@ def select_top50_pairs_v2(end_date: datetime, period: int, output_label: str) ->
 
     # Define the file name
     file_name = path.join(
-        UNISWAP_V2_DATA_PATH, "top50_pairs_list_v2_" + output_label + ".csv"
+        UNISWAP_V2_DATA_PATH, "pool_list/top50_pairs_list_v2_" + output_label + ".csv"
     )
 
     # Write dataframe to csv

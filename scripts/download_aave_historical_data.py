@@ -16,7 +16,7 @@ def download_dune_data(dune_id: int) -> dict:
     """
 
     # initialize client
-    dune = DuneAnalytics("YOUR_DUNE_ACCOUNT", "YOUR_DUNE_PASSWORD")
+    dune = DuneAnalytics("Your_Dune_Account", "You_Dune_Password")
 
     # try to login
     dune.login()
@@ -43,8 +43,9 @@ def download_dune_data(dune_id: int) -> dict:
 
 
 if __name__ == "__main__":
-    # data source: https://dune.com/queries/589140/1100732
-    result_dict = download_dune_data(589140)
+    # data source: https://dune.com/queries/589140/1100732 (top asset, instant)
+    # data source: https://dune.com/queries/575705/1082614 (all asset)
+    result_dict = download_dune_data(575705)
 
     # Initialize the dataframe for storing the result from dictionary
     df_result = pd.DataFrame()
@@ -55,7 +56,7 @@ if __name__ == "__main__":
         df_result = pd.concat([df_result, new_entity], ignore_index=True, axis=0)
 
     # reorder the column
-    df_result = df_result[["day", "symbol", "deposit", "borrow"]]
+    # df_result = df_result[["day", "symbol", "deposit", "borrow"]]
 
-    file_name = path.join(AAVE_DATA_PATH, "aave_top_token_historical_data.csv")
+    file_name = path.join(AAVE_DATA_PATH, "aave_all_token_historical_data.csv")
     df_result.to_csv(file_name)

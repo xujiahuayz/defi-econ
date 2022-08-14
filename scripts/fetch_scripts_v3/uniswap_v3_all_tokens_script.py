@@ -99,7 +99,7 @@ def uniswap_v3_all_tokens() -> None:
 
     # Define the file name
     file_name = path.join(
-        UNISWAP_V3_DATA_PATH, "uniswap_v3_all_tokens_" + file_date + ".csv"
+        UNISWAP_V3_DATA_PATH, "overview/uniswap_v3_all_tokens_" + file_date + ".csv"
     )
 
     # Write dataframe to csv

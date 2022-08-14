@@ -24,12 +24,12 @@ def load_volume_dataset(date, uni_version) -> pd.DataFrame:
     if uni_version == "v2":
         data_source = path.join(
             UNISWAP_V2_DATA_PATH,
-            "top50_directional_volume_v2_" + date_str + ".csv",
+            "directional_volume/top50_directional_volume_v2_" + date_str + ".csv",
         )
     elif uni_version == "v3":
         data_source = path.join(
             UNISWAP_V3_DATA_PATH,
-            "top50_directional_volume_v3_" + date_str + ".csv",
+            "directional_volume/top50_directional_volume_v3_" + date_str + ".csv",
         )
 
     # Load the dataframe from the top 50 pairs
@@ -126,7 +126,12 @@ def prepare_network_data(target_date: datetime, uniswap_version: str) -> None:
     target_date_str = target_date.strftime("%Y%m%d")
     node_file_name = path.join(
         NETWORK_DATA_PATH,
-        "primary_tokens_" + uniswap_version + "_" + target_date_str + ".csv",
+        uniswap_version
+        + "/primary_tokens/primary_tokens_"
+        + uniswap_version
+        + "_"
+        + target_date_str
+        + ".csv",
     )
     df_node_list.to_csv(node_file_name)
     print("-------------------------")
@@ -136,7 +141,12 @@ def prepare_network_data(target_date: datetime, uniswap_version: str) -> None:
     # Write dataframe to csv
     edge_file_name = path.join(
         NETWORK_DATA_PATH,
-        "inout_flow_tokens_" + uniswap_version + "_" + target_date_str + ".csv",
+        uniswap_version
+        + "/inout_flow/inout_flow_tokens_"
+        + uniswap_version
+        + "_"
+        + target_date_str
+        + ".csv",
     )
     df_edge_list.to_csv(edge_file_name)
     print("-------------------------")

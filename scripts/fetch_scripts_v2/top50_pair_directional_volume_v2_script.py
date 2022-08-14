@@ -301,7 +301,10 @@ def top50_pair_directional_volume_v2(
 
     # Load the dataframe from the top 50 pairs of May
     df_top50_pairs_dir_volume = pd.read_csv(
-        UNISWAP_V2_DATA_PATH + "/top50_pairs_list_v2_" + token_list_label + ".csv"
+        UNISWAP_V2_DATA_PATH
+        + "/pool_list/top50_pairs_list_v2_"
+        + token_list_label
+        + ".csv"
     )
     df_top50_pairs_dir_volume = df_top50_pairs_dir_volume.drop(
         columns=[
@@ -322,18 +325,18 @@ def top50_pair_directional_volume_v2(
         # Get the daily gross volume from subgraph API
         batch_pair_info = get_gross_volume(batch_pair_id, date_timestamp)
 
-        # # fix the bug of null data
-        # if len(batch_pair_info) == 0:
-        #     batch_pair_info = [
-        #         {
-        #             "dailyTxns": "0",
-        #             "dailyVolumeToken0": "0",
-        #             "dailyVolumeToken1": "0",
-        #             "dailyVolumeUSD": "0",
-        #             "reserveUSD": "0",
-        #         }
-        #     ]
-        #     print("WARNING: Notice the null data at index: ", index)
+        # fix the bug of null data
+        if len(batch_pair_info) == 0:
+            batch_pair_info = [
+                {
+                    "dailyTxns": "0",
+                    "dailyVolumeToken0": "0",
+                    "dailyVolumeToken1": "0",
+                    "dailyVolumeUSD": "0",
+                    "reserveUSD": "0",
+                }
+            ]
+            print("WARNING: Notice the null data at index: ", index)
 
         # Store values for the daily aggregated data
         df_top50_pairs_dir_volume.loc[index, "dailyTxns"] = batch_pair_info[0][
@@ -393,7 +396,8 @@ def top50_pair_directional_volume_v2(
 
     # Define the file name
     file_name = path.join(
-        UNISWAP_V2_DATA_PATH, "top50_directional_volume_v2_" + file_date + ".csv"
+        UNISWAP_V2_DATA_PATH,
+        "directional_volume/top50_directional_volume_v2_" + file_date + ".csv",
     )
     # Write dataframe to csv
     df_top50_pairs_dir_volume.to_csv(file_name)
