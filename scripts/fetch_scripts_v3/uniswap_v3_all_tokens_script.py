@@ -12,7 +12,7 @@ from defi_econ.constants import UNISWAP_V3_DATA_PATH
 
 def get_all_tokens_v3() -> pd.DataFrame:
     """
-    get all tokens from the v2 protocol
+    get all tokens from the v3 protocol
     """
 
     # Start from fetching the initial Batch 0: Query 1000 tokens on UNISWAP V3 order by id (asc)
