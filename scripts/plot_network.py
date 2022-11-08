@@ -218,6 +218,15 @@ def plot_network(date: datetime, uniswap_version: str) -> None:
     df_centrality["eigenvector_centrality"] = nx.eigenvector_centrality_numpy(
         G, weight="weight"
     ).values()
+    betweenness_centrality_dict = nx.betweenness_centrality(
+        G, k=None, normalized=True, weight=None, endpoints=False, seed=None
+    )
+    df_centrality["betweenness_centrality"] = df_centrality.apply(
+        lambda x: betweenness_centrality_dict[x.token], axis=1
+    )
+    df_centrality["degree"] = [i[1] for i in list(G.degree())]
+    df_centrality["in_degree"] = [i[1] for i in list(G.in_degree())]
+    df_centrality["out_degree"] = [i[1] for i in list(G.out_degree())]
     df_centrality["weighted_degree"] = [i[1] for i in list(G.degree(weight="weight"))]
     df_centrality["weighted_in_degree"] = [
         i[1] for i in list(G.in_degree(weight="weight"))
@@ -268,5 +277,5 @@ def plot_network(date: datetime, uniswap_version: str) -> None:
 
 
 if __name__ == "__main__":
-    target_date = datetime.datetime(2022, 6, 30, 0, 0)
-    plot_network(target_date, "v3")
+    target_date = datetime.datetime(2022, 7, 31, 0, 0)
+    plot_network(target_date, "v2")
