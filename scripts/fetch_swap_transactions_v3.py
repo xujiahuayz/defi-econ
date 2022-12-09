@@ -161,7 +161,7 @@ def uniswap_v3_swaps(
     """
 
     file_name = path.join(
-        UNISWAP_V3_DATA_PATH, "swap/uniswap_tx_v3_" + period_label + ".csv"
+        UNISWAP_V3_DATA_PATH, "swap/uniswap_swaps_v3_" + period_label + ".csv"
     )
     df_all_swaps = query_swaps_trading_v3(start_timestamp, end_timestamp)
     df_all_swaps
@@ -171,17 +171,22 @@ def uniswap_v3_swaps(
     print("complete write the file: ", file_name)
 
 
-period_label = "2022TEST"
-# start_timestamp = 1665064859  # include
-# end_timestamp = 1665066131  # exclude
+if __name__ == "__main__":
+    # Data output include start_date, exclude end_date
+    start_date = datetime.datetime(2022, 7, 1, 0, 0)
+    end_date = datetime.datetime(2022, 8, 1, 0, 0)
 
-start_date_UTC = datetime.datetime(2022, 7, 1, 0, 0)
-end_date_UTC = datetime.datetime(2022, 7, 2, 0, 0)
+    # list for multiple dates
+    date_list = []
+    for i in range((end_date - start_date).days):
+        date = start_date + datetime.timedelta(i)
+        date_list.append(date)
 
-start_timestamp = int(calendar.timegm(start_date_UTC.timetuple()))  # include
-end_timestamp = int(calendar.timegm(end_date_UTC.timetuple()))  # exclude
+    for date in date_list:
+        date_str = date.strftime("%Y%m%d")
+        start_timestamp = int(calendar.timegm(date.timetuple()))  # include
+        end_date = date + datetime.timedelta(days=1)
+        end_timestamp = int(calendar.timegm(end_date.timetuple()))  # exclude
 
-print("Start Time: ", start_date_UTC, "  ", start_timestamp)
-print("End Time: ", end_date_UTC, "  ", end_timestamp)
-
-uniswap_v3_swaps(start_timestamp, end_timestamp, period_label)
+        uniswap_v3_swaps(start_timestamp, end_timestamp, date_str)
+        print("-----Complete fetch swaps in " + date_str + "-----")

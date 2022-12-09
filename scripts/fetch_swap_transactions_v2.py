@@ -8,6 +8,8 @@ from defi_econ.constants import UNISWAP_V2_DATA_PATH
 import datetime
 import calendar
 import pandas as pd
+from numpy import random
+from time import sleep
 
 
 def query_swaps_trading_v2(start_timestamp: int, end_timestamp: int) -> pd.DataFrame:
@@ -140,7 +142,7 @@ def query_swaps_trading_v2(start_timestamp: int, end_timestamp: int) -> pd.DataF
     df_all_swaps["token0_symbol"] = df_all_swaps["pair"].apply(
         lambda x: x["token0"]["symbol"]
     )
-    df_all_swaps["token1_id"] = df_all_swaps["pair]"].apply(lambda x: x["token1"]["id"])
+    df_all_swaps["token1_id"] = df_all_swaps["pair"].apply(lambda x: x["token1"]["id"])
     df_all_swaps["token1_symbol"] = df_all_swaps["pair"].apply(
         lambda x: x["token1"]["symbol"]
     )
@@ -157,10 +159,6 @@ def query_swaps_trading_v2(start_timestamp: int, end_timestamp: int) -> pd.DataF
     return df_all_swaps
 
 
-from numpy import random
-from time import sleep
-
-
 def uniswap_v2_swaps(
     start_timestamp: int, end_timestamp: int, period_label: str
 ) -> None:
@@ -169,27 +167,32 @@ def uniswap_v2_swaps(
     """
 
     file_name = path.join(
-        UNISWAP_V2_DATA_PATH, "swap/uniswap_tx_v2_" + period_label + ".csv"
+        UNISWAP_V2_DATA_PATH, "swap/uniswap_swaps_v2_" + period_label + ".csv"
     )
     df_all_swaps = query_swaps_trading_v2(start_timestamp, end_timestamp)
-    df_all_swaps
+
     df_all_swaps.to_csv(file_name)
     sleep(random.randint(10, 100) / 100)
     print("-------------------------")
     print("complete write the file: ", file_name)
 
 
-period_label = "2022TEST"
-# start_timestamp = 1665064859  # include
-# end_timestamp = 1665066131  # exclude
+if __name__ == "__main__":
+    # Data output include start_date, exclude end_date
+    start_date = datetime.datetime(2022, 7, 16, 0, 0)
+    end_date = datetime.datetime(2022, 8, 1, 0, 0)
 
-start_date_UTC = datetime.datetime(2022, 7, 1, 0, 0)
-end_date_UTC = datetime.datetime(2022, 7, 2, 0, 0)
+    # list for multiple dates
+    date_list = []
+    for i in range((end_date - start_date).days):
+        date = start_date + datetime.timedelta(i)
+        date_list.append(date)
 
-start_timestamp = int(calendar.timegm(start_date_UTC.timetuple()))  # include
-end_timestamp = int(calendar.timegm(end_date_UTC.timetuple()))  # exclude
+    for date in date_list:
+        date_str = date.strftime("%Y%m%d")
+        start_timestamp = int(calendar.timegm(date.timetuple()))  # include
+        end_date = date + datetime.timedelta(days=1)
+        end_timestamp = int(calendar.timegm(end_date.timetuple()))  # exclude
 
-print("Start Time: ", start_date_UTC, "  ", start_timestamp)
-print("End Time: ", end_date_UTC, "  ", end_timestamp)
-
-uniswap_v2_swaps(start_timestamp, end_timestamp, period_label)
+        uniswap_v2_swaps(start_timestamp, end_timestamp, date_str)
+        print("-----Complete fetch swaps in " + date_str + "-----")
