@@ -103,28 +103,30 @@ def query_swaps_trading_v3(start_timestamp: int, end_timestamp: int) -> pd.DataF
       }
     }
     """
+        if list(result_iter.keys()) == ["data"]:
+            result_iter = subgraph.run_query_var(
+                subgraph.http_v3, query_iter, params_gt
+            )
 
-        result_iter = subgraph.run_query_var(subgraph.http_v3, query_iter, params_gt)
+            # List of swaps for this batch
+            swaps_iter = result_iter["data"]["swaps"]
 
-        # List of swaps for this batch
-        swaps_iter = result_iter["data"]["swaps"]
+            # Add list of this batch to the dataframe
+            df_all_swaps = df_all_swaps.append(swaps_iter, ignore_index=True)
 
-        # Add list of this batch to the dataframe
-        df_all_swaps = df_all_swaps.append(swaps_iter, ignore_index=True)
+            # Summary for this batch, and update iterator
+            iter_count = iter_count + 1
+            total_swaps_amount = total_swaps_amount + len(swaps_iter)
 
-        # Summary for this batch, and update iterator
-        iter_count = iter_count + 1
-        total_swaps_amount = total_swaps_amount + len(swaps_iter)
-
-        print(
-            "Batch ",
-            iter_count,
-            ": ",
-            len(swaps_iter),
-            " swaps fetched,  Total swaps: ",
-            total_swaps_amount,
-        )
-        print("Start from timestamp: ", last_gt)
+            print(
+                "Batch ",
+                iter_count,
+                ": ",
+                len(swaps_iter),
+                " swaps fetched,  Total swaps: ",
+                total_swaps_amount,
+            )
+            print("Start from timestamp: ", last_gt)
 
     df_all_swaps = df_all_swaps.drop(
         df_all_swaps[df_all_swaps.timestamp >= str(end_timestamp)].index
@@ -161,7 +163,7 @@ def uniswap_v3_swaps(
     """
 
     file_name = path.join(
-        UNISWAP_V3_DATA_PATH, "swap/uniswap_swaps_v3_" + period_label + ".csv"
+        UNISWAP_V3_DATA_PATH, "swap/uniswap_v3_swaps" + period_label + ".csv"
     )
     df_all_swaps = query_swaps_trading_v3(start_timestamp, end_timestamp)
     df_all_swaps
