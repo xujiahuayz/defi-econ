@@ -24,8 +24,12 @@ def manipulate_data(
     # Step 1: Read File
     if uniswap_version == "v2" or uniswap_version == "v2v3":
         # Path
+        # data_file_v2 = path.join(
+        #     UNISWAP_V2_DATA_PATH, str("swap/uniswap_v2_swaps_" + date_label + ".csv")
+        # )
         data_file_v2 = path.join(
-            UNISWAP_V2_DATA_PATH, str("swap/uniswap_swaps_v2_" + date_label + ".csv")
+            UNISWAP_V2_DATA_PATH,
+            str("swap/" + top_list_label + "/uniswap_v2_swaps_" + date_label + ".csv"),
         )
         pool_file_v2 = path.join(
             UNISWAP_V2_DATA_PATH,
@@ -36,8 +40,12 @@ def manipulate_data(
         top_pools_v2 = pd.read_csv(pool_file_v2, index_col=0)
 
         # Add attribute as "Source" and "Target" for the trading direction
-        data_v2["amount0"] = data_v2.apply(lambda x: x.amount0In - x.amount0Out, axis=1)
-        data_v2["amount1"] = data_v2.apply(lambda x: x.amount1In - x.amount1Out, axis=1)
+        data_v2["amount0"] = data_v2.apply(
+            lambda x: float(x.amount0In) - float(x.amount0Out), axis=1
+        )
+        data_v2["amount1"] = data_v2.apply(
+            lambda x: float(x.amount1In) - float(x.amount1Out), axis=1
+        )
         data_v2["Source"] = data_v2.apply(
             lambda x: x.token0_symbol if float(x.amount0) > 0 else x.token1_symbol,
             axis=1,
@@ -67,11 +75,16 @@ def manipulate_data(
 
     if uniswap_version == "v3" or uniswap_version == "v2v3":
         # Path
+        # data_file_v3 = path.join(
+        #     UNISWAP_V3_DATA_PATH, str("swap/uniswap_v3_swaps_" + date_label + ".csv")
+        # )
         data_file_v3 = path.join(
-            UNISWAP_V3_DATA_PATH, str("swap/uniswap_swaps_v3_" + date_label + ".csv")
+            UNISWAP_V3_DATA_PATH,
+            str("swap/" + top_list_label + "/uniswap_v3_swaps_" + date_label + ".csv"),
         )
         pool_file_v3 = path.join(
-            UNISWAP_V3_DATA_PATH, str("top50_pairs_list_v3_" + top_list_label + ".csv")
+            UNISWAP_V3_DATA_PATH,
+            str("pool_list/top50_pairs_list_v3_" + top_list_label + ".csv"),
         )
         # Load
         data_v3 = pd.read_csv(data_file_v3, index_col=0)
@@ -128,6 +141,8 @@ def manipulate_data(
     swaps_merge["Distance"] = swaps_merge.apply(
         lambda x: len(swaps_merge.loc[x.name[0]]), axis=1
     )
+
+    swaps_merge = swaps_merge.dropna()
 
     return swaps_merge
 
@@ -470,7 +485,7 @@ def get_betweenness_centrality(
     # Store to file
     tx_route_file_name = path.join(
         BETWEENNESS_DATA_PATH,
-        "swap_route/swaps_tx_route_" + uniswap_version + "_" + "date_label" + ".csv",
+        "swap_route/swaps_tx_route_" + uniswap_version + "_" + date_label + ".csv",
     )
     # Write dataframe to csv
     swaps_tx_route.to_csv(tx_route_file_name)
@@ -496,21 +511,12 @@ def get_betweenness_centrality(
 
 
 if __name__ == "__main__":
-    # involve_version = "v2v3"  # candidate: v2, v3, v2v3
-    # target_date = datetime.datetime(2022, 7, 31, 0, 0)
-    # date = "2022TEST"
-    # get_betweenness_centrality(
-    #     date_label=date,
-    #     top_list_label=top50_list_label,
-    #     uniswap_version=involve_version,
-    # )
-
     involve_version = "v2v3"  # candidate: v2, v3, v2v3
 
-    top50_list_label = "2022JUL"
+    top50_list_label = "2022MAY"
     # Data output include start_date, exclude end_date
-    start_date = datetime.datetime(2022, 7, 1, 0, 0)
-    end_date = datetime.datetime(2022, 8, 1, 0, 0)
+    start_date = datetime.datetime(2022, 5, 11, 0, 0)
+    end_date = datetime.datetime(2022, 6, 1, 0, 0)
 
     # list for multiple dates
     date_list = []
