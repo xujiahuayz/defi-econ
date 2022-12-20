@@ -15,6 +15,6 @@ import argparse
 def arg_parse_cmd():
     parser = argparse.ArgumentParser(description="Date to update the defi data.")
     parser.add_argument(
-        "--date", required=True, help="Provide date to update in format YYYY-MM-DD."
+        "--date", required=False, help="Provide date to update in format YYYY-MM-DD."
     )
     return parser

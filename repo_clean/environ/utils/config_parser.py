@@ -35,7 +35,7 @@ class Config(UserDict):
         data(dict): Program configuration.
     """
 
-    def __init__(self, config_path="./config/conf.yaml"):
+    def __init__(self, config_path="repo_clean/config/conf.yaml"):
         self.config_path = os.path.expanduser(config_path)
         self.load()
 
