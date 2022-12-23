@@ -1,0 +1,11 @@
+dev:
+  config:
+    data:
+      UNISWAP_V2_DATA_PATH: "repo_clean/data/data_uniswap_v2"
+      UNISWAP_V3_DATA_PATH: "repo_clean/data/data_uniswap_v3"
+      COMPOUND_DATA_PATH: "repo_clean/data/data_compound"
+      AAVE_DATA_PATH: "repo_clean/data/data_aave"
+      GLOBAL_DATA_PATH: "repo_clean/data/data_global"
+      NETWORK_DATA_PATHL: "repo_clean/data/data_network"
+      REGRESSION_DATA_PATH: "repo_clean/data/data_regression"
+      BETWEENNESS_DATA_PATH: "repo_clean/data/data_betweenness"
