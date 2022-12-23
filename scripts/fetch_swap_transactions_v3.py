@@ -103,9 +103,7 @@ def query_swaps_trading_v3(start_timestamp: int, end_timestamp: int) -> pd.DataF
       }
     }
     """
-        result_iter = subgraph.run_query_var(
-                subgraph.http_v3, query_iter, params_gt
-            )
+        result_iter = subgraph.run_query_var(subgraph.http_v3, query_iter, params_gt)
         if list(result_iter.keys()) == ["data"]:
 
             # List of swaps for this batch
