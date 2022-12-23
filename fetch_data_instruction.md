@@ -18,7 +18,7 @@
   - Token Market Cap: https://www.coingecko.com/en/api (WETH: Infura archive node)
   - Volatility of Gas Fee and Token Price
 
-## Uniswap
+## Uniswap (Aggregated)
 
 **WORK FLOW SCRIPTS AS [`scripts/fetch_integrated_data_uniswap.py`](scripts/fetch_integrated_data_uniswap.py)**
 
@@ -90,6 +90,34 @@
      - input: `data_uniswap_vX/uniswap_v2_overview.csv`, read and update the csv by adding one row snapshot after executing
      - output: `uniswap_v2_overview.csv`
      - Note: recommend directly execute the script
+
+
+## Uniswap (Swaps)
+
+In the previous sections "Uniswap (Aggregated), the scripts fetch the daily aggregated data of Uniswap in the format like "GrossVolumeUSD in each day". While this section fetchs the transaction level raw data which entity is the transaction id (hash), so that the data volume is large and the fectching time is long. The raw data is primarily used for computing betweenness centrality which needs to iterate each transaction. 
+
+
+**SCRIPTS AS [`scripts/fetch_swap_transactions_v2.py`](scripts/fetch_swap_transactions_v2.py) Uniswap V2 and [`scripts/fetch_swap_transactions_v3.py`](scripts/fetch_swap_transactions_v3.py) for Uniswap V3**
+
+Note: the scripts will fetch all the swap transactions in the specific time period which would not filtered by the top50 pools. 
+
+
+Extention: Work flow of computing betweenness centrality
+
+1. **Step 1**: fetch raw data by: `fetch_swap_transactions_vX.py` `uniswap_vX_swaps(start_timestamp, end_timestamp, date_str)`
+
+   - example: transaction level swaps data in a single day
+   - input: datetime(2022, 5, 1, 0, 0) as `start_timestamp`, datetime(2022, 5, 2, 0, 0) as `end_timestamp`, 31 as `period`, "20220501" as `date_str`
+   - output: `data_uniswap_vX/swap/uniswap_vX_swaps_20220501.csv`
+
+2. **Step 1**: run computing scripts by: [`scripts/betweenness_scripts.py.py`](scripts/betweenness_scripts.py.py) `get_betweenness_centrality(date_label: str, top_list_label: str, uniswap_version: str)`
+
+   - example: betweenness centrality in a single day
+   - input: 20220501 as `date_label`,  as 2022MAY `top_list_label`, v2v3 as `uniswap_version` (candidate: v2, v3, v2v3)
+   - output1: `data_betweenness/swap_route/swaps_tx_route_v2v3_20220501.csv` as the data backup for transforming transaction level raw data to the list-like transactions.
+   - output2: `data_betweenness/betweenness/betweenness_centrality_v2v3_20220501.csv` as the results of betweenness centrality within one day.
+
+
 
 ## DeFi
 
