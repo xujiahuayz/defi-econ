@@ -1,1 +1,3 @@
 ruamel.yaml==0.17.21
+duneanalytics==2.0.0
+tqdm==4.64.1
