@@ -18,16 +18,14 @@ from environ.fetch.data_fetcher import fetch_data
 if __name__ == "__main__":
 
     # Initize the config and parse the running date.
-    print_info_log("DeFi script started", "progress")
+    print_info_log("DeFi data fetching script started", "progress")
 
     config = Config()
     args = arg_parse_cmd()
     parsed_args = args.parse_args()
 
-    # Fetch Data
-    print_info_log("Fetch Data", "progress")
-
+    # Fetch data.
     fetch_data()
 
-    # Finish
-    print_info_log("DeFi script finished", "progress")
+    # Finish.
+    print_info_log("Fetch script finished", "progress")
