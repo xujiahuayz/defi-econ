@@ -132,3 +132,6 @@ dmypy.json
 /**/~$*.xlsx
 
 /**/*.DS_Store
+
+# csv data file
+*.csv
