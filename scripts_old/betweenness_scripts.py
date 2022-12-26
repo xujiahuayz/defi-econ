@@ -509,27 +509,35 @@ def get_betweenness_centrality(
     # Write dataframe to csv
     compare_table.to_csv(betweenness_file_name)
 
+    print("-----Complete betweenness centrality in " + date_label + "-----")
+
 
 if __name__ == "__main__":
+
+    from multiprocessing import Pool
+    from functools import partial
+
     involve_version = "v2v3"  # candidate: v2, v3, v2v3
 
     top50_list_label = "2022MAY"
     # Data output include start_date, exclude end_date
-    start_date = datetime.datetime(2022, 5, 11, 0, 0)
+    start_date = datetime.datetime(2022, 5, 1, 0, 0)
     end_date = datetime.datetime(2022, 6, 1, 0, 0)
 
     # list for multiple dates
     date_list = []
     for i in range((end_date - start_date).days):
         date = start_date + datetime.timedelta(i)
-        date_list.append(date)
-
-    # for each day
-    for date in date_list:
         date_str = date.strftime("%Y%m%d")
-        get_betweenness_centrality(
-            date_label=date_str,
+        date_list.append(date_str)
+
+    # Multiprocess
+    p = Pool()
+    p.map(
+        partial(
+            get_betweenness_centrality,
             top_list_label=top50_list_label,
             uniswap_version=involve_version,
-        )
-        print("-----Complete betweenness centrality in " + date_str + "-----")
+        ),
+        date_list,
+    )

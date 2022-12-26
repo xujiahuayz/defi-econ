@@ -103,10 +103,8 @@ def query_swaps_trading_v3(start_timestamp: int, end_timestamp: int) -> pd.DataF
       }
     }
     """
+        result_iter = subgraph.run_query_var(subgraph.http_v3, query_iter, params_gt)
         if list(result_iter.keys()) == ["data"]:
-            result_iter = subgraph.run_query_var(
-                subgraph.http_v3, query_iter, params_gt
-            )
 
             # List of swaps for this batch
             swaps_iter = result_iter["data"]["swaps"]
@@ -163,7 +161,7 @@ def uniswap_v3_swaps(
     """
 
     file_name = path.join(
-        UNISWAP_V3_DATA_PATH, "swap/uniswap_v3_swaps" + period_label + ".csv"
+        UNISWAP_V3_DATA_PATH, "swap/uniswap_v3_swaps_" + period_label + ".csv"
     )
     df_all_swaps = query_swaps_trading_v3(start_timestamp, end_timestamp)
     df_all_swaps
