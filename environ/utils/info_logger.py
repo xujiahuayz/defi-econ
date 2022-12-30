@@ -9,21 +9,27 @@ Desc    : print info log in the terminal.
 
 """
 
+# Import python modules
 import datetime
 
 # -- Print info log
 # --- helper/util function for logging script info into console
 # args:
-#   type = 'progress'
+#   category = 'progress'
 #   msg = 'test message'
 
 
-def print_info_log(msg, type):
+def print_info_log(msg: str, category: str) -> None:
+
+    """
+    Print information in terminal
+    """
+
     now_time = datetime.datetime.now()
     msg_out = (
         now_time.strftime("%Y-%m-%d %H:%M:%S")
         + " --- [ "
-        + type.upper()
+        + category.upper()
         + " ] --- "
         + msg
     )

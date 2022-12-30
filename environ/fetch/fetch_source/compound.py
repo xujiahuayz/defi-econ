@@ -13,18 +13,15 @@ Desc    : Fetch compound data.
 import datetime
 
 # Import internal modules
-from repo_clean.environ.utils.info_logger import print_info_log
+from environ.utils.info_logger import print_info_log
 from .fetch_comp.fetch_compound_historical_data import fetch_comp_historical_data
 
 
-def fetch_comp() -> None:
+def fetch_comp(start_date: datetime, end_date: datetime) -> None:
 
     """
     Aggregate functon to fetch compound-related data.
     """
-
-    start_date = datetime.datetime(2022, 7, 11, 0, 0)
-    end_date = datetime.datetime(2022, 8, 1, 0, 0)
 
     # Fetch compound distorical data of all the tokens
     print_info_log("Fetch compound historical data of all the tokens", "Compound")

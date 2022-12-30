@@ -8,8 +8,8 @@ import calendar
 from os import path
 import pandas as pd
 from tqdm import tqdm
-import repo_clean.environ.fetch.fetch_utils.subgraph_query as subgraph
-from repo_clean.environ.utils.config_parser import Config
+import environ.fetch.fetch_utils.subgraph_query as subgraph
+from environ.utils.config_parser import Config
 
 
 def get_gross_volume(batch_pair_id: str, date_timestamp: int) -> list:
@@ -23,25 +23,25 @@ def get_gross_volume(batch_pair_id: str, date_timestamp: int) -> list:
     batch_pair_daily_query = """
     query ($batch_pair: String!, $date_timestamp: Int!) 
     {
-      poolDayDatas(
+      pairDayDatas(
         where: {
-          pool: $batch_pair,
+          pairAddress: $batch_pair,
           date: $date_timestamp
         })
         {
-          txCount
-          volumeToken0
-          volumeToken1
-          volumeUSD
-          tvlUSD
+          dailyTxns
+          dailyVolumeToken0
+          dailyVolumeToken1
+          dailyVolumeUSD
+          reserveUSD
         }
       }
   """
     batch_pair_daily = subgraph.run_query_var(
-        subgraph.http_v3, batch_pair_daily_query, params_batch_pair
+        subgraph.HTTP_V2, batch_pair_daily_query, params_batch_pair
     )
     # Query result for this pair
-    batch_pair_gross_info = batch_pair_daily["data"]["poolDayDatas"]
+    batch_pair_gross_info = batch_pair_daily["data"]["pairDayDatas"]
 
     return batch_pair_gross_info
 
@@ -65,50 +65,53 @@ def count_daily_mints(
         }
         # Get all mints transactions
         mints_batch_query = """
-        query($batch_pair: String!, $last_timestamp_gt: Int!)
+      query($batch_pair: String!, $last_timestamp_gt: Int!)
+      {
+        mints(first: 1000, 
+          where: {
+            pair: $batch_pair,
+            timestamp_gt: $last_timestamp_gt
+          }, orderBy: timestamp, orderDirection: asc)
         {
-            mints(first: 1000, 
-            where: {
-                pool: $batch_pair,
-                timestamp_gt: $last_timestamp_gt
-            }, orderBy: timestamp, orderDirection: asc)
-            {
-            transaction {
-                id
-            }
+          transaction {
+            id
             timestamp
-            amountUSD
-            }
+          }
+          amountUSD
         }
-        """
+      }
+    """
         mints_batch = subgraph.run_query_var(
-            subgraph.http_v3, mints_batch_query, params_mints_gt
+            subgraph.HTTP_V2, mints_batch_query, params_mints_gt
         )
 
-        # Mint transactions in this batch
-        mints_txs_batch = mints_batch["data"]["mints"]
+        # Check whether the api returns data
+        if list(mints_batch.keys()) == ["data"]:
 
-        # Fix issue: no transaction in the next day
-        if len(mints_txs_batch) == 0:
-            break
+            # Mint transactions in this batch
+            mints_txs_batch = mints_batch["data"]["mints"]
 
-        # Do loop to observe each mint transaction
-        for i in range(len(mints_txs_batch)):
-            # Update the last_timestamp
-            # last_ts_gt >= end_ts after the executing of loop break
-            last_timestamp_gt = int(mints_txs_batch[i]["timestamp"])
-
-            # Only count transactions within the given date of this batch
-            if int(mints_txs_batch[i]["timestamp"]) < end_timestamp:
-                # Count++ for the valid swap
-                mints_count = mints_count + 1
-
-            # Stop loop when the timestamp exceed the end timestamp
-            else:
+            # Fix issue: no transaction in the next day
+            if len(mints_txs_batch) == 0:
                 break
 
-        # End of the for loop, we got the transactions in this batch
-    # End of the while loop, we got the transactions for all batchs
+            # Do loop to observe each mint transaction
+            for i, _ in enumerate(mints_txs_batch):
+                # Update the last_timestamp
+                # last_ts_gt >= end_ts after the executing of loop break
+                last_timestamp_gt = int(mints_txs_batch[i]["transaction"]["timestamp"])
+
+                # Only count transactions within the given date of this batch
+                if int(mints_txs_batch[i]["transaction"]["timestamp"]) < end_timestamp:
+                    # Count++ for the valid swap
+                    mints_count = mints_count + 1
+
+                # Stop loop when the timestamp exceed the end timestamp
+                else:
+                    break
+
+            # End of the for loop, we got the transactions in this batch
+        # End of the while loop, we got the transactions for all batchs
 
     return mints_count
 
@@ -137,20 +140,20 @@ def count_daily_burns(
       {
         burns(first: 1000, 
           where: {
-            pool: $batch_pair,
+            pair: $batch_pair,
             timestamp_gt: $last_timestamp_gt
           }, orderBy: timestamp, orderDirection: asc)
         {
           transaction {
             id
+            timestamp
           }
-          timestamp
           amountUSD
         }
       }
     """
         burns_batch = subgraph.run_query_var(
-            subgraph.http_v3, burns_batch_query, params_burns_gt
+            subgraph.HTTP_V2, burns_batch_query, params_burns_gt
         )
 
         # burns transactions in this batch
@@ -161,13 +164,13 @@ def count_daily_burns(
             break
 
         # Do loop to observe each burns transaction
-        for i in range(len(burns_txs_batch)):
+        for i, _ in enumerate(burns_txs_batch):
             # Update the last_timestamp
             # last_ts_gt >= end_ts after the executing of loop break
-            last_timestamp_gt = int(burns_txs_batch[i]["timestamp"])
+            last_timestamp_gt = int(burns_txs_batch[i]["transaction"]["timestamp"])
 
             # Only count transactions within the given date of this batch
-            if int(burns_txs_batch[i]["timestamp"]) < end_timestamp:
+            if int(burns_txs_batch[i]["transaction"]["timestamp"]) < end_timestamp:
                 # Count++ for the valid swap
                 burns_count = burns_count + 1
 
@@ -212,81 +215,90 @@ def compute_daily_directional_volume(
       {
         swaps(first: 1000, 
           where: {
-            pool: $batch_pair,
+            pair: $batch_pair,
             timestamp_gt: $last_timestamp_gt
           }, orderBy: timestamp, orderDirection: asc)
         {
           transaction {
             id
-          }
-          timestamp
-          amount0
-          amount1
+            timestamp
+          }   
+          amount0In
+          amount1In
+          amount0Out
+          amount1Out
           amountUSD
         }
       }
     """
         swaps_batch = subgraph.run_query_var(
-            subgraph.http_v3, swaps_batch_query, params_swaps_gt
+            subgraph.HTTP_V2, swaps_batch_query, params_swaps_gt
         )
 
-        # Swap transactions in this batch
-        swaps_txs_batch = swaps_batch["data"]["swaps"]
+        # Check whether the api returns data
+        if list(swaps_batch.keys()) == ["data"]:
 
-        # Fix issue: no transaction in the next day
-        if len(swaps_txs_batch) == 0:
-            break
+            # Swap transactions in this batch
+            swaps_txs_batch = swaps_batch["data"]["swaps"]
 
-        # Do loop to observe each swap transaction
-        for i in range(len(swaps_txs_batch)):
-            # Update the last_timestamp no matter which type of transaction it is
-            # last_ts_gt >= end_ts after the executing of loop break
-            last_timestamp_gt = int(swaps_txs_batch[i]["timestamp"])
-
-            # Only count transactions within the given date
-            if int(swaps_txs_batch[i]["timestamp"]) < end_timestamp:
-                # Count++ for the valid swap
-                swaps_count = swaps_count + 1
-
-                # For swaps: token0 to token1
-                # A.K.A. SWAP token0 for token1, token0 IN, token1 OUT
-                # 0IN != 0 (must), 0OUT == 0, 1IN == 0, 1OUT != 0 (must)
-                # V3: 0IN -> amount 0 > 0, 1OUT -> amount1 < 0
-                if (float(swaps_txs_batch[i]["amount0"]) > 0.0) and (
-                    float(swaps_txs_batch[i]["amount1"]) < 0.0
-                ):
-                    tx_0to1_count = tx_0to1_count + 1
-                    volume_0to1 = volume_0to1 + float(swaps_txs_batch[i]["amountUSD"])
-
-                # For swaps: token1 to token0
-                # A.K.A. SWAP token1 for token0, token0 OUT, token1 IN
-                # 0IN == 0 (or not?), 0OUT != 0 (must), 1IN != 0 (Must), 1OUT == 0
-                # V3: 0OUT -> amount0<0,  1IN -> amount1>0
-                elif (float(swaps_txs_batch[i]["amount1"]) > 0.0) and (
-                    float(swaps_txs_batch[i]["amount0"]) < 0.0
-                ):
-                    tx_1to0_count = tx_1to0_count + 1
-                    volume_1to0 = volume_1to0 + float(swaps_txs_batch[i]["amountUSD"])
-
-                # Theoretically no transactions here
-                else:
-                    pass
-                    # print(
-                    #     "Invest what happens on this transaction: ",
-                    #     swaps_txs_batch[i]["transaction"]["id"],
-                    # )
-
-            # Stop loop when the timestamp exceed the end timestamp
-            else:
+            # Fix issue: no transaction in the next day
+            if len(swaps_txs_batch) == 0:
                 break
 
-        # End the for loop (finish summing this batch)
-    # End the while loop (finish summing all batch)
+            # Do loop to observe each swap transaction
+            for i, _ in enumerate(swaps_txs_batch):
+                # Update the last_timestamp no matter which type of transaction it is
+                # last_ts_gt >= end_ts after the executing of loop break
+                last_timestamp_gt = int(swaps_txs_batch[i]["transaction"]["timestamp"])
+
+                # Only count transactions within the given date
+                if int(swaps_txs_batch[i]["transaction"]["timestamp"]) < end_timestamp:
+                    # Count++ for the valid swap
+                    swaps_count = swaps_count + 1
+
+                    # For swaps: token0 to token1
+                    # A.K.A. SWAP token0 for token1, token0 IN, token1 OUT
+                    # 0IN != 0 (must), 0OUT == 0, 1IN == 0, 1OUT != 0 (must)
+                    # V3: 0IN -> amount 0 > 0, 1OUT -> amount1 < 0
+                    if (float(swaps_txs_batch[i]["amount0In"]) != 0.0) and (
+                        float(swaps_txs_batch[i]["amount1Out"]) != 0.0
+                    ):
+                        tx_0to1_count = tx_0to1_count + 1
+                        volume_0to1 = volume_0to1 + float(
+                            swaps_txs_batch[i]["amountUSD"]
+                        )
+
+                    # For swaps: token1 to token0
+                    # A.K.A. SWAP token1 for token0, token0 OUT, token1 IN
+                    # 0IN == 0 (or not?), 0OUT != 0 (must), 1IN != 0 (Must), 1OUT == 0
+                    # V3: 0OUT -> amount0<0,  1IN -> amount1>0
+                    elif (float(swaps_txs_batch[i]["amount1In"]) != 0.0) and (
+                        float(swaps_txs_batch[i]["amount0Out"]) != 0.0
+                    ):
+                        tx_1to0_count = tx_1to0_count + 1
+                        volume_1to0 = volume_1to0 + float(
+                            swaps_txs_batch[i]["amountUSD"]
+                        )
+
+                    # Theoretically no transactions here
+                    else:
+                        pass
+                        # print(
+                        #     "Invest what happens on this transaction: ",
+                        #     swaps_txs_batch[i]["transaction"]["id"],
+                        # )
+
+                # Stop loop when the timestamp exceed the end timestamp
+                else:
+                    break
+
+            # End the for loop (finish summing this batch)
+        # End the while loop (finish summing all batch)
 
     return swaps_count, tx_0to1_count, volume_0to1, tx_1to0_count, volume_1to0
 
 
-def top50_pair_directional_volume_v3(
+def top50_pair_directional_volume_v2(
     aggregate_date: datetime, token_list_label: str
 ) -> None:
     """
@@ -303,8 +315,8 @@ def top50_pair_directional_volume_v3(
 
     # Load the dataframe from the top 50 pairs of May
     df_top50_pairs_dir_volume = pd.read_csv(
-        config["dev"]["config"]["data"]["UNISWAP_V3_DATA_PATH"]
-        + "/pool_list/top50_pairs_list_v3_"
+        config["dev"]["config"]["data"]["UNISWAP_V2_DATA_PATH"]
+        + "/pool_list/top50_pairs_list_v2_"
         + token_list_label
         + ".csv"
     )
@@ -322,7 +334,7 @@ def top50_pair_directional_volume_v3(
         df_top50_pairs_dir_volume.iterrows(), total=df_top50_pairs_dir_volume.shape[0]
     ):
         # Pool id for this batch
-        batch_pair_id = row["id"]
+        batch_pair_id = row["pairAddress"]
 
         # Get the daily gross volume from subgraph API
         batch_pair_info = get_gross_volume(batch_pair_id, date_timestamp)
@@ -331,29 +343,31 @@ def top50_pair_directional_volume_v3(
         if len(batch_pair_info) == 0:
             batch_pair_info = [
                 {
-                    "txCount": "0",
-                    "volumeToken0": "0",
-                    "volumeToken1": "0",
-                    "volumeUSD": "0",
-                    "tvlUSD": "0",
+                    "dailyTxns": "0",
+                    "dailyVolumeToken0": "0",
+                    "dailyVolumeToken1": "0",
+                    "dailyVolumeUSD": "0",
+                    "reserveUSD": "0",
                 }
             ]
             print("WARNING: Notice the null data at index: ", index)
 
         # Store values for the daily aggregated data
         df_top50_pairs_dir_volume.loc[index, "dailyTxns"] = batch_pair_info[0][
-            "txCount"
+            "dailyTxns"
         ]
         df_top50_pairs_dir_volume.loc[index, "dailyGrossVolumeUSD"] = batch_pair_info[
             0
-        ]["volumeUSD"]
+        ]["dailyVolumeUSD"]
         df_top50_pairs_dir_volume.loc[index, "dailySwapVolumeToken0"] = batch_pair_info[
             0
-        ]["volumeToken0"]
+        ]["dailyVolumeToken0"]
         df_top50_pairs_dir_volume.loc[index, "dailySwapVolumeToken1"] = batch_pair_info[
             0
-        ]["volumeToken1"]
-        df_top50_pairs_dir_volume.loc[index, "tvlUSD"] = batch_pair_info[0]["tvlUSD"]
+        ]["dailyVolumeToken1"]
+        df_top50_pairs_dir_volume.loc[index, "reserveUSD"] = batch_pair_info[0][
+            "reserveUSD"
+        ]
 
         # Get the daily count for the mints transactions
         mints_count = count_daily_mints(batch_pair_id, date_timestamp, end_timestamp)
@@ -396,8 +410,8 @@ def top50_pair_directional_volume_v3(
 
     # Define the file name
     file_name = path.join(
-        config["dev"]["config"]["data"]["UNISWAP_V3_DATA_PATH"],
-        "directional_volume/top50_directional_volume_v3_" + file_date + ".csv",
+        config["dev"]["config"]["data"]["UNISWAP_V2_DATA_PATH"],
+        "directional_volume/top50_directional_volume_v2_" + file_date + ".csv",
     )
     # Write dataframe to csv
     df_top50_pairs_dir_volume.to_csv(file_name)

@@ -8,7 +8,7 @@ from os import path
 import pandas as pd
 from tqdm import tqdm
 from duneanalytics import DuneAnalytics
-from repo_clean.environ.utils.config_parser import Config
+from environ.utils.config_parser import Config
 
 
 def download_dune_data(dune_id: int) -> dict:

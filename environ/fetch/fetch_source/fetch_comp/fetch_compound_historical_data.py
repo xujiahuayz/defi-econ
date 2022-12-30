@@ -10,7 +10,7 @@ import calendar
 import requests
 import pandas as pd
 import numpy as np
-from repo_clean.environ.utils.config_parser import Config
+from environ.utils.config_parser import Config
 
 
 def fetch_asset_historical_data(

@@ -10,7 +10,7 @@ Desc    : Fetch compound data.
 """
 
 # Import internal modules
-from repo_clean.environ.utils.info_logger import print_info_log
+from environ.utils.info_logger import print_info_log
 from .fetch_aave.download_aave_historical_data import fetch_aave_historical_data
 
 

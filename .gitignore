@@ -132,3 +132,7 @@ dmypy.json
 /**/~$*.xlsx
 
 /**/*.DS_Store
+
+# ignore all data folders
+data/
+data_old/
