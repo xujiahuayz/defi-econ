@@ -11,6 +11,7 @@ Desc    : Fetch uniswap data.
 
 # Inport python modules
 import datetime
+from tqdm import tqdm
 
 # Import internal modules
 from environ.utils.info_logger import print_info_log
@@ -40,12 +41,20 @@ def fetch_uni(top50_list_label: str, start_date: datetime, end_date: datetime) -
 
     # Step 1: determine the list of monthly top 50 pools as candidates
     print_info_log("Fetch the list of monthly top 50 pools", "Uniswap V2")
+
     select_top50_pairs_v2(end_date - datetime.timedelta(1), period, top50_list_label)
+
     print_info_log("Fetch the list of monthly top 50 pools", "Uniswap V3")
+
     select_top50_pairs_v3(end_date - datetime.timedelta(1), period, top50_list_label)
 
     # Step 2: get directional daily volume for all dates based on the list in Step 1
     print_info_log("Fetch daily directional volume", "Uniswap V2")
-    top50_pair_directional_volume_v2(date, top50_list_label)
+
+    for date in tqdm(date_list):
+        top50_pair_directional_volume_v2(date, top50_list_label)
+
     print_info_log("Fetch daily directional volume", "Uniswap V3")
-    top50_pair_directional_volume_v3(date, top50_list_label)
+
+    for date in tqdm(date_list):
+        top50_pair_directional_volume_v3(date, top50_list_label)

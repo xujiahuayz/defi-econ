@@ -39,7 +39,7 @@ def select_candidate_pairs(end_date: datetime) -> pd.DataFrame:
             token1 {
               symbol
             }
-            dailyVolumeUSDc
+            dailyVolumeUSD
           }
       }
     """

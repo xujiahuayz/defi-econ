@@ -7,7 +7,6 @@ import datetime
 import calendar
 from os import path
 import pandas as pd
-from tqdm import tqdm
 import environ.fetch.fetch_utils.subgraph_query as subgraph
 from environ.utils.config_parser import Config
 
@@ -156,29 +155,32 @@ def count_daily_burns(
             subgraph.HTTP_V2, burns_batch_query, params_burns_gt
         )
 
-        # burns transactions in this batch
-        burns_txs_batch = burns_batch["data"]["burns"]
+        # Check whether the api returns data
+        if list(burns_batch.keys()) == ["data"]:
 
-        # Fix issue: no transaction in the next day
-        if len(burns_txs_batch) == 0:
-            break
+            # burns transactions in this batch
+            burns_txs_batch = burns_batch["data"]["burns"]
 
-        # Do loop to observe each burns transaction
-        for i, _ in enumerate(burns_txs_batch):
-            # Update the last_timestamp
-            # last_ts_gt >= end_ts after the executing of loop break
-            last_timestamp_gt = int(burns_txs_batch[i]["transaction"]["timestamp"])
-
-            # Only count transactions within the given date of this batch
-            if int(burns_txs_batch[i]["transaction"]["timestamp"]) < end_timestamp:
-                # Count++ for the valid swap
-                burns_count = burns_count + 1
-
-            # Stop loop when the timestamp exceed the end timestamp
-            else:
+            # Fix issue: no transaction in the next day
+            if len(burns_txs_batch) == 0:
                 break
 
-        # End of the for loop, we got the transactions in this batch
+            # Do loop to observe each burns transaction
+            for i, _ in enumerate(burns_txs_batch):
+                # Update the last_timestamp
+                # last_ts_gt >= end_ts after the executing of loop break
+                last_timestamp_gt = int(burns_txs_batch[i]["transaction"]["timestamp"])
+
+                # Only count transactions within the given date of this batch
+                if int(burns_txs_batch[i]["transaction"]["timestamp"]) < end_timestamp:
+                    # Count++ for the valid swap
+                    burns_count = burns_count + 1
+
+                # Stop loop when the timestamp exceed the end timestamp
+                else:
+                    break
+
+            # End of the for loop, we got the transactions in this batch
     # End of the while loop, we got the transactions for all batchs
 
     return burns_count
@@ -330,9 +332,7 @@ def top50_pair_directional_volume_v2(
     )
 
     # Do iteration to sum up all transaction (directional) for each pair
-    for index, row in tqdm(
-        df_top50_pairs_dir_volume.iterrows(), total=df_top50_pairs_dir_volume.shape[0]
-    ):
+    for index, row in df_top50_pairs_dir_volume.iterrows():
         # Pool id for this batch
         batch_pair_id = row["pairAddress"]
 
@@ -350,7 +350,7 @@ def top50_pair_directional_volume_v2(
                     "reserveUSD": "0",
                 }
             ]
-            print("WARNING: Notice the null data at index: ", index)
+            # print("WARNING: Notice the null data at index: ", index)
 
         # Store values for the daily aggregated data
         df_top50_pairs_dir_volume.loc[index, "dailyTxns"] = batch_pair_info[0][

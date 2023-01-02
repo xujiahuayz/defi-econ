@@ -134,5 +134,23 @@ dmypy.json
 /**/*.DS_Store
 
 # ignore all data folders
-data/
 data_old/
+data/data_aave/
+data/data_betweenness/
+data/data_compound/
+data/data_global/
+data/data_network/v2/inflow_centrality/
+data/data_network/v2/inout_flow/
+data/data_network/v2/network_graph/
+data/data_network/v2/outflow_centrality/
+data/data_network/v2/primary_tokens/
+data/data_network/v3/inflow_centrality/
+data/data_network/v3/inout_flow/
+data/data_network/v3/network_graph/
+data/data_network/v3/outflow_centrality/
+data/data_network/v3/primary_tokens/
+data/data_regression/
+data/data_uniswap_v2/directional_volume/
+data/data_uniswap_v2/pool_list/
+data/data_uniswap_v3/directional_volume/
+data/data_uniswap_v3/pool_list/
