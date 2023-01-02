@@ -6,7 +6,7 @@ dev:
       COMPOUND_DATA_PATH: "data/data_compound"
       AAVE_DATA_PATH: "data/data_aave"
       GLOBAL_DATA_PATH: "data/data_global"
-      NETWORK_DATA_PATHL: "data/data_network"
+      NETWORK_DATA_PATH: "data/data_network"
       REGRESSION_DATA_PATH: "data/data_regression"
       BETWEENNESS_DATA_PATH: "data/data_betweenness"
     compound:
