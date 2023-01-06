@@ -110,12 +110,13 @@ Extention: Work flow of computing betweenness centrality
    - input: datetime(2022, 5, 1, 0, 0) as `start_timestamp`, datetime(2022, 5, 2, 0, 0) as `end_timestamp`, 31 as `period`, "20220501" as `date_str`
    - output: `data_uniswap_vX/swap/uniswap_vX_swaps_20220501.csv`
 
-2. **Step 1**: run computing scripts by: [`scripts/betweenness_scripts.py.py`](scripts/betweenness_scripts.py.py) `get_betweenness_centrality(date_label: str, top_list_label: str, uniswap_version: str)`
+2. **Step 2**: run computing scripts by: [`scripts/betweenness_scripts.py.py`](scripts/betweenness_scripts.py.py) `get_betweenness_centrality(date_label: str, top_list_label: str, uniswap_version: str)`
 
    - example: betweenness centrality in a single day
    - input: 20220501 as `date_label`,  as 2022MAY `top_list_label`, v2v3 as `uniswap_version` (candidate: v2, v3, v2v3)
    - output1: `data_betweenness/swap_route/swaps_tx_route_v2v3_20220501.csv` as the data backup for transforming transaction level raw data to the list-like transactions.
    - output2: `data_betweenness/betweenness/betweenness_centrality_v2v3_20220501.csv` as the results of betweenness centrality within one day.
+
 
 
 
