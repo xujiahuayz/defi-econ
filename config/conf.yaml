@@ -32,3 +32,6 @@ dev:
     aave:
       DUNE_ACCOUNT: "hileoo"
       DUNE_PASSWORD: "QWERtyui123"
+    dynamic:
+      HEIGHT: 1600
+      WIDTH: 1200
