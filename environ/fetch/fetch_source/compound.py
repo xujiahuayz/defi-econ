@@ -17,7 +17,7 @@ from environ.utils.info_logger import print_info_log
 from .fetch_comp.fetch_compound_historical_data import fetch_comp_historical_data
 
 
-def fetch_comp(start_date: datetime, end_date: datetime) -> None:
+def fetch_comp(start_date: datetime.datetime, end_date: datetime.datetime) -> None:
 
     """
     Aggregate functon to fetch compound-related data.
