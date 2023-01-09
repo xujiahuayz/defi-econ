@@ -9,7 +9,7 @@ import pandas as pd
 from environ.utils.config_parser import Config
 
 
-def load_volume_dataset(date, uni_version) -> pd.DataFrame:
+def load_volume_dataset(date: datetime.datetime, uni_version: str) -> pd.DataFrame:
     """
     Load the volume dataset file from local file as dataframe
     """
@@ -37,7 +37,7 @@ def load_volume_dataset(date, uni_version) -> pd.DataFrame:
     return df_top50_pairs_dir_volume
 
 
-def get_primary_token_list(date, uni_version) -> pd.DataFrame:
+def get_primary_token_list(date: datetime.datetime, uni_version: str) -> pd.DataFrame:
     """
     Get the primary token list as the nodes of network from the volume dataset.
     """
@@ -113,7 +113,7 @@ def get_node_flow(date, uni_version) -> pd.DataFrame:
     return df_edge
 
 
-def prepare_network_data(target_date: datetime, uniswap_version: str) -> None:
+def prepare_network_data(target_date: datetime.datetime, uniswap_version: str) -> None:
     """
     Prepare the network data and save to file
     """

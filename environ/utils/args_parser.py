@@ -13,7 +13,7 @@ Desc    : Parse the info from the terminal.
 import argparse
 
 
-def arg_parse_cmd() -> None:
+def arg_parse_cmd() -> argparse.ArgumentParser:
 
     """
     Function for user to interact with terminal.
