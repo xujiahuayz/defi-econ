@@ -45,9 +45,9 @@ def plot_graph():
         f"Plot network graphs from {parsed_args.start} to {parsed_args.end}", "progress"
     )
 
-    # for date in tqdm(date_list):
-    #     plot_network(date, "v2")
-    #     plot_network(date, "v3")
+    for date in tqdm(date_list):
+        plot_network(date, "v2")
+        plot_network(date, "v3")
 
     # Plot dynamic graphs
     print_info_log("Plot dynamic graphs for v2 and v3", "progress")

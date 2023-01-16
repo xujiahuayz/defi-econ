@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from environ.utils.config_parser import Config
 
 
-def plot_network(date: datetime, uniswap_version: str) -> None:
+def plot_network(date: datetime.datetime, uniswap_version: str) -> None:
     """
     Plot the network by networkx
     """
@@ -46,17 +46,22 @@ def plot_network(date: datetime, uniswap_version: str) -> None:
         )[["token", "total_tvl"]]
 
     # token library
-    token_lib = pd.read_csv(
-        path.join(
-            config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
-            "token_library_" + uniswap_version + ".csv",
-        ),
-        index_col=0,
-    )
+    # token_lib = pd.read_csv(
+    #     path.join(
+    #         config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
+    #         "token_library_" + uniswap_version + ".csv",
+    #     ),
+    #     index_col=0,
+    # )
+
+    token_lib = pd.DataFrame.from_dict(
+        config["dev"]["config"]["token_library"][uniswap_version]
+    ).set_index("token")
 
     # label stable coin or non-stable coin
     token_data = token_data.join(token_lib, on="token", how="left")
-    token_data = token_data.drop(columns=["eigenvector_centrality"])
+    # token_data = token_data.drop(columns=["eigenvector_centrality"])
+
     # Sort the order by stablecoin
     token_data = token_data.sort_values(
         by=["stable"], ascending=False, ignore_index=True

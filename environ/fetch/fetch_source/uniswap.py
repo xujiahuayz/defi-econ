@@ -47,6 +47,22 @@ def fetch_uni(
         date = start_date + datetime.timedelta(i)
         date_list.append(date)
 
+    # List for finished pool list of Uniswap V2
+    done_v2_pool_list = os.listdir(
+        path.join(
+            config["dev"]["config"]["data"]["UNISWAP_V2_DATA_PATH"],
+            "pool_list/",
+        )
+    )
+
+    # List for finished pool list of Uniswap V3
+    done_v3_pool_list = os.listdir(
+        path.join(
+            config["dev"]["config"]["data"]["UNISWAP_V3_DATA_PATH"],
+            "pool_list/",
+        )
+    )
+
     # List for to-do dates of Uniswap V2 for top 50 directional volume
     done_v2_directional_volume_list = os.listdir(
         path.join(
@@ -78,11 +94,21 @@ def fetch_uni(
     # Step 1: determine the list of monthly top 50 pools as candidates
     print_info_log("Fetch the list of monthly top 50 pools", "Uniswap V2")
 
-    select_top50_pairs_v2(end_date - datetime.timedelta(1), period, top50_list_label)
+    if "top50_pairs_list_v2_" + top50_list_label + ".csv" not in done_v2_pool_list:
+        select_top50_pairs_v2(
+            end_date - datetime.timedelta(1), period, top50_list_label
+        )
+    else:
+        print_info_log("The list of monthly top 50 pools was fetched", "Uniswap V2")
 
     print_info_log("Fetch the list of monthly top 50 pools", "Uniswap V3")
 
-    select_top50_pairs_v3(end_date - datetime.timedelta(1), period, top50_list_label)
+    if "top50_pairs_list_v3_" + top50_list_label + ".csv" not in done_v3_pool_list:
+        select_top50_pairs_v3(
+            end_date - datetime.timedelta(1), period, top50_list_label
+        )
+    else:
+        print_info_log("The list of monthly top 50 pools was fetched", "Uniswap V3")
 
     # Step 2: get directional daily volume for all dates based on the list in Step 1
     print_info_log("Fetch daily directional volume", "Uniswap V2")
