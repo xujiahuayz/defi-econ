@@ -30,7 +30,7 @@ def plot_timeseries(date_list: list, uniswap_version: str) -> None:
 
     # Constants
     network_data_path = config["dev"]["config"]["data"]["NETWORK_DATA_PATH"]
-    token_list = ["DAI", "FEI", "USDC", "USDT", "WETH"]
+    token_list = ["DAI", "FEI", "USDC", "USDT", "WETH", "WBTC", "MATIC"]
     # Load the dataframe for eigenvector centrality
 
     fig_in, eigen_in_plot = plt.subplots(figsize=(10, 8))

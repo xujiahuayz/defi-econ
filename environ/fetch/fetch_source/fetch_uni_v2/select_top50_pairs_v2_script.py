@@ -13,7 +13,7 @@ import environ.fetch.fetch_utils.subgraph_query as subgraph
 from environ.utils.config_parser import Config
 
 
-def select_candidate_pairs(end_date: datetime) -> pd.DataFrame:
+def select_candidate_pairs(end_date: datetime.datetime) -> pd.DataFrame:
     """
     select top 500 pairs order by daily volume USD as candidate pairs
     """
@@ -56,7 +56,7 @@ def select_candidate_pairs(end_date: datetime) -> pd.DataFrame:
 
 
 def get_avg_volume_candidate_pairs(
-    df_top500_pairs: pd.DataFrame, start_date: datetime, period: int
+    df_top500_pairs: pd.DataFrame, start_date: datetime.datetime, period: int
 ) -> pd.DataFrame:
     """
     get the average daily volume by dividing the sum of each daily volume for the past horizon
@@ -132,7 +132,9 @@ def get_avg_volume_candidate_pairs(
     return df_top500_pairs
 
 
-def select_top50_pairs_v2(end_date: datetime, period: int, output_label: str) -> None:
+def select_top50_pairs_v2(
+    end_date: datetime.datetime, period: int, output_label: str
+) -> None:
     """
     Select the top50 pools of v2 by given end date, past period, and output label
     (eg. MAY2022). Output to the separate data file.

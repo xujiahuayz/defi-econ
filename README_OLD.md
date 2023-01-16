@@ -79,23 +79,17 @@ Please import the data folder `dominant_defi/data` from Dropbox (authorization r
 
 ## Run scripts
 
-To trigger scripts, please run the following commands:
-
-- First, run the following command to fetch defi-related data:
-  
-```zsh
-python scripts/fetch_main.py --start "YYYY-MM-DD" --end "YYYY-MM-DD"
-```
-
-Notes: This script runs on a montly basis. This script will fetch defi-related data from the first day of the month specified by the --start to the end of the day of the month of specified by the --end. For example python scripts/fetch_main.py --start "2022-05-01" -- end "2022-12-01" will fetch the data from May 2022 to Dec 2022. Meanwhile, the script will automatically detect the unfinished fetching dates during the specified period. The data generated will be placed under ['data'](data)
-
-- Second, run the following command to plot defi-related graphs:
+a minimum viable example to fetch data from thegraph and print the result on the screen
 
 ```zsh
-python scripts/plot_main.py --start "YYYY-MM-DD" --end "YYYY-MM-DD"
+python scripts/thegraph.py
 ```
 
-Notes: This script runs on a daily basis. This script will plot defi-related data from the date specified by the --start to the the day specified by the --end (different from fetch_main.py). For example python scripts/fetch_main.py --start "2022-05-01" -- end "2022-12-01" will plot the data from 2022-05-01 to 2022-12-01. The graphs generated will be placed under ['data/data_network'](data/data_network)
+fetch compound historical data and save in [`data/data_compound`](data/data_compound)
+
+```zsh
+python scripts/fetch_compound_historical_data.py
+```
 
 ## Python Project Documentation
 

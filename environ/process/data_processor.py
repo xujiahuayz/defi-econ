@@ -34,7 +34,7 @@ def process_data():
 
     # Generate date list
     date_list = []
-    for i in range((end_date - start_date).days):
+    for i in range((end_date - start_date).days + 1):
         date = start_date + datetime.timedelta(i)
         date_list.append(date)
 
