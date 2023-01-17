@@ -30,6 +30,7 @@ def plot_timeseries(date_list: list, uniswap_version: str) -> None:
 
     # Constants
     network_data_path = config["dev"]["config"]["data"]["NETWORK_DATA_PATH"]
+    figure_path = config["dev"]["config"]["figures"]
     token_list = ["DAI", "FEI", "USDC", "USDT", "WETH", "WBTC", "MATIC"]
     # Load the dataframe for eigenvector centrality
 
@@ -42,7 +43,8 @@ def plot_timeseries(date_list: list, uniswap_version: str) -> None:
         for date in date_list:
             date_str = date.strftime("%Y%m%d")
             eigen_in_df = pd.read_csv(
-                f"{network_data_path}/{uniswap_version}/inflow_centrality/centrality_{uniswap_version}_{date_str}.csv"
+                f"{network_data_path}/{uniswap_version}/inflow_centrality/\
+centrality_{uniswap_version}_{date_str}.csv"
             )
 
             if (
@@ -59,14 +61,26 @@ def plot_timeseries(date_list: list, uniswap_version: str) -> None:
                     ].values[0]
                 )
 
-        eigen_in_plot.plot(pd.to_datetime(date_list), eigen_in_list, label=token)
+        # Calculate moving averages
+        eigen_in_ma_df = pd.DataFrame.from_dict(
+            {"date": pd.to_datetime(date_list), "eigen_in": eigen_in_list}
+        )
+        eigen_in_ma_df["eigen_in_ma_30"] = eigen_in_ma_df["eigen_in"].rolling(30).mean()
+        if token == "MATIC":
+            eigen_in_ma_df.to_csv(f"{network_data_path}/matic_test.csv", index=False)
+
+        eigen_in_plot.plot(
+            pd.to_datetime(date_list), eigen_in_ma_df["eigen_in_ma_30"], label=token
+        )
         eigen_in_plot.set_xlabel("Date")
         eigen_in_plot.set_ylabel("Eigenvector Centrality")
-        eigen_in_plot.set_title("Inflow Eigenvector Centrality")
+        eigen_in_plot.set_title(
+            "30-day Moving Averages of Inflow Eigenvector Centrality"
+        )
         eigen_in_plot.tick_params(axis="x", labelrotation=30)
         eigen_in_plot.legend()
 
-    fig_in.savefig(f"{network_data_path}/eigen_in.png")
+    fig_in.savefig(f"{figure_path}/eigen_in_{uniswap_version}.pdf")
 
     for token in tqdm(token_list):
         eigen_out_list = []
@@ -74,7 +88,8 @@ def plot_timeseries(date_list: list, uniswap_version: str) -> None:
         for date in date_list:
             date_str = date.strftime("%Y%m%d")
             eigen_out_df = pd.read_csv(
-                f"{network_data_path}/{uniswap_version}/outflow_centrality/centrality_{uniswap_version}_{date_str}.csv"
+                f"{network_data_path}/{uniswap_version}/outflow_centrality/\
+centrality_{uniswap_version}_{date_str}.csv"
             )
 
             if (
@@ -90,12 +105,23 @@ def plot_timeseries(date_list: list, uniswap_version: str) -> None:
                         eigen_out_df["token"] == token, "eigenvector_centrality"
                     ].values[0]
                 )
+        # Calculate moving averages
+        eigen_out_ma_df = pd.DataFrame.from_dict(
+            {"date": pd.to_datetime(date_list), "eigen_in": eigen_out_list}
+        )
+        eigen_out_ma_df["eigen_in_ma_30"] = (
+            eigen_out_ma_df["eigen_in"].rolling(30).mean()
+        )
 
-        eigen_out_plot.plot(pd.to_datetime(date_list), eigen_out_list, label=token)
+        eigen_out_plot.plot(
+            pd.to_datetime(date_list), eigen_out_ma_df["eigen_in_ma_30"], label=token
+        )
         eigen_out_plot.set_xlabel("Date")
         eigen_out_plot.set_ylabel("Eigenvector Centrality")
-        eigen_out_plot.set_title("Outflow Eigenvector Centrality")
+        eigen_out_plot.set_title(
+            "30-Day Moving Averages of Outflow Eigenvector Centrality"
+        )
         eigen_out_plot.tick_params(axis="x", labelrotation=30)
         eigen_out_plot.legend()
 
-    fig_out.savefig(f"{network_data_path}/eigen_out.png")
+    fig_out.savefig(f"{figure_path}/eigen_out_{uniswap_version}.pdf")
