@@ -13,6 +13,7 @@ Desc    : Fetch uniswap data.
 import os
 from os import path
 import datetime
+import calendar
 from tqdm import tqdm
 
 # Import internal modules
@@ -26,6 +27,8 @@ from .fetch_uni_v2.top50_pair_directional_volume_v2_script import (
 from .fetch_uni_v3.top50_pair_directional_volume_v3_script import (
     top50_pair_directional_volume_v3,
 )
+from .fetch_uni_v2.fetch_swap_transactions_v2 import uniswap_v2_swaps
+from .fetch_uni_v3.fetch_swap_transactions_v3 import uniswap_v3_swaps
 
 # Fetch uniswap-related data
 def fetch_uni(
@@ -91,6 +94,34 @@ def fetch_uni(
         not in done_v3_directional_volume_list
     ]
 
+    # List for to-do dates of Uniswap V2 for raw swap data
+    done_v2_swap_list = os.listdir(
+        path.join(
+            config["dev"]["config"]["data"]["UNISWAP_V2_DATA_PATH"],
+            "swap/",
+        )
+    )
+
+    swap_date_list_v2 = [
+        to_do_date
+        for to_do_date in date_list
+        if "uniswap_v2_swaps_" + top50_list_label + ".csv" not in done_v2_swap_list
+    ]
+
+    # List for to-do dates of Uniswap V3 for raw swap data
+    done_v3_swap_list = os.listdir(
+        path.join(
+            config["dev"]["config"]["data"]["UNISWAP_V3_DATA_PATH"],
+            "swap/",
+        )
+    )
+
+    swap_date_list_v3 = [
+        to_do_date
+        for to_do_date in date_list
+        if "uniswap_v3_swaps_" + top50_list_label + ".csv" not in done_v3_swap_list
+    ]
+
     # Step 1: determine the list of monthly top 50 pools as candidates
     print_info_log("Fetch the list of monthly top 50 pools", "Uniswap V2")
 
@@ -130,5 +161,38 @@ def fetch_uni(
         except:
             print_info_log(
                 f"Failed to fetch daily directional volume for {date} for Uniswap V3.",
+                "Error",
+            )
+
+    # Step 3: Fetch raw swap data
+    print_info_log("Fetch raw swap data", "Uniswap V2")
+
+    for date in tqdm(swap_date_list_v2):
+        try:
+            date_str = date.strftime("%Y%m%d")
+            start_timestamp = int(calendar.timegm(date.timetuple()))  # include
+            end_date = date + datetime.timedelta(days=1)
+            end_timestamp = int(calendar.timegm(end_date.timetuple()))  # exclude
+
+            uniswap_v2_swaps(start_timestamp, end_timestamp, date_str)
+        except:
+            print_info_log(
+                f"Failed to fetch raw sawp data for {date} for Uniswap V2.",
+                "Error",
+            )
+
+    print_info_log("Fetch raw swap data", "Uniswap V2")
+
+    for date in tqdm(swap_date_list_v3):
+        try:
+            date_str = date.strftime("%Y%m%d")
+            start_timestamp = int(calendar.timegm(date.timetuple()))  # include
+            end_date = date + datetime.timedelta(days=1)
+            end_timestamp = int(calendar.timegm(end_date.timetuple()))  # exclude
+
+            uniswap_v3_swaps(start_timestamp, end_timestamp, date_str)
+        except:
+            print_info_log(
+                f"Failed to fetch raw sawp data for {date} for Uniswap V3.",
                 "Error",
             )

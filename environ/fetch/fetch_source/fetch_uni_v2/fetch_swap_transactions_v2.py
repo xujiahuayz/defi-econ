@@ -6,9 +6,7 @@ Fetch swap transactions of Uniswap V2
 
 from os import path
 from time import sleep
-import datetime
 import warnings
-import calendar
 import pandas as pd
 from numpy import random
 
@@ -185,23 +183,3 @@ def uniswap_v2_swaps(
 
     df_all_swaps.to_csv(file_name)
     sleep(random.randint(10, 100) / 100)
-
-
-if __name__ == "__main__":
-    # Data output include start_date, exclude end_date
-    start_date = datetime.datetime(2022, 7, 16, 0, 0)
-    end_date = datetime.datetime(2022, 8, 1, 0, 0)
-
-    # list for multiple dates
-    date_list = []
-    for i in range((end_date - start_date).days):
-        date = start_date + datetime.timedelta(i)
-        date_list.append(date)
-
-    for date in date_list:
-        date_str = date.strftime("%Y%m%d")
-        start_timestamp = int(calendar.timegm(date.timetuple()))  # include
-        end_date = date + datetime.timedelta(days=1)
-        end_timestamp = int(calendar.timegm(end_date.timetuple()))  # exclude
-
-        uniswap_v2_swaps(start_timestamp, end_timestamp, date_str)

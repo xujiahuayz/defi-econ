@@ -37,7 +37,13 @@ def plot_timeseries(date_list: list, uniswap_version: str) -> None:
     fig_in, eigen_in_plot = plt.subplots(figsize=(10, 8))
     fig_out, eigen_out_plot = plt.subplots(figsize=(10, 8))
 
+    # DataFrame to store inflow eigenvector of all tokens
+    eigen_in = pd.DataFrame()
+    eigen_out = pd.DataFrame()
+
     for token in tqdm(token_list):
+
+        # List to store inflow eigenvector of a specific token and
         eigen_in_list = []
 
         for date in date_list:
@@ -66,9 +72,6 @@ centrality_{uniswap_version}_{date_str}.csv"
             {"date": pd.to_datetime(date_list), "eigen_in": eigen_in_list}
         )
         eigen_in_ma_df["eigen_in_ma_30"] = eigen_in_ma_df["eigen_in"].rolling(30).mean()
-        if token == "MATIC":
-            eigen_in_ma_df.to_csv(f"{network_data_path}/matic_test.csv", index=False)
-
         eigen_in_plot.plot(
             pd.to_datetime(date_list), eigen_in_ma_df["eigen_in_ma_30"], label=token
         )
@@ -80,9 +83,15 @@ centrality_{uniswap_version}_{date_str}.csv"
         eigen_in_plot.tick_params(axis="x", labelrotation=30)
         eigen_in_plot.legend()
 
+        # DataFrame to implement the summary statistics
+        eigen_in[token] = eigen_in_ma_df["eigen_in"]
+
     fig_in.savefig(f"{figure_path}/eigen_in_{uniswap_version}.pdf")
+    eigen_in.to_csv(f"{network_data_path}/eigen_in_{uniswap_version}.csv", index=False)
 
     for token in tqdm(token_list):
+
+        # List to store inflow eigenvector of a specific token and
         eigen_out_list = []
 
         for date in date_list:
@@ -124,4 +133,10 @@ centrality_{uniswap_version}_{date_str}.csv"
         eigen_out_plot.tick_params(axis="x", labelrotation=30)
         eigen_out_plot.legend()
 
+        # DataFrame to implement the summary statistics
+        eigen_out[token] = eigen_out_ma_df["eigen_in"]
+
     fig_out.savefig(f"{figure_path}/eigen_out_{uniswap_version}.pdf")
+    eigen_out.to_csv(
+        f"{network_data_path}/eigen_out_{uniswap_version}.csv", index=False
+    )
