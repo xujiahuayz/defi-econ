@@ -9,8 +9,6 @@ from datetime import datetime, timedelta
 import calendar
 import requests
 import pandas as pd
-import numpy as np
-import json
 
 from environ.utils.config_parser import Config
 
@@ -138,77 +136,10 @@ def fetch_comp_historical_data(start_date: datetime, end_date: datetime) -> None
             if len(new_df.columns) == 3:
                 new_df.columns = ["block_number", "block_timestamp", w]
                 df = df.merge(new_df, on="block_number")
-
-        df.to_csv(
-            file_name,
-            mode="a",
-            header=False if path.exists(file_name) else True,
-            index=False,
-        )
-
-        # with open(file_name, "w", encoding="utf-8") as f:
-        #     json.dump(token_history_result, f, ensure_ascii=False, indent=4)
-
-        # # get the total supply and borrow (json)
-        # (
-        #     supply_result,
-        #     borrow_result,
-        #     price_result,
-        #     exchange_rate_result,
-        # ) = fetch_asset_historical_data(
-        #     ctoken_address, start_timestamp, end_timestamp, horizon
-        # )
-
-        # # list of timestamps
-        # timestamp_values = []
-        # for i in supply_result:
-        #     utc_dt = datetime.utcfromtimestamp(int(i["block_timestamp"]))
-        #     timestamp_values.append(utc_dt)
-
-        # # list of supply values
-        # supply_values = []
-        # for i in supply_result:
-        #     supply_values.append(float(i["total"]["value"]))
-
-        # # list of borrow values
-        # borrow_values = []
-        # for i in borrow_result:
-        #     borrow_values.append(float(i["total"]["value"]))
-
-        # # list of prices
-        # price_values = []
-        # for i in price_result:
-        #     price_values.append(float(i["price"]["value"]))
-
-        # # list of exchange rates
-        # exchange_rate_values = []
-        # for i in exchange_rate_result:
-        #     exchange_rate_values.append(float(i["rate"]))
-
-        # # derived values
-        # total_supply_underlying = np.multiply(supply_values, exchange_rate_values)
-        # total_supply_usd = np.multiply(total_supply_underlying, price_values)
-        # total_borrow_usd = np.multiply(borrow_values, price_values)
-
-        # # create a dataframe for this asset
-        # df_asset_history = pd.DataFrame(
-        #     {
-        #         "ctoken_symbol": ctoken_symbol,
-        #         "date": timestamp_values,
-        #         "total_supply": total_supply_usd,
-        #         "total_borrow": total_borrow_usd,
-        #     }
-        # )
-
-        # # Add to the whole dataset frame
-        # df_compound = pd.concat(
-        #     [df_compound, df_asset_history], ignore_index=True, axis=0
-        # )
-
-        # Separate file
-        # file_name = path.join(
-        #     config["dev"]["config"]["data"]["COMPOUND_DATA_PATH"],
-        #     "compound_" + ctoken_symbol + ".csv",
-        # )
-        # df_asset_history.to_csv(file_name)
-        # time.sleep(1)
+        if len(df) > 0:
+            df.to_csv(
+                file_name,
+                mode="a",
+                header=False if path.exists(file_name) else True,
+                index=False,
+            )
