@@ -135,7 +135,7 @@ def fetch_comp_historical_data(start_date: datetime, end_date: datetime) -> None
             new_df = pd.json_normalize(token_history_result[w])
             if len(new_df.columns) == 3:
                 new_df.columns = ["block_number", "block_timestamp", w]
-                df = df.merge(new_df, on="block_number")
+                df = df.merge(new_df, on=["block_number", "block_timestamp"])
         if len(df) > 0:
             df.to_csv(
                 file_name,

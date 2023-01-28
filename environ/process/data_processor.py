@@ -16,6 +16,7 @@ from tqdm import tqdm
 from environ.utils.args_parser import arg_parse_cmd
 from environ.utils.info_logger import print_info_log
 from .network.prepare_network_data import prepare_network_data
+from .network.network_graph import prepare_volume
 
 
 def process_data():
@@ -38,12 +39,27 @@ def process_data():
         date = start_date + datetime.timedelta(i)
         date_list.append(date)
 
-    # Process network data
+    # Generate data list for volume data
+    date_list_volume = []
+    for i in range((end_date - start_date).days):
+        date = start_date + datetime.timedelta(i)
+        date_list_volume.append(date)
+
+    # # Process network data
+    # print_info_log(
+    #     f"Process Network Data from {parsed_args.start} to {parsed_args.end}",
+    #     "progress",
+    # )
+
+    # for date in tqdm(date_list, total=len(date_list)):
+    #     prepare_network_data(date, "v2")
+    #     prepare_network_data(date, "v3")
+
+    # Process volume data
     print_info_log(
-        f"Process Network Data from {parsed_args.start} to {parsed_args.end}",
+        f"Process Volume Data from {parsed_args.start} to {parsed_args.end}",
         "progress",
     )
 
     for date in tqdm(date_list, total=len(date_list)):
-        prepare_network_data(date, "v2")
-        prepare_network_data(date, "v3")
+        prepare_volume(date)
