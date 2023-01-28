@@ -81,8 +81,17 @@ Please import the data folder `dominant_defi/data` from Dropbox (authorization r
 
 To trigger scripts, please run the following commands:
 
-- First, run the following command to fetch defi-related data:
-  
+- First, create data folders
+
+```zsh
+mkdir data
+cd data
+mkdir data_compound
+cd ..
+```
+
+- run the following command to fetch defi-related data:
+
 ```zsh
 python scripts/fetch_main.py --start "YYYY-MM-DD" --end "YYYY-MM-DD"
 ```
