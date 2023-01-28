@@ -101,9 +101,6 @@ def fetch_comp_historical_data(start_date: datetime, end_date: datetime) -> None
         date = start_date + timedelta(days=date_count)
         date_list.append(date)
 
-    # Initialize a dataframe to store the whole result
-    df_compound = pd.DataFrame()
-
     # Do iteration for each ctoken
     for _, row in tqdm(
         df_compound_assets.iterrows(), total=df_compound_assets.shape[0]
@@ -121,7 +118,6 @@ def fetch_comp_historical_data(start_date: datetime, end_date: datetime) -> None
             "compound_" + ctoken_symbol + ".csv",
         )
 
-        df = pd.DataFrame()
         df = pd.json_normalize(token_history_result["borrow_rates"]).rename(
             columns={"rate": "borrow_rate"}
         )
@@ -135,7 +131,9 @@ def fetch_comp_historical_data(start_date: datetime, end_date: datetime) -> None
             new_df = pd.json_normalize(token_history_result[w])
             if len(new_df.columns) == 3:
                 new_df.columns = ["block_number", "block_timestamp", w]
-                df = df.merge(new_df, on=["block_number", "block_timestamp"])
+                df = df.merge(
+                    new_df, on=["block_number", "block_timestamp"], how="left"
+                )
         if len(df) > 0:
             df.to_csv(
                 file_name,
