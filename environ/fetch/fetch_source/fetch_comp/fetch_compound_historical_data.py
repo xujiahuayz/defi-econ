@@ -13,6 +13,8 @@ import pandas as pd
 from environ.utils.config_parser import Config
 
 
+config = Config()
+
 compound_assets = {
     "ETH": "0x4ddc2d193948926d02f9b1fe9e1daa0718270ed5",
     "USDC": "0x39aa39c021dfbae8fac545936693ac917d5e7563",
@@ -78,11 +80,6 @@ def fetch_comp_historical_data(start_date: datetime, end_date: datetime) -> None
     """
     Fetch compound historical data.
     """
-
-    # Initialize configuration
-    config = Config()
-
-    # Define the asset (symbol of underlying asset + ctoken address)
 
     df_compound_assets = pd.DataFrame(
         list(compound_assets.items()), columns=["underlying_symbol", "ctoken_address"]
