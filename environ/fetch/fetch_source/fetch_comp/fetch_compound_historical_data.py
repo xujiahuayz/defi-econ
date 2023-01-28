@@ -35,6 +35,7 @@ compound_assets = {
     "TUSD": "0x12392f67bdf24fae0af363c24ac620a2f67dad86",
     "AAVE": "0xe65cdb6479bac1e22340e4e755fae7e509ecd06c",
     "LINK": "0xface851a4921ce59e912d19329929ce6da6eb0c7",
+    "WBTC2": "0xccF4429DB6322D5C611ee964527D42E5d685DD6a",
 }
 
 
