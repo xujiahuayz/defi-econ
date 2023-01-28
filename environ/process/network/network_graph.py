@@ -12,15 +12,151 @@ import numpy as np
 import matplotlib.pyplot as plt
 from environ.utils.config_parser import Config
 
+# Initialize configuration
+config = Config()
+
+
+def prepare_volume(date: datetime.datetime) -> None:
+    """
+    Function to calculate volume
+    """
+
+    # Convert the datetime to the string
+    date_str = date.strftime("%Y%m%d")
+
+    # Edge data
+    edge_data = []
+
+    edge_data_v2 = pd.read_csv(
+        path.join(
+            config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
+            "v2" + "/inout_flow/inout_flow_tokens_" + "v2" + "_" + date_str + ".csv",
+        ),
+        index_col=0,
+    )
+
+    # Change data format at the presentation layer
+    edge_data_v2["Source_symbol"] = [i[12:-2] for i in edge_data_v2["Source"]]
+    edge_data_v2 = edge_data_v2.drop(columns=["Source"]).rename(
+        columns={"Source_symbol": "Source"}
+    )
+    edge_data_v2["Target_symbol"] = [i[12:-2] for i in edge_data_v2["Target"]]
+    edge_data_v2 = edge_data_v2.drop(columns=["Target"]).rename(
+        columns={"Target_symbol": "Target"}
+    )
+    edge_data_v2 = edge_data_v2[["Source", "Target", "Volume"]]
+
+    edge_data.append(edge_data_v2)
+
+    # List for the token data of v3
+    edge_data_v3_path = os.listdir(
+        path.join(
+            config["dev"]["config"]["data"]["NETWORK_DATA_PATH"], "v3" + "/inout_flow/"
+        )
+    )
+
+    # Check whether the uniswap v3 have data, and decide whether to merge
+    if "inout_flow_tokens_" + "v3" + "_" + date_str + ".csv" in edge_data_v3_path:
+        edge_data_v3 = pd.read_csv(
+            path.join(
+                config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
+                "v3"
+                + "/inout_flow/inout_flow_tokens_"
+                + "v3"
+                + "_"
+                + date_str
+                + ".csv",
+            ),
+            index_col=0,
+        )
+        edge_data.append(edge_data_v3)
+
+    edge_data = pd.concat(edge_data)
+    edge_data = edge_data.groupby(["Source", "Target"])["Volume"].sum().reset_index()
+
+    # Save the volume data
+    edge_data.to_csv(
+        path.join(
+            config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
+            "merged" + "/volume/volume_" + "merged" + "_" + date_str + ".csv",
+        )
+    )
+
+    # Calculate and save the volume_in data
+    volume_in_data = edge_data.copy()
+    volume_in_data = (
+        volume_in_data.groupby(["Target"])["Volume"]
+        .sum()
+        .reset_index()
+        .rename(columns={"Target": "Token"})
+    )
+    volume_in_data.to_csv(
+        path.join(
+            config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
+            "merged" + "/volume_in/volume_in_" + "merged" + "_" + date_str + ".csv",
+        )
+    )
+
+    # Calculate and save the volume_in data
+    volume_out_data = edge_data.copy()
+    volume_out_data = (
+        volume_out_data.groupby(["Source"])["Volume"]
+        .sum()
+        .reset_index()
+        .rename(columns={"Source": "Token"})
+    )
+    volume_out_data.to_csv(
+        path.join(
+            config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
+            "merged" + "/volume_out/volume_out_" + "merged" + "_" + date_str + ".csv",
+        )
+    )
+
+    # Calculate and save the volume_total data
+    volume_total_data = []
+    volume_total_data.append(volume_in_data)
+    volume_total_data.append(volume_out_data)
+    volume_total_data = pd.concat(volume_total_data)
+    volume_total_data = (
+        volume_total_data.groupby(["Token"])["Volume"].sum().reset_index()
+    )
+    volume_total_data.to_csv(
+        path.join(
+            config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
+            "merged"
+            + "/volume_total/volume_total_"
+            + "merged"
+            + "_"
+            + date_str
+            + ".csv",
+        )
+    )
+
+    # Calculate and save the volume_share data
+    volume_share_data = volume_total_data.copy()
+    volume_share_data["Volume"] = (
+        volume_share_data["Volume"] / volume_share_data["Volume"].sum()
+    )
+    volume_share_data.to_csv(
+        path.join(
+            config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
+            "merged"
+            + "/volume_share/volume_share_"
+            + "merged"
+            + "_"
+            + date_str
+            + ".csv",
+        )
+    )
+
 
 # def plot_network(date: datetime.datetime, uniswap_version: str) -> None:
-def plot_network(date: datetime.datetime) -> None:
+def prepare_network_graph(date: datetime.datetime) -> None:
     """
     Plot the network by networkx
     """
-    # Initialize configuration
-    config = Config()
 
+    # Convert the datetime to the string
     date_str = date.strftime("%Y%m%d")
 
     # Define the network instance, for directional graph
@@ -272,138 +408,138 @@ def plot_network(date: datetime.datetime) -> None:
         dir_volume = row["Volume"]
         G.add_edge(source, target, weight=dir_volume)
 
-    # Get the lists of weights for node sizes and edge widths
-    node_sizes = nx.get_node_attributes(G, "tvl")
-    node_colors = nx.get_node_attributes(G, "stable")
-    edge_widths = nx.get_edge_attributes(G, "weight")
+    # # Get the lists of weights for node sizes and edge widths
+    # node_sizes = nx.get_node_attributes(G, "tvl")
+    # node_colors = nx.get_node_attributes(G, "stable")
+    # edge_widths = nx.get_edge_attributes(G, "weight")
 
-    # Scale the varaibles to fit the node and edge parameters
-    # if uniswap_version == "v2":
-    #     node_sizes_scaler = 300000
-    #     # 5x arc line width than v3
-    #     # edge_widths_scaler = 2000000  # linear scaler
-    #     # 2x arc line width than v3?
-    #     edge_widths_scaler = 500
-    # elif uniswap_version == "v3":
-    #     node_sizes_scaler = 300000
-    #     # edge_widths_scaler = 10000000 # linear scaler
-    #     edge_widths_scaler = 500
+    # # Scale the varaibles to fit the node and edge parameters
+    # # if uniswap_version == "v2":
+    # #     node_sizes_scaler = 300000
+    # #     # 5x arc line width than v3
+    # #     # edge_widths_scaler = 2000000  # linear scaler
+    # #     # 2x arc line width than v3?
+    # #     edge_widths_scaler = 500
+    # # elif uniswap_version == "v3":
+    # #     node_sizes_scaler = 300000
+    # #     # edge_widths_scaler = 10000000 # linear scaler
+    # #     edge_widths_scaler = 500
 
-    node_sizes_scaler = 300000
-    # 5x arc line width than v3
-    # edge_widths_scaler = 2000000  # linear scaler
-    # 2x arc line width than v3?
-    edge_widths_scaler = 500
+    # node_sizes_scaler = 300000
+    # # 5x arc line width than v3
+    # # edge_widths_scaler = 2000000  # linear scaler
+    # # 2x arc line width than v3?
+    # edge_widths_scaler = 500
 
-    # Plot the network
-    pos = nx.circular_layout(G)
-    plt.figure(figsize=(16, 12))
+    # # Plot the network
+    # pos = nx.circular_layout(G)
+    # plt.figure(figsize=(16, 12))
 
+    # # plt.title(
+    # #     label="Directional Trading Volume among Top 50 Pools in Uniswap "
+    # #     + uniswap_version
+    # #     + " at "
+    # #     + date_str,
+    # #     fontdict={"fontsize": 12},
+    # #     loc="center",
+    # # )
     # plt.title(
     #     label="Directional Trading Volume among Top 50 Pools in Uniswap "
-    #     + uniswap_version
     #     + " at "
     #     + date_str,
     #     fontdict={"fontsize": 12},
     #     loc="center",
     # )
-    plt.title(
-        label="Directional Trading Volume among Top 50 Pools in Uniswap "
-        + " at "
-        + date_str,
-        fontdict={"fontsize": 12},
-        loc="center",
-    )
 
-    # nx.draw(G, node_size=node_sizes, pos=pos, with_labels = True, connectionstyle='arc3,rad=0.3')
-    nx.draw_networkx_nodes(
-        G,
-        pos,
-        node_size=[i / node_sizes_scaler for i in list(node_sizes.values())],
-        node_color=[
-            "tab:orange" if i == 1 else "tab:blue" for i in list(node_colors.values())
-        ],
-        alpha=0.8,
-    )
+    # # nx.draw(G, node_size=node_sizes, pos=pos, with_labels = True, connectionstyle='arc3,rad=0.3')
+    # nx.draw_networkx_nodes(
+    #     G,
+    #     pos,
+    #     node_size=[i / node_sizes_scaler for i in list(node_sizes.values())],
+    #     node_color=[
+    #         "tab:orange" if i == 1 else "tab:blue" for i in list(node_colors.values())
+    #     ],
+    #     alpha=0.8,
+    # )
 
-    nx.draw_networkx_edges(
-        G,
-        pos,
-        connectionstyle="arc3,rad=0.2",
-        arrowstyle="-|>",
-        arrowsize=20,
-        alpha=0.3,
-        width=[np.sqrt(i) / edge_widths_scaler for i in list(edge_widths.values())],
-    )
-    nx.draw_networkx_labels(G, pos, font_size=18, verticalalignment="bottom")
+    # nx.draw_networkx_edges(
+    #     G,
+    #     pos,
+    #     connectionstyle="arc3,rad=0.2",
+    #     arrowstyle="-|>",
+    #     arrowsize=20,
+    #     alpha=0.3,
+    #     width=[np.sqrt(i) / edge_widths_scaler for i in list(edge_widths.values())],
+    # )
+    # nx.draw_networkx_labels(G, pos, font_size=18, verticalalignment="bottom")
 
-    plt.savefig(
+    # plt.savefig(
+    #     path.join(
+    #         config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
+    #         "merged" + "/network_graph/network_" + "merged" + "_" + date_str + ".jpg",
+    #     )
+    # )
+
+    # plt.close()
+
+    # Compute degree and centrality
+    df_centrality = node_data.copy()
+    df_centrality["eigenvector_centrality"] = nx.eigenvector_centrality_numpy(
+        G, weight="weight"
+    ).values()
+    betweenness_centrality_dict = nx.betweenness_centrality(
+        G, k=None, normalized=True, weight=None, endpoints=False, seed=None
+    )
+    df_centrality["betweenness_centrality"] = df_centrality.apply(
+        lambda x: betweenness_centrality_dict[x.token], axis=1
+    )
+    df_centrality["degree"] = [i[1] for i in list(G.degree())]
+    df_centrality["in_degree"] = [i[1] for i in list(G.in_degree())]
+    df_centrality["out_degree"] = [i[1] for i in list(G.out_degree())]
+    df_centrality["weighted_degree"] = [i[1] for i in list(G.degree(weight="weight"))]
+    df_centrality["weighted_in_degree"] = [
+        i[1] for i in list(G.in_degree(weight="weight"))
+    ]
+    df_centrality["weighted_out_degree"] = [
+        i[1] for i in list(G.out_degree(weight="weight"))
+    ]
+
+    df_centrality.to_csv(
         path.join(
             config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
-            "merged" + "/network_graph/network_" + "merged" + "_" + date_str + ".jpg",
+            "merged"
+            + "/inflow_centrality/centrality_"
+            + "merged"
+            + "_"
+            + date_str
+            + ".csv",
         )
     )
 
-    plt.close()
+    G = G.reverse()
+    # Compute out degree and centrality
+    df_centrality_out = node_data.copy()
+    df_centrality_out["eigenvector_centrality"] = nx.eigenvector_centrality_numpy(
+        G, weight="weight"
+    ).values()
+    df_centrality_out["weighted_degree"] = [
+        i[1] for i in list(G.degree(weight="weight"))
+    ]
+    df_centrality_out["weighted_in_degree"] = [
+        i[1] for i in list(G.in_degree(weight="weight"))
+    ]
+    df_centrality_out["weighted_out_degree"] = [
+        i[1] for i in list(G.out_degree(weight="weight"))
+    ]
 
-    # # Compute degree and centrality
-    # df_centrality = node_data.copy()
-    # df_centrality["eigenvector_centrality"] = nx.eigenvector_centrality_numpy(
-    #     G, weight="weight"
-    # ).values()
-    # betweenness_centrality_dict = nx.betweenness_centrality(
-    #     G, k=None, normalized=True, weight=None, endpoints=False, seed=None
-    # )
-    # df_centrality["betweenness_centrality"] = df_centrality.apply(
-    #     lambda x: betweenness_centrality_dict[x.token], axis=1
-    # )
-    # df_centrality["degree"] = [i[1] for i in list(G.degree())]
-    # df_centrality["in_degree"] = [i[1] for i in list(G.in_degree())]
-    # df_centrality["out_degree"] = [i[1] for i in list(G.out_degree())]
-    # df_centrality["weighted_degree"] = [i[1] for i in list(G.degree(weight="weight"))]
-    # df_centrality["weighted_in_degree"] = [
-    #     i[1] for i in list(G.in_degree(weight="weight"))
-    # ]
-    # df_centrality["weighted_out_degree"] = [
-    #     i[1] for i in list(G.out_degree(weight="weight"))
-    # ]
-
-    # df_centrality.to_csv(
-    #     path.join(
-    #         config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
-    #         "merged"
-    #         + "/inflow_centrality/centrality_"
-    #         + "merged"
-    #         + "_"
-    #         + date_str
-    #         + ".csv",
-    #     )
-    # )
-
-    # G = G.reverse()
-    # # Compute out degree and centrality
-    # df_centrality_out = node_data.copy()
-    # df_centrality_out["eigenvector_centrality"] = nx.eigenvector_centrality_numpy(
-    #     G, weight="weight"
-    # ).values()
-    # df_centrality_out["weighted_degree"] = [
-    #     i[1] for i in list(G.degree(weight="weight"))
-    # ]
-    # df_centrality_out["weighted_in_degree"] = [
-    #     i[1] for i in list(G.in_degree(weight="weight"))
-    # ]
-    # df_centrality_out["weighted_out_degree"] = [
-    #     i[1] for i in list(G.out_degree(weight="weight"))
-    # ]
-
-    # df_centrality_out.to_csv(
-    #     path.join(
-    #         config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
-    #         "merged"
-    #         + "/outflow_centrality/centrality_"
-    #         + "merged"
-    #         + "_"
-    #         + date_str
-    #         + ".csv",
-    #     )
-    # )
+    df_centrality_out.to_csv(
+        path.join(
+            config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
+            "merged"
+            + "/outflow_centrality/centrality_"
+            + "merged"
+            + "_"
+            + date_str
+            + ".csv",
+        )
+    )
