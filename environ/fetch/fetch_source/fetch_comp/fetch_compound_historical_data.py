@@ -13,6 +13,8 @@ import pandas as pd
 from environ.utils.config_parser import Config
 
 
+config = Config()
+
 compound_assets = {
     "ETH": "0x4ddc2d193948926d02f9b1fe9e1daa0718270ed5",
     "USDC": "0x39aa39c021dfbae8fac545936693ac917d5e7563",
@@ -33,6 +35,7 @@ compound_assets = {
     "TUSD": "0x12392f67bdf24fae0af363c24ac620a2f67dad86",
     "AAVE": "0xe65cdb6479bac1e22340e4e755fae7e509ecd06c",
     "LINK": "0xface851a4921ce59e912d19329929ce6da6eb0c7",
+    "WBTC2": "0xccF4429DB6322D5C611ee964527D42E5d685DD6a",
 }
 
 
@@ -79,11 +82,6 @@ def fetch_comp_historical_data(start_date: datetime, end_date: datetime) -> None
     Fetch compound historical data.
     """
 
-    # Initialize configuration
-    config = Config()
-
-    # Define the asset (symbol of underlying asset + ctoken address)
-
     df_compound_assets = pd.DataFrame(
         list(compound_assets.items()), columns=["underlying_symbol", "ctoken_address"]
     )
@@ -100,9 +98,6 @@ def fetch_comp_historical_data(start_date: datetime, end_date: datetime) -> None
     for date_count in range(horizon):
         date = start_date + timedelta(days=date_count)
         date_list.append(date)
-
-    # Initialize a dataframe to store the whole result
-    df_compound = pd.DataFrame()
 
     # Do iteration for each ctoken
     for _, row in tqdm(
@@ -121,7 +116,6 @@ def fetch_comp_historical_data(start_date: datetime, end_date: datetime) -> None
             "compound_" + ctoken_symbol + ".csv",
         )
 
-        df = pd.DataFrame()
         df = pd.json_normalize(token_history_result["borrow_rates"]).rename(
             columns={"rate": "borrow_rate"}
         )
@@ -135,7 +129,9 @@ def fetch_comp_historical_data(start_date: datetime, end_date: datetime) -> None
             new_df = pd.json_normalize(token_history_result[w])
             if len(new_df.columns) == 3:
                 new_df.columns = ["block_number", "block_timestamp", w]
-                df = df.merge(new_df, on=["block_number", "block_timestamp"])
+                df = df.merge(
+                    new_df, on=["block_number", "block_timestamp"], how="left"
+                )
         if len(df) > 0:
             df.to_csv(
                 file_name,
