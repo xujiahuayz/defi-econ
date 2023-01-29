@@ -7,7 +7,6 @@ source = "merged"
 
 
 def plot_ma(graph_type, source):
-
     """
     Function to plot the 30-day moving average graph of each token
     """
