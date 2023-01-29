@@ -16,9 +16,9 @@ from environ.utils.config_parser import Config
 config = Config()
 
 
-def prepare_volume(date: datetime.datetime) -> None:
+def prepare_volume(date: datetime.datetime, data_srouce: str) -> None:
     """
-    Function to calculate volume
+    Function to calculate volume-related independent variables
     """
 
     # Convert the datetime to the string
@@ -222,6 +222,24 @@ def prepare_network_graph(date: datetime.datetime) -> None:
     # Generate token data
     token_data = pd.concat(token_data)
     token_data = token_data.groupby(["token"])["total_tvl"].sum().reset_index()
+
+    token_data.to_csv(
+        path.join(
+            config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
+            "merged" + "/tvl/tvl_" + "merged" + "_" + date_str + ".csv",
+        ),
+        index=False,
+    )
+
+    tvl_share = token_data.copy()
+    tvl_share = tvl_share["total_tvl"] / tvl_share["total_tvl"].sum()
+    tvl_share.to_csv(
+        path.join(
+            config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
+            "merged" + "/tvl_share/tvl_share_" + "merged" + "_" + date_str + ".csv",
+        ),
+        index=False,
+    )
 
     # # Change data format at the presentation layer
     # if uniswap_version == "v2":
