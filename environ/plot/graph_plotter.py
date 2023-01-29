@@ -61,6 +61,6 @@ def plot_graph():
     # Plot time-series graphs
     print_info_log("Plot time-series graphs for v2 and v3", "progress")
 
-    # plot_timeseries(date_list, "v2")
+    plot_timeseries(date_list, "v2")
     # plot_timeseries(date_list, "v3")
-    plot_timeseries(date_list, "merged")
+    # plot_timeseries(date_list, "merged")

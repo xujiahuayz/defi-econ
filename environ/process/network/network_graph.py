@@ -203,7 +203,7 @@ def prepare_volume(date: datetime.datetime, data_srouce: str) -> None:
 
 
 # def plot_network(date: datetime.datetime, uniswap_version: str) -> None:
-def prepare_network_graph(date: datetime.datetime) -> None:
+def prepare_network_graph(date: datetime.datetime, data_source: str) -> None:
     """
     Plot the network by networkx
     """
@@ -231,45 +231,52 @@ def prepare_network_graph(date: datetime.datetime) -> None:
     # token data
     token_data = []
 
-    token_data_v2 = pd.read_csv(
-        path.join(
-            config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
-            "v2" + "/primary_tokens/primary_tokens_" + "v2" + "_" + date_str + ".csv",
-        ),
-        index_col=0,
-    )
-
-    # Change data format at the presentation layer for Uniswap 2
-    token_data_v2["token_symbol"] = [i[12:-2] for i in token_data_v2["token"]]
-    token_data_v2 = token_data_v2.drop(columns=["token"]).rename(
-        columns={"token_symbol": "token"}
-    )[["token", "total_tvl"]]
-
-    # List for the token data of v3
-    token_data_v3_path = os.listdir(
-        path.join(
-            config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
-            "v3" + "/primary_tokens/",
-        )
-    )
-
-    token_data.append(token_data_v2)
-
-    # Check whether the uniswap v3 have data, and decide whether to merge
-    if "primary_tokens_" + "v3" + "_" + date_str + ".csv" in token_data_v3_path:
-        token_data_v3 = pd.read_csv(
+    if (data_source == "v2") | (data_source == "merged"):
+        token_data_v2 = pd.read_csv(
             path.join(
                 config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
-                "v3"
+                "v2"
                 + "/primary_tokens/primary_tokens_"
-                + "v3"
+                + "v2"
                 + "_"
                 + date_str
                 + ".csv",
             ),
             index_col=0,
         )
-        token_data.append(token_data_v3)
+
+        # Change data format at the presentation layer for Uniswap 2
+        token_data_v2["token_symbol"] = [i[12:-2] for i in token_data_v2["token"]]
+        token_data_v2 = token_data_v2.drop(columns=["token"]).rename(
+            columns={"token_symbol": "token"}
+        )[["token", "total_tvl"]]
+
+        token_data.append(token_data_v2)
+
+    if (data_source == "v3") | (data_source == "merged"):
+        # List for the token data of v3
+        token_data_v3_path = os.listdir(
+            path.join(
+                config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
+                "v3" + "/primary_tokens/",
+            )
+        )
+
+        # Check whether the uniswap v3 have data, and decide whether to merge
+        if "primary_tokens_" + "v3" + "_" + date_str + ".csv" in token_data_v3_path:
+            token_data_v3 = pd.read_csv(
+                path.join(
+                    config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
+                    "v3"
+                    + "/primary_tokens/primary_tokens_"
+                    + "v3"
+                    + "_"
+                    + date_str
+                    + ".csv",
+                ),
+                index_col=0,
+            )
+            token_data.append(token_data_v3)
 
     # Generate token data
     token_data = pd.concat(token_data)
@@ -278,7 +285,7 @@ def prepare_network_graph(date: datetime.datetime) -> None:
     token_data.to_csv(
         path.join(
             config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
-            "merged" + "/tvl/tvl_" + "merged" + "_" + date_str + ".csv",
+            data_source + "/tvl/tvl_" + data_source + "_" + date_str + ".csv",
         ),
         index=False,
     )
@@ -288,7 +295,12 @@ def prepare_network_graph(date: datetime.datetime) -> None:
     tvl_share.to_csv(
         path.join(
             config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
-            "merged" + "/tvl_share/tvl_share_" + "merged" + "_" + date_str + ".csv",
+            data_source
+            + "/tvl_share/tvl_share_"
+            + data_source
+            + "_"
+            + date_str
+            + ".csv",
         ),
         index=False,
     )
@@ -315,16 +327,18 @@ def prepare_network_graph(date: datetime.datetime) -> None:
 
     token_lib = []
 
-    token_lib_v2 = pd.DataFrame.from_dict(
-        config["dev"]["config"]["token_library"]["v2"]
-    )
+    if (data_source == "v2") | (data_source == "merged"):
+        token_lib_v2 = pd.DataFrame.from_dict(
+            config["dev"]["config"]["token_library"]["v2"]
+        )
+        token_lib.append(token_lib_v2)
 
-    token_lib_v3 = pd.DataFrame.from_dict(
-        config["dev"]["config"]["token_library"]["v3"]
-    )
+    if (data_source == "v3") | (data_source == "merged"):
+        token_lib_v3 = pd.DataFrame.from_dict(
+            config["dev"]["config"]["token_library"]["v3"]
+        )
+        token_lib.append(token_lib_v3)
 
-    token_lib.append(token_lib_v2)
-    token_lib.append(token_lib_v3)
     token_lib = pd.concat(token_lib)
     token_lib = token_lib.drop_duplicates("token").set_index("token")
 
@@ -413,144 +427,65 @@ def prepare_network_graph(date: datetime.datetime) -> None:
     # Edge data
     edge_data = []
 
-    edge_data_v2 = pd.read_csv(
-        path.join(
-            config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
-            "v2" + "/inout_flow/inout_flow_tokens_" + "v2" + "_" + date_str + ".csv",
-        ),
-        index_col=0,
-    )
-
-    # Change data format at the presentation layer
-    edge_data_v2["Source_symbol"] = [i[12:-2] for i in edge_data_v2["Source"]]
-    edge_data_v2 = edge_data_v2.drop(columns=["Source"]).rename(
-        columns={"Source_symbol": "Source"}
-    )
-    edge_data_v2["Target_symbol"] = [i[12:-2] for i in edge_data_v2["Target"]]
-    edge_data_v2 = edge_data_v2.drop(columns=["Target"]).rename(
-        columns={"Target_symbol": "Target"}
-    )
-    edge_data_v2 = edge_data_v2[["Source", "Target", "Volume"]]
-
-    edge_data.append(edge_data_v2)
-
-    # List for the token data of v3
-    edge_data_v3_path = os.listdir(
-        path.join(
-            config["dev"]["config"]["data"]["NETWORK_DATA_PATH"], "v3" + "/inout_flow/"
-        )
-    )
-
-    # Check whether the uniswap v3 have data, and decide whether to merge
-    if "inout_flow_tokens_" + "v3" + "_" + date_str + ".csv" in edge_data_v3_path:
-        edge_data_v3 = pd.read_csv(
+    if (data_source == "v2") | (data_source == "merged"):
+        edge_data_v2 = pd.read_csv(
             path.join(
                 config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
-                "v3"
+                "v2"
                 + "/inout_flow/inout_flow_tokens_"
-                + "v3"
+                + "v2"
                 + "_"
                 + date_str
                 + ".csv",
             ),
             index_col=0,
         )
-        edge_data.append(edge_data_v3)
+
+        # Change data format at the presentation layer
+        edge_data_v2["Source_symbol"] = [i[12:-2] for i in edge_data_v2["Source"]]
+        edge_data_v2 = edge_data_v2.drop(columns=["Source"]).rename(
+            columns={"Source_symbol": "Source"}
+        )
+        edge_data_v2["Target_symbol"] = [i[12:-2] for i in edge_data_v2["Target"]]
+        edge_data_v2 = edge_data_v2.drop(columns=["Target"]).rename(
+            columns={"Target_symbol": "Target"}
+        )
+        edge_data_v2 = edge_data_v2[["Source", "Target", "Volume"]]
+
+        edge_data.append(edge_data_v2)
+    if (data_source == "v3") | (data_source == "merged"):
+        # List for the token data of v3
+        edge_data_v3_path = os.listdir(
+            path.join(
+                config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
+                "v3" + "/inout_flow/",
+            )
+        )
+
+        # Check whether the uniswap v3 have data, and decide whether to merge
+        if "inout_flow_tokens_" + "v3" + "_" + date_str + ".csv" in edge_data_v3_path:
+            edge_data_v3 = pd.read_csv(
+                path.join(
+                    config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
+                    "v3"
+                    + "/inout_flow/inout_flow_tokens_"
+                    + "v3"
+                    + "_"
+                    + date_str
+                    + ".csv",
+                ),
+                index_col=0,
+            )
+            edge_data.append(edge_data_v3)
 
     edge_data = pd.concat(edge_data)
     edge_data = edge_data.groupby(["Source", "Target"])["Volume"].sum().reset_index()
-
-    # Change data format at the presentation layer
-    # if uniswap_version == "v2":
-    #     edge_data["Source_symbol"] = [i[12:-2] for i in edge_data["Source"]]
-    #     edge_data = edge_data.drop(columns=["Source"]).rename(
-    #         columns={"Source_symbol": "Source"}
-    #     )
-    #     edge_data["Target_symbol"] = [i[12:-2] for i in edge_data["Target"]]
-    #     edge_data = edge_data.drop(columns=["Target"]).rename(
-    #         columns={"Target_symbol": "Target"}
-    #     )
-    #     edge_data = edge_data[["Source", "Target", "Volume"]]
 
     for _, row in edge_data.iterrows():
         source = row["Source"]
         target = row["Target"]
         dir_volume = row["Volume"]
         G.add_edge(source, target, weight=dir_volume)
-
-    # # Get the lists of weights for node sizes and edge widths
-    # node_sizes = nx.get_node_attributes(G, "tvl")
-    # node_colors = nx.get_node_attributes(G, "stable")
-    # edge_widths = nx.get_edge_attributes(G, "weight")
-
-    # # Scale the varaibles to fit the node and edge parameters
-    # # if uniswap_version == "v2":
-    # #     node_sizes_scaler = 300000
-    # #     # 5x arc line width than v3
-    # #     # edge_widths_scaler = 2000000  # linear scaler
-    # #     # 2x arc line width than v3?
-    # #     edge_widths_scaler = 500
-    # # elif uniswap_version == "v3":
-    # #     node_sizes_scaler = 300000
-    # #     # edge_widths_scaler = 10000000 # linear scaler
-    # #     edge_widths_scaler = 500
-
-    # node_sizes_scaler = 300000
-    # # 5x arc line width than v3
-    # # edge_widths_scaler = 2000000  # linear scaler
-    # # 2x arc line width than v3?
-    # edge_widths_scaler = 500
-
-    # # Plot the network
-    # pos = nx.circular_layout(G)
-    # plt.figure(figsize=(16, 12))
-
-    # # plt.title(
-    # #     label="Directional Trading Volume among Top 50 Pools in Uniswap "
-    # #     + uniswap_version
-    # #     + " at "
-    # #     + date_str,
-    # #     fontdict={"fontsize": 12},
-    # #     loc="center",
-    # # )
-    # plt.title(
-    #     label="Directional Trading Volume among Top 50 Pools in Uniswap "
-    #     + " at "
-    #     + date_str,
-    #     fontdict={"fontsize": 12},
-    #     loc="center",
-    # )
-
-    # # nx.draw(G, node_size=node_sizes, pos=pos, with_labels = True, connectionstyle='arc3,rad=0.3')
-    # nx.draw_networkx_nodes(
-    #     G,
-    #     pos,
-    #     node_size=[i / node_sizes_scaler for i in list(node_sizes.values())],
-    #     node_color=[
-    #         "tab:orange" if i == 1 else "tab:blue" for i in list(node_colors.values())
-    #     ],
-    #     alpha=0.8,
-    # )
-
-    # nx.draw_networkx_edges(
-    #     G,
-    #     pos,
-    #     connectionstyle="arc3,rad=0.2",
-    #     arrowstyle="-|>",
-    #     arrowsize=20,
-    #     alpha=0.3,
-    #     width=[np.sqrt(i) / edge_widths_scaler for i in list(edge_widths.values())],
-    # )
-    # nx.draw_networkx_labels(G, pos, font_size=18, verticalalignment="bottom")
-
-    # plt.savefig(
-    #     path.join(
-    #         config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
-    #         "merged" + "/network_graph/network_" + "merged" + "_" + date_str + ".jpg",
-    #     )
-    # )
-
-    # plt.close()
 
     # Compute degree and centrality
     df_centrality = node_data.copy()
@@ -577,9 +512,9 @@ def prepare_network_graph(date: datetime.datetime) -> None:
     df_centrality.to_csv(
         path.join(
             config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
-            "merged"
+            data_source
             + "/inflow_centrality/centrality_"
-            + "merged"
+            + data_source
             + "_"
             + date_str
             + ".csv",
@@ -605,9 +540,9 @@ def prepare_network_graph(date: datetime.datetime) -> None:
     df_centrality_out.to_csv(
         path.join(
             config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
-            "merged"
+            data_source
             + "/outflow_centrality/centrality_"
-            + "merged"
+            + data_source
             + "_"
             + date_str
             + ".csv",

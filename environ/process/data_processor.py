@@ -39,11 +39,11 @@ def process_data():
     start_date = datetime.datetime.strptime(parsed_args.start, "%Y-%m-%d")
     end_date = datetime.datetime.strptime(parsed_args.end, "%Y-%m-%d")
 
-    # # Generate date list
-    # date_list = []
-    # for i in range((end_date - start_date).days + 1):
-    #     date = start_date + datetime.timedelta(i)
-    #     date_list.append(date)
+    # Generate date list
+    date_list = []
+    for i in range((end_date - start_date).days + 1):
+        date = start_date + datetime.timedelta(i)
+        date_list.append(date)
 
     # Generate data list for volume data
     date_list_volume = []
@@ -59,16 +59,18 @@ def process_data():
 
     # for date in tqdm(date_list, total=len(date_list)):
     #     prepare_network_data(date, "v2")
-    #     prepare_network_data(date, "v3")
+    # prepare_network_data(date, "v3")
 
-    # # Prepare eigenvector centrality data
-    # print_info_log(
-    #     f"Process Eigenvector Centrality Data from {parsed_args.start} to {parsed_args.end}",
-    #     "progress",
-    # )
+    # Prepare eigenvector centrality data
+    print_info_log(
+        f"Process Eigenvector Centrality Data from {parsed_args.start} to {parsed_args.end}",
+        "progress",
+    )
 
-    # for date in tqdm(date_list_volume, total=len(date_list)):
-    #     prepare_network_graph(date)
+    for date in tqdm(date_list_volume, total=len(date_list)):
+        # prepare_network_graph(date, "v2")
+        prepare_network_graph(date, "v3")
+        # prepare_network_graph(date, "merged")
 
     # # Prepare betweenness centrality data
     # print_info_log(
@@ -118,13 +120,13 @@ def process_data():
     #     date_list,
     # )
 
-    # Process volume data
-    print_info_log(
-        f"Process Volume Data from {parsed_args.start} to {parsed_args.end}",
-        "progress",
-    )
+    # # Process volume data
+    # print_info_log(
+    #     f"Process Volume Data from {parsed_args.start} to {parsed_args.end}",
+    #     "progress",
+    # )
 
-    for date in tqdm(date_list_volume, total=len(date_list_volume)):
-        # prepare_volume(date, "v2")
-        prepare_volume(date, "v3")
-        # prepare_volume(date, "merged")
+    # for date in tqdm(date_list_volume, total=len(date_list_volume)):
+    # prepare_volume(date, "v2")
+    # prepare_volume(date, "v3")
+    # prepare_volume(date, "merged")
