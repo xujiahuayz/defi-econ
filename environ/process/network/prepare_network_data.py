@@ -71,6 +71,8 @@ def get_primary_token_list(date: datetime.datetime, uni_version: str) -> pd.Data
         total_tvl = 0
 
         # Get the pools involving this token as token0 or token1
+        # TODO: potentially need to divide by 2 for V2
+        # definitely for V3 need to also check the calculation altogether
         for _, row_pool in df_top50_pairs_dir_volume.iterrows():
             if token in {row_pool["token0"], row_pool["token1"]}:
                 total_tvl = total_tvl + row_pool[tvl_symbol]

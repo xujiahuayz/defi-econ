@@ -35,7 +35,7 @@ compound_assets = {
 }
 
 
-def prepare_compound_data():
+def prepare_compound_data() -> None:
     """
     A function to calculate the boroow and supply rate for each asset
     """
@@ -49,39 +49,44 @@ def prepare_compound_data():
         )
 
         # Load the data from the csv file
-        compound_info = pd.read_csv(file_name)
 
-        # Calculate the borrow rata in USD
-        compound_info["borrow_rate_usd"] = (
-            compound_info["borrow_rate"] * compound_info["Prices_usd"]
-        )
-        compound_info["supply_rate_usd"] = (
-            compound_info["supply_rate"]
-            * compound_info["exchange_rate"]
-            * compound_info["Prices_usd"]
-        )
+        def calculate_borrow_supply(file_name: str) -> pd.DataFrame:
+            compound_info = pd.read_csv(file_name)
+
+            # Calculate the borrow rata in USD
+            compound_info["total_borrow_usd"] = (
+                compound_info["total_borrows_history"] * compound_info["prices_usd"]
+            )
+            compound_info["total_supply_usd"] = (
+                compound_info["total_supply_history"]
+                * compound_info["exchange_rates"]
+                * compound_info["prices_usd"]
+            )
+            # convert the timestamp to datetime
+            compound_info["block_timestamp"] = pd.to_datetime(
+                compound_info["block_timestamp"], unit="s"
+            )
+            return compound_info
+
+        # Calculate the borrow and supply in USD
+        compound_info = calculate_borrow_supply(file_name)
 
         if ctoken_symbol == "WBTC":
             file_name = path.join(
                 config["dev"]["config"]["data"]["COMPOUND_DATA_PATH"],
                 "compound_" + "WBTC2" + ".csv",
             )
-            compound_info2 = pd.read_csv(file_name)
-            # Calculate the borrow rata in USD
-            compound_info2["borrow_rate_usd"] = (
-                compound_info2["borrow_rate"] * compound_info2["Prices_usd"]
-            )
-            compound_info2["supply_rate_usd"] = (
-                compound_info2["supply_rate"]
-                * compound_info2["exchange_rate"]
-                * compound_info2["Prices_usd"]
-            )
+
+            # Calculate the borrow and supply in USD
+            compound_info2 = calculate_borrow_supply(file_name)
 
             compound_info = pd.concat(
                 [compound_info, compound_info2], ignore_index=True
             )
             compound_info = (
-                compound_info.groupby(["Block_number", "Block_timestamp"])
+                compound_info.groupby(["block_timestamp"])[
+                    ["total_borrow_usd", "total_supply_usd"]
+                ]
                 .sum()
                 .reset_index()
             )
@@ -90,13 +95,8 @@ def prepare_compound_data():
         if ctoken_symbol == "WBTC2":
             continue
 
-        # convert the timestamp to datetime
-        compound_info["Block_timestamp"] = pd.to_datetime(
-            compound_info["Block_timestamp"], unit="s"
-        )
-
         # sort the data by timestamp
-        compound_info = compound_info.sort_values(by=["Block_timestamp"])
+        compound_info = compound_info.sort_values(by=["block_timestamp"])
 
         # set the new file name
         file_name = path.join(
@@ -106,3 +106,7 @@ def prepare_compound_data():
 
         # save the data to csv
         compound_info.to_csv(file_name, index=False)
+
+
+if __name__ == "__main__":
+    prepare_compound_data()
