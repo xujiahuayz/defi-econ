@@ -27,49 +27,57 @@ def prepare_volume(date: datetime.datetime, data_srouce: str) -> None:
     # Edge data
     edge_data = []
 
-    edge_data_v2 = pd.read_csv(
-        path.join(
-            config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
-            "v2" + "/inout_flow/inout_flow_tokens_" + "v2" + "_" + date_str + ".csv",
-        ),
-        index_col=0,
-    )
-
-    # Change data format at the presentation layer
-    edge_data_v2["Source_symbol"] = [i[12:-2] for i in edge_data_v2["Source"]]
-    edge_data_v2 = edge_data_v2.drop(columns=["Source"]).rename(
-        columns={"Source_symbol": "Source"}
-    )
-    edge_data_v2["Target_symbol"] = [i[12:-2] for i in edge_data_v2["Target"]]
-    edge_data_v2 = edge_data_v2.drop(columns=["Target"]).rename(
-        columns={"Target_symbol": "Target"}
-    )
-    edge_data_v2 = edge_data_v2[["Source", "Target", "Volume"]]
-
-    edge_data.append(edge_data_v2)
-
-    # List for the token data of v3
-    edge_data_v3_path = os.listdir(
-        path.join(
-            config["dev"]["config"]["data"]["NETWORK_DATA_PATH"], "v3" + "/inout_flow/"
-        )
-    )
-
-    # Check whether the uniswap v3 have data, and decide whether to merge
-    if "inout_flow_tokens_" + "v3" + "_" + date_str + ".csv" in edge_data_v3_path:
-        edge_data_v3 = pd.read_csv(
+    if (data_srouce == "v2") | (data_srouce == "merged"):
+        edge_data_v2 = pd.read_csv(
             path.join(
                 config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
-                "v3"
+                "v2"
                 + "/inout_flow/inout_flow_tokens_"
-                + "v3"
+                + "v2"
                 + "_"
                 + date_str
                 + ".csv",
             ),
             index_col=0,
         )
-        edge_data.append(edge_data_v3)
+
+        # Change data format at the presentation layer
+        edge_data_v2["Source_symbol"] = [i[12:-2] for i in edge_data_v2["Source"]]
+        edge_data_v2 = edge_data_v2.drop(columns=["Source"]).rename(
+            columns={"Source_symbol": "Source"}
+        )
+        edge_data_v2["Target_symbol"] = [i[12:-2] for i in edge_data_v2["Target"]]
+        edge_data_v2 = edge_data_v2.drop(columns=["Target"]).rename(
+            columns={"Target_symbol": "Target"}
+        )
+        edge_data_v2 = edge_data_v2[["Source", "Target", "Volume"]]
+
+        edge_data.append(edge_data_v2)
+
+    if (data_srouce == "v3") | (data_srouce == "merged"):
+        # List for the token data of v3
+        edge_data_v3_path = os.listdir(
+            path.join(
+                config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
+                "v3" + "/inout_flow/",
+            )
+        )
+
+        # Check whether the uniswap v3 have data, and decide whether to merge
+        if "inout_flow_tokens_" + "v3" + "_" + date_str + ".csv" in edge_data_v3_path:
+            edge_data_v3 = pd.read_csv(
+                path.join(
+                    config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
+                    "v3"
+                    + "/inout_flow/inout_flow_tokens_"
+                    + "v3"
+                    + "_"
+                    + date_str
+                    + ".csv",
+                ),
+                index_col=0,
+            )
+            edge_data.append(edge_data_v3)
 
     edge_data = pd.concat(edge_data)
     edge_data = edge_data.groupby(["Source", "Target"])["Volume"].sum().reset_index()
@@ -78,7 +86,7 @@ def prepare_volume(date: datetime.datetime, data_srouce: str) -> None:
     edge_data.to_csv(
         path.join(
             config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
-            "merged" + "/volume/volume_" + "merged" + "_" + date_str + ".csv",
+            data_srouce + "/volume/volume_" + data_srouce + "_" + date_str + ".csv",
         )
     )
 
@@ -93,11 +101,33 @@ def prepare_volume(date: datetime.datetime, data_srouce: str) -> None:
     volume_in_data.to_csv(
         path.join(
             config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
-            "merged" + "/volume_in/volume_in_" + "merged" + "_" + date_str + ".csv",
+            data_srouce
+            + "/volume_in/volume_in_"
+            + data_srouce
+            + "_"
+            + date_str
+            + ".csv",
         )
     )
 
-    # Calculate and save the volume_in data
+    # Calculate and save the volume_in_share data
+    volume_in_share_data = volume_in_data.copy()
+    volume_in_share_data["Volume"] = (
+        volume_in_share_data["Volume"] / volume_in_share_data["Volume"].sum()
+    )
+    volume_in_share_data.to_csv(
+        path.join(
+            config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
+            data_srouce
+            + "/volume_in_share/volume_in_share_"
+            + data_srouce
+            + "_"
+            + date_str
+            + ".csv",
+        )
+    )
+
+    # Calculate and save the volume_out data
     volume_out_data = edge_data.copy()
     volume_out_data = (
         volume_out_data.groupby(["Source"])["Volume"]
@@ -108,7 +138,29 @@ def prepare_volume(date: datetime.datetime, data_srouce: str) -> None:
     volume_out_data.to_csv(
         path.join(
             config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
-            "merged" + "/volume_out/volume_out_" + "merged" + "_" + date_str + ".csv",
+            data_srouce
+            + "/volume_out/volume_out_"
+            + data_srouce
+            + "_"
+            + date_str
+            + ".csv",
+        )
+    )
+
+    # Calculate and save the volume_out_share data
+    volume_out_share_data = volume_out_data.copy()
+    volume_out_share_data["Volume"] = (
+        volume_out_share_data["Volume"] / volume_out_share_data["Volume"].sum()
+    )
+    volume_out_share_data.to_csv(
+        path.join(
+            config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
+            data_srouce
+            + "/volume_out_share/volume_out_share_"
+            + data_srouce
+            + "_"
+            + date_str
+            + ".csv",
         )
     )
 
@@ -123,9 +175,9 @@ def prepare_volume(date: datetime.datetime, data_srouce: str) -> None:
     volume_total_data.to_csv(
         path.join(
             config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
-            "merged"
+            data_srouce
             + "/volume_total/volume_total_"
-            + "merged"
+            + data_srouce
             + "_"
             + date_str
             + ".csv",
@@ -140,9 +192,9 @@ def prepare_volume(date: datetime.datetime, data_srouce: str) -> None:
     volume_share_data.to_csv(
         path.join(
             config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
-            "merged"
+            data_srouce
             + "/volume_share/volume_share_"
-            + "merged"
+            + data_srouce
             + "_"
             + date_str
             + ".csv",
