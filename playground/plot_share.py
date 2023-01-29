@@ -77,8 +77,15 @@ def plot_ma(graph_type, source):
 
     # place the legend outside the plot without border
     plt.legend(
-        bbox_to_anchor=(1.01, 1), loc="upper left", borderaxespad=0.0, prop={"size": 15}
+        bbox_to_anchor=(1.01, 1), loc="upper left", borderaxespad=0.0, prop={"size": 40}
     )
+
+    # enlarge the font of ticker
+    plt.xticks(fontsize=40)
+    plt.yticks(fontsize=40)
+
+    # add some rotation for x tick labels
+    plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
 
     # tight layout
     plt.tight_layout()
