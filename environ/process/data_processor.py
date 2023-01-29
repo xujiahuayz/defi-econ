@@ -35,9 +35,9 @@ def process_data():
     args = arg_parse_cmd()
     parsed_args = args.parse_args()
 
-    # # Input start date and end date
-    # start_date = datetime.datetime.strptime(parsed_args.start, "%Y-%m-%d")
-    # end_date = datetime.datetime.strptime(parsed_args.end, "%Y-%m-%d")
+    # Input start date and end date
+    start_date = datetime.datetime.strptime(parsed_args.start, "%Y-%m-%d")
+    end_date = datetime.datetime.strptime(parsed_args.end, "%Y-%m-%d")
 
     # # Generate date list
     # date_list = []
@@ -45,11 +45,11 @@ def process_data():
     #     date = start_date + datetime.timedelta(i)
     #     date_list.append(date)
 
-    # # Generate data list for volume data
-    # date_list_volume = []
-    # for i in range((end_date - start_date).days):
-    #     date = start_date + datetime.timedelta(i)
-    #     date_list_volume.append(date)
+    # Generate data list for volume data
+    date_list_volume = []
+    for i in range((end_date - start_date).days):
+        date = start_date + datetime.timedelta(i)
+        date_list_volume.append(date)
 
     # # Process inout flow data
     # print_info_log(
@@ -70,59 +70,61 @@ def process_data():
     # for date in tqdm(date_list_volume, total=len(date_list)):
     #     prepare_network_graph(date)
 
-    # Prepare betweenness centrality data
-    print_info_log(
-        f"Process Betweenness Centrality Data from {parsed_args.start} to {parsed_args.end}",
-        "progress",
-    )
-
-    # Update the data monthly
-    start_date_input = parsed_args.start
-    end_date_input = parsed_args.end
-
-    for month in pd.date_range(start_date_input, end_date_input, freq="MS"):
-        start_date = datetime.datetime.strptime(month.strftime("%Y-%m-%d"), "%Y-%m-%d")
-        end_date = datetime.datetime.strptime(
-            (month + relativedelta.relativedelta(months=1)).strftime("%Y-%m-%d"),
-            "%Y-%m-%d",
-        )
-
-        label_year = month.strftime("%Y")
-        label_month = month.strftime("%b").upper()
-        label = label_year + label_month
-
-        # list for multiple dates
-        date_list_betweenness = []
-        for i in range((end_date - start_date).days):
-            date = start_date + datetime.timedelta(i)
-            date_str = date.strftime("%Y%m%d")
-            date_list_betweenness.append(date_str)
-
-        # Multiprocess
-        p = Pool()
-        p.map(
-            partial(
-                get_betweenness_centrality,
-                top_list_label=label,
-                uniswap_version="v2",
-            ),
-            date_list_betweenness,
-        )
-        # p = Pool()
-        # p.map(
-        #     partial(
-        #         get_betweenness_centrality,
-        #         top_list_label=top50_list_label,
-        #         uniswap_version="v2",
-        #     ),
-        #     date_list,
-        # )
-
-    # # Process volume data
+    # # Prepare betweenness centrality data
     # print_info_log(
-    #     f"Process Volume Data from {parsed_args.start} to {parsed_args.end}",
+    #     f"Process Betweenness Centrality Data from {parsed_args.start} to {parsed_args.end}",
     #     "progress",
     # )
 
-    # for date in tqdm(date_list, total=len(date_list)):
-    #     prepare_volume(date)
+    # # Update the data monthly
+    # start_date_input = parsed_args.start
+    # end_date_input = parsed_args.end
+
+    # for month in pd.date_range(start_date_input, end_date_input, freq="MS"):
+    #     start_date = datetime.datetime.strptime(month.strftime("%Y-%m-%d"), "%Y-%m-%d")
+    #     end_date = datetime.datetime.strptime(
+    #         (month + relativedelta.relativedelta(months=1)).strftime("%Y-%m-%d"),
+    #         "%Y-%m-%d",
+    #     )
+
+    #     label_year = month.strftime("%Y")
+    #     label_month = month.strftime("%b").upper()
+    #     label = label_year + label_month
+
+    #     # list for multiple dates
+    #     date_list_betweenness = []
+    #     for i in range((end_date - start_date).days):
+    #         date = start_date + datetime.timedelta(i)
+    #         date_str = date.strftime("%Y%m%d")
+    #         date_list_betweenness.append(date_str)
+
+    #     # Multiprocess
+    #     p = Pool()
+    #     p.map(
+    #         partial(
+    #             get_betweenness_centrality,
+    #             top_list_label=label,
+    #             uniswap_version="v2",
+    #         ),
+    #         date_list_betweenness,
+    #     )
+    # p = Pool()
+    # p.map(
+    #     partial(
+    #         get_betweenness_centrality,
+    #         top_list_label=top50_list_label,
+    #         uniswap_version="v2",
+    #     ),
+    #     date_list,
+    # )
+
+    # Process volume data
+    print_info_log(
+        f"Process Volume Data from {parsed_args.start} to {parsed_args.end}",
+        "progress",
+    )
+
+    for date in tqdm(date_list_volume, total=len(date_list_volume)):
+        # prepare_volume(date, "v2")
+        prepare_volume(date, "v3")
+        # prepare_volume(date, "merged")

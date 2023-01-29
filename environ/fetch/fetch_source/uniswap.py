@@ -181,7 +181,7 @@ def fetch_uni(
                 "Error",
             )
 
-    print_info_log("Fetch raw swap data", "Uniswap V2")
+    print_info_log("Fetch raw swap data", "Uniswap V3")
 
     for date in tqdm(swap_date_list_v3):
         try:
