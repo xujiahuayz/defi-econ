@@ -223,7 +223,15 @@ def plot_ma(graph_type, source):
 
     # tight layout
     plt.tight_layout()
-    plt.savefig(f"figures/{graph_type}_{source}.pdf")
+    if graph_type in [
+        "volume_share",
+        "tvl_share",
+        "volume_in_share",
+        "volume_out_share",
+    ]:
+        plt.savefig(f"figures/{graph_type}_{source}.pdf")
+    else:
+        plt.savefig(f"figures/{graph_type}.pdf")
     # plt.show()
 
 
@@ -235,7 +243,8 @@ if __name__ == "__main__":
             "volume_out_share",
             "volume_share",
             "tvl_share",
-            "borrow_share",
-            "supply_share",
         ]:
+            plot_ma(graph_type, source)
+
+        for graph_type in ["borrow_share", "supply_share"]:
             plot_ma(graph_type, source)
