@@ -291,7 +291,7 @@ def prepare_network_graph(date: datetime.datetime, data_source: str) -> None:
     )
 
     tvl_share = token_data.copy()
-    tvl_share = tvl_share["total_tvl"] / tvl_share["total_tvl"].sum()
+    tvl_share["total_tvl"] = tvl_share["total_tvl"] / tvl_share["total_tvl"].sum()
     tvl_share.to_csv(
         path.join(
             config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],

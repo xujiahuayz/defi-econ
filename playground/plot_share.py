@@ -31,9 +31,18 @@ def plot_ma(graph_type, source):
     # combine all csv files into one dataframe
     frame = pd.concat(li, axis=0, ignore_index=True)
 
+    if graph_type == "tvl_share":
+        token_col_name = "token"
+        y_col_name = "total_tvl"
+    else:
+        token_col_name = "Token"
+        y_col_name = "Volume"
+
     # only keep WETH, WBTC, MATIC, USDC, USDT, DAI, FEI
     frame = frame[
-        frame["Token"].isin(["WETH", "WBTC", "MATIC", "USDC", "USDT", "DAI", "FEI"])
+        frame[token_col_name].isin(
+            ["WETH", "WBTC", "MATIC", "USDC", "USDT", "DAI", "FEI"]
+        )
     ]
 
     # specify the color for each token
@@ -50,21 +59,27 @@ def plot_ma(graph_type, source):
     # plot the 30-day moving average of volume share of each token
     # the x-axis is date, the y-axis is volume share
     # the plot is saved in data/data_network/merged/volume_share/volume_share.png
-    frame["Volume"] = frame["Volume"].astype(float)
+    frame[y_col_name] = frame[y_col_name].astype(float)
     frame["Date"] = pd.to_datetime(frame["Date"])
-    frame = frame.sort_values(by=["Token", "Date"])
+    frame = frame.sort_values(by=[token_col_name, "Date"])
 
     # each day from 2020-08-01 to 2022-12-31, calculate the past 30-day moving average of volume share of each token
-    plot_df = frame.groupby(["Token"])["Volume"].rolling(window=30).mean().reset_index()
+    plot_df = (
+        frame.groupby([token_col_name])[y_col_name]
+        .rolling(window=30)
+        .mean()
+        .reset_index()
+    )
 
     # plot the 30-day moving average of volume share of each token
     fig, ax = plt.subplots(figsize=(15, 10))
-    for token in plot_df["Token"].unique():
-        date = frame.loc[frame["Token"] == token]["Date"]
+    for token in plot_df[token_col_name].unique():
+        date = frame.loc[frame[token_col_name] == token]["Date"]
         # plot the 30-day moving average of volume share of each token using date
+
         ax.plot(
             date,
-            plot_df[plot_df["Token"] == token]["Volume"],
+            plot_df[plot_df[token_col_name] == token][y_col_name],
             label=token,
             color=color_dict[token],
         )
@@ -96,5 +111,10 @@ def plot_ma(graph_type, source):
 if __name__ == "__main__":
 
     for source in ["v2", "v3", "merged"]:
-        for graph_type in ["volume_in_share", "volume_out_share", "volume_share"]:
+        for graph_type in [
+            "volume_in_share",
+            "volume_out_share",
+            "volume_share",
+            "tvl_share",
+        ]:
             plot_ma(graph_type, source)
