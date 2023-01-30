@@ -6,6 +6,52 @@ graph_type = "volume_share"
 source = "merged"
 
 
+def betweenness_prep(graph_type, source):
+    """
+    Function to prepare the data for the betweenness centrality graph
+    """
+
+    # combine all csv files in data/data_betweenness/betweenness with the format of "betweenness_{source}_date.csv"
+    # each csv file's title contains the date, and has columes: Token, Betweenness, and has row number
+    # the new combined dataframe has colume: Date, Token, Betweenness
+
+    # get all csv files in data/data_betweenness/betweenness
+    path = rf"data/data_betweenness/betweenness"  # use your path
+    all_files = glob.glob(path + "/*.csv")
+
+    # extract date from file name
+    # combine data from all csv files into one dataframe, dropping row number of each csv file
+    li = []
+    for filename in all_files:
+        if filename.split("_")[-2].split(".")[0] == source:
+            df = pd.read_csv(filename, index_col=None, header=0)
+            date = filename.split("_")[-1].split(".")[0]
+            df["Date"] = date
+            li.append(df)
+
+    # combine all csv files into one dataframe
+    frame = pd.concat(li, axis=0, ignore_index=True)
+
+    # only keep WETH, WBTC, MATIC, USDC, USDT, DAI, FEI
+    frame = frame[
+        frame["node"].isin(["WETH", "WBTC", "MATIC", "USDC", "USDT", "DAI", "FEI"])
+    ]
+
+    # plot the 30-day moving average of betweenness centrality of each token
+    # the x-axis is date, the y-axis is betweenness centrality
+    # the plot is saved in data/data_betweenness/betweenness/betweenness.png
+    frame["graph_type"] = frame["graph_type"].astype(float)
+    frame["Date"] = pd.to_datetime(frame["Date"])
+    frame = frame.sort_values(by=["node", "Date"])
+
+    # each day from 2020-08-01 to 2022-12-31, calculate the past 30-day moving average of betweenness centrality of each token
+    plot_df = (
+        frame.groupby(["node"])["graph_type"].rolling(window=30).mean().reset_index()
+    )
+    x_col_name = "Date"
+    return plot_df, "node", x_col_name, graph_type, frame
+
+
 def volume_tvl_prep(graph_type, source):
     """
     Function to plot the 30-day moving average graph of each token
@@ -166,9 +212,13 @@ def plot_ma(graph_type, source):
         plot_df, token_col_name, x_col_name, y_col_name, frame = volume_tvl_prep(
             graph_type, source
         )
-    else:
+    elif graph_type in ["borrow_share", "supply_share"]:
         plot_df, token_col_name, x_col_name, y_col_name, frame = borrow_supply_prep(
             graph_type
+        )
+    else:
+        plot_df, token_col_name, x_col_name, y_col_name, frame = betweenness_prep(
+            graph_type, source
         )
 
     # specify the color for each token
@@ -248,3 +298,6 @@ if __name__ == "__main__":
 
         for graph_type in ["borrow_share", "supply_share"]:
             plot_ma(graph_type, source)
+
+    for souce in ["v2", "v3", "v2v3"]:
+        plot_ma(graph_type, source)

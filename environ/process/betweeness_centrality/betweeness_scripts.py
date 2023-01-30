@@ -333,7 +333,11 @@ def compute_betweenness_count(swaps_tx_route: pd.DataFrame) -> pd.DataFrame:
     """
 
     # Exclude "LOOP" AND "SPOON"
-    count_based_set = swaps_tx_route[swaps_tx_route["label"] == 0]
+    count_based_set = swaps_tx_route[swaps_tx_route["label"] == 0].copy()
+
+    # Exclude Error
+    count_based_set = count_based_set[count_based_set["intermediary"] != "Error"]
+
     node_set_count = (
         count_based_set["ultimate_source"]
         .append(count_based_set["ultimate_target"])
@@ -349,90 +353,18 @@ def compute_betweenness_count(swaps_tx_route: pd.DataFrame) -> pd.DataFrame:
     for node in node_set_count:
         # Calculate the betweenness centrality
         denominator_df = count_based_set.loc[
-            count_based_set["ultimate_source"]
-            != node & count_based_set["ultimate_target"]
-            != node
+            (count_based_set["ultimate_source"] != node)
+            & (count_based_set["ultimate_target"] != node)
         ]
 
         denominator = denominator_df.shape[0]
-
-        numerator = denominator_df.loc[node in denominator_df["intermediatry"]].shape[0]
+        numerator = denominator_df.loc[
+            [node in inter_list for inter_list in denominator_df["intermediary"]]
+        ].shape[0]
 
         betweenness_score_count.loc[
             betweenness_score_count["node"] == node, "betweenness_centrality_count"
         ] = (numerator / denominator)
-
-    # # Get all involving tokens as nodes
-    # node_set_count = (
-    #     count_based_set["ultimate_source"]
-    #     .append(count_based_set["ultimate_target"])
-    #     .unique()
-    # )
-
-    # # Step 1: sigma
-    # # Dataframe for the sigma of count based set
-    # sigma_count_value = count_based_set["pair"].value_counts()
-    # sigma_count = pd.DataFrame(
-    #     {"pair": sigma_count_value.index, "sigma_count": sigma_count_value.values}
-    # )
-
-    # sigma_count["pair_index"] = sigma_count["pair"].apply(
-    #     lambda x: str(x)
-    # )  # use str-format as index (list-format can not be indexed)
-    # sigma_count = sigma_count.set_index("pair_index")
-
-    # # Step 2: conditional sigma
-    # # Dataframe for the conditional sigma of count based set
-    # sigma_con_count = pd.DataFrame(
-    #     columns=["pair_index", "node", "sigma_conditional_count"]
-    # )
-    # sigma_con_count = sigma_con_count.set_index(["pair_index", "node"])
-
-    # # Initialize
-    # for index, row in sigma_count.iterrows():
-    #     for node in node_set_count:
-    #         sigma_con_count.loc[(str(row["pair"]), node), "sigma_conditional_count"] = 0
-
-    # # Compute
-    # for index, row in count_based_set.iterrows():
-    #     if len(row["intermediary"]) > 0:
-    #         for inter_node in row["intermediary"]:
-    #             sigma_con_count.loc[
-    #                 (str(row["pair"]), inter_node), "sigma_conditional_count"
-    #             ] += 1
-
-    # # Step 3: betweenness centrality of each node
-    # # Dataframe for the scores of betweenness centrality (by nodes) of count based set
-    # # Initialize
-    # betweenness_score_count = pd.DataFrame(
-    #     {"node": node_set_count, "betweenness_centrality_count": 0}
-    # )
-    # betweenness_score_count = betweenness_score_count.set_index("node")
-
-    # # Compute for node n
-    # for node in node_set_count:
-    #     sigma_sum = 0
-    #     sigma_con_sum = 0
-
-    #     # for each pair<s,t>
-    #     for pair_index, row in sigma_count.iterrows():
-
-    #         if str(node) in row["pair"]:
-    #             continue
-
-    #         sigma_st = sigma_count.loc[str(pair_index), "sigma_count"]
-    #         sigma_con_stn = sigma_con_count.loc[
-    #             (str(pair_index), str(node)), "sigma_conditional_count"
-    #         ]
-
-    #         sigma_sum += sigma_st
-    #         sigma_con_sum += sigma_con_stn
-
-    #     betweenness_score_n_count = sigma_con_sum / sigma_sum
-    #     # store the value
-    #     betweenness_score_count.loc[
-    #         str(node), "betweenness_centrality_count"
-    #     ] = betweenness_score_n_count
 
     return betweenness_score_count
 
@@ -441,12 +373,12 @@ def compute_betweenness_volume(swaps_tx_route: pd.DataFrame) -> pd.DataFrame:
     """
     Compute the betweenness centrality (volume weighted) and return the results as dataframe
     """
-
     # Exclude "LOOP" AND "SPOON"
-    volume_based_set = swaps_tx_route[swaps_tx_route["label"] == 0]
+    volume_based_set = swaps_tx_route[swaps_tx_route["label"] == 0].copy()
 
-    # Exclude "LOOP" AND "SPOON"
-    volume_based_set = swaps_tx_route[swaps_tx_route["label"] == 0]
+    # Exclude Error
+    volume_based_set = volume_based_set[volume_based_set["intermediary"] != "Error"]
+
     node_set_count = (
         volume_based_set["ultimate_source"]
         .append(volume_based_set["ultimate_target"])
@@ -455,92 +387,31 @@ def compute_betweenness_volume(swaps_tx_route: pd.DataFrame) -> pd.DataFrame:
 
     # Initialize the betweenness centrality dataframe
     betweenness_score_volume = pd.DataFrame(
-        {"node": node_set_count, "betweenness_centrality_count": 0}
+        {"node": node_set_count, "betweenness_centrality_volume": 0}
     )
 
     # Calculate the betweenness centrality
     for node in node_set_count:
         # Calculate the betweenness centrality
         denominator_df = volume_based_set.loc[
-            volume_based_set["ultimate_source"]
-            != node & volume_based_set["ultimate_target"]
-            != node
+            (volume_based_set["ultimate_source"] != node)
+            & (volume_based_set["ultimate_target"] != node)
         ]
 
-        denominator = denominator_df["volume_usd"].sum()
+        denominator = denominator_df["volume_usd"].apply(float).sum()
 
-        numerator = denominator_df.loc[
-            node in denominator_df["intermediatry"], "volume_usd"
-        ].sum()
+        numerator = (
+            denominator_df.loc[
+                [node in inter_list for inter_list in denominator_df["intermediary"]],
+                "volume_usd",
+            ]
+            .apply(float)
+            .sum()
+        )
 
         betweenness_score_volume.loc[
             betweenness_score_volume["node"] == node, "betweenness_centrality_volume"
         ] = (numerator / denominator)
-
-    # # Get all involving tokens as nodes
-    # node_set_volume = (
-    #     volume_based_set["ultimate_source"]
-    #     .append(volume_based_set["ultimate_target"])
-    #     .unique()
-    # )
-
-    # # Step 1: sigma
-    # # Dataframe for the sigma of count based set
-    # sigma_volume = (
-    #     volume_based_set[["pair_str", "volume_usd"]].groupby("pair_str").agg("sum")
-    # )
-    # sigma_volume.index = sigma_volume.index.set_names(["pair_index"])
-    # sigma_volume.rename(columns={"volume_usd": "sigma_volume"}, inplace=True)
-
-    # # Step 2: conditional sigma
-    # # Dataframe for the conditional sigma of count based set
-    # sigma_con_volume = pd.DataFrame(
-    #     columns=["pair_index", "node", "sigma_conditional_volume"]
-    # )
-    # sigma_con_volume = sigma_con_volume.set_index(["pair_index", "node"])
-
-    # # Initialize
-    # for index, row in sigma_volume.iterrows():
-    #     for node in node_set_volume:
-    #         sigma_con_volume.loc[(str(index), node), :] = 0
-
-    # # Compute
-    # for index, row in volume_based_set.iterrows():
-    #     if len(row["intermediary"]) > 0:
-    #         for inter_node in row["intermediary"]:
-    #             sigma_con_volume.loc[
-    #                 (str(row["pair"]), inter_node), "sigma_conditional_volume"
-    #             ] += row["volume_usd"]
-
-    # # Step 3: betweenness centrality of each node
-    # # Dataframe for the scores of betweenness centrality (by nodes) of count based set
-
-    # # Initialize
-    # betweenness_score_volume = pd.DataFrame(
-    #     {"node": node_set_volume, "betweenness_centrality_volume": 0}
-    # )
-    # betweenness_score_volume = betweenness_score_volume.set_index("node")
-
-    # # Compute for node n
-    # for node in node_set_volume:
-    #     sigma_sum = 0
-    #     sigma_con_sum = 0
-
-    #     # for each pair<s,t>
-    #     for pair_index, row in sigma_volume.iterrows():
-    #         sigma_st = sigma_volume.loc[str(pair_index), "sigma_volume"]
-    #         sigma_con_stn = sigma_con_volume.loc[
-    #             (str(pair_index), str(node)), "sigma_conditional_volume"
-    #         ]
-
-    #         sigma_sum += sigma_st
-    #         sigma_con_sum += sigma_con_stn
-
-    #     betweenness_score_n_volume = sigma_con_sum / sigma_sum
-    #     # store the value
-    #     betweenness_score_volume.loc[
-    #         str(node), "betweenness_centrality_volume"
-    #     ] = betweenness_score_n_volume
 
     return betweenness_score_volume
 
@@ -569,9 +440,16 @@ def get_betweenness_centrality(
     betweenness_score_count = compute_betweenness_count(swaps_tx_route)
     betweenness_score_volume = compute_betweenness_volume(swaps_tx_route)
 
-    compare_table = betweenness_score_count.sort_values(
-        by="betweenness_centrality_count", ascending=False
-    ).join(betweenness_score_volume)
+    # compare_table = betweenness_score_count.sort_values(
+    #     by="betweenness_centrality_count", ascending=False
+    # ).join(betweenness_score_volume)
+
+    compare_table = betweenness_score_count.merge(
+        betweenness_score_volume, on="node", how="left", validate="1:1"
+    )
+    compare_table.sort_values(
+        by="betweenness_centrality_count", ascending=False, inplace=True
+    )
 
     # Store to file
     betweenness_file_name = path.join(
@@ -591,12 +469,12 @@ if __name__ == "__main__":
     from multiprocessing import Pool
     from functools import partial
 
-    involve_version = "v2v3"  # candidate: v2, v3, v2v3
+    involve_version = "v2"  # candidate: v2, v3, v2v3
 
-    top50_list_label = "2022MAY"
+    top50_list_label = "2020JUN"
     # Data output include start_date, exclude end_date
-    start_date = datetime.datetime(2022, 5, 1, 0, 0)
-    end_date = datetime.datetime(2022, 6, 1, 0, 0)
+    start_date = datetime.datetime(2020, 6, 1, 0, 0)
+    end_date = datetime.datetime(2020, 7, 1, 0, 0)
 
     # list for multiple dates
     date_list = []
