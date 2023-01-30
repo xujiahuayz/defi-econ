@@ -6,50 +6,50 @@ graph_type = "volume_share"
 source = "merged"
 
 
-def betweenness_prep(graph_type, source):
-    """
-    Function to prepare the data for the betweenness centrality graph
-    """
+# def betweenness_prep(graph_type, source):
+#     """
+#     Function to prepare the data for the betweenness centrality graph
+#     """
 
-    # combine all csv files in data/data_betweenness/betweenness with the format of "betweenness_{source}_date.csv"
-    # each csv file's title contains the date, and has columes: Token, Betweenness, and has row number
-    # the new combined dataframe has colume: Date, Token, Betweenness
+#     # combine all csv files in data/data_betweenness/betweenness with the format of "betweenness_{source}_date.csv"
+#     # each csv file's title contains the date, and has columes: Token, Betweenness, and has row number
+#     # the new combined dataframe has colume: Date, Token, Betweenness
 
-    # get all csv files in data/data_betweenness/betweenness
-    path = rf"data/data_betweenness/betweenness"  # use your path
-    all_files = glob.glob(path + "/*.csv")
+#     # get all csv files in data/data_betweenness/betweenness
+#     path = rf"data/data_betweenness/betweenness"  # use your path
+#     all_files = glob.glob(path + "/*.csv")
 
-    # extract date from file name
-    # combine data from all csv files into one dataframe, dropping row number of each csv file
-    li = []
-    for filename in all_files:
-        if filename.split("_")[-2].split(".")[0] == source:
-            df = pd.read_csv(filename, index_col=None, header=0)
-            date = filename.split("_")[-1].split(".")[0]
-            df["Date"] = date
-            li.append(df)
+#     # extract date from file name
+#     # combine data from all csv files into one dataframe, dropping row number of each csv file
+#     li = []
+#     for filename in all_files:
+#         if filename.split("_")[-2].split(".")[0] == source:
+#             df = pd.read_csv(filename, index_col=None, header=0)
+#             date = filename.split("_")[-1].split(".")[0]
+#             df["Date"] = date
+#             li.append(df)
 
-    # combine all csv files into one dataframe
-    frame = pd.concat(li, axis=0, ignore_index=True)
+#     # combine all csv files into one dataframe
+#     frame = pd.concat(li, axis=0, ignore_index=True)
 
-    # only keep WETH, WBTC, MATIC, USDC, USDT, DAI, FEI
-    frame = frame[
-        frame["node"].isin(["WETH", "WBTC", "MATIC", "USDC", "USDT", "DAI", "FEI"])
-    ]
+#     # only keep WETH, WBTC, MATIC, USDC, USDT, DAI, FEI
+#     frame = frame[
+#         frame["node"].isin(["WETH", "WBTC", "MATIC", "USDC", "USDT", "DAI", "FEI"])
+#     ]
 
-    # plot the 30-day moving average of betweenness centrality of each token
-    # the x-axis is date, the y-axis is betweenness centrality
-    # the plot is saved in data/data_betweenness/betweenness/betweenness.png
-    frame["graph_type"] = frame["graph_type"].astype(float)
-    frame["Date"] = pd.to_datetime(frame["Date"])
-    frame = frame.sort_values(by=["node", "Date"])
+#     # plot the 30-day moving average of betweenness centrality of each token
+#     # the x-axis is date, the y-axis is betweenness centrality
+#     # the plot is saved in data/data_betweenness/betweenness/betweenness.png
+#     frame["graph_type"] = frame["graph_type"].astype(float)
+#     frame["Date"] = pd.to_datetime(frame["Date"])
+#     frame = frame.sort_values(by=["node", "Date"])
 
-    # each day from 2020-08-01 to 2022-12-31, calculate the past 30-day moving average of betweenness centrality of each token
-    plot_df = (
-        frame.groupby(["node"])["graph_type"].rolling(window=30).mean().reset_index()
-    )
-    x_col_name = "Date"
-    return plot_df, "node", x_col_name, graph_type, frame
+#     # each day from 2020-08-01 to 2022-12-31, calculate the past 30-day moving average of betweenness centrality of each token
+#     plot_df = (
+#         frame.groupby(["node"])["graph_type"].rolling(window=30).mean().reset_index()
+#     )
+#     x_col_name = "Date"
+#     return plot_df, "node", x_col_name, graph_type, frame
 
 
 def volume_tvl_prep(graph_type, source):
@@ -198,6 +198,57 @@ def borrow_supply_prep(graph_type):
     return plot_df, token_col_name, x_col_name, y_col_name, frame
 
 
+def borrow_supply_apy_prep(graph_type):
+    """
+    Function to preprocess the data for the borrow
+    """
+
+    # combine all csv files with "_processed" at the end of the name in data/data_compound into a panel dataset.
+    # each csv file's title contains the date, and has columes: Token, Borrow, and has row number
+    # the new combined dataframe has colume: Date, Token, Borrow
+
+    # get all csv files in data/data_compound
+    path = rf"data/data_compound"  # use your path
+    all_files = glob.glob(path + "/*_processed.csv")
+
+    # merge all csv files into one dataframe with token name in the file name as the primary key
+    li = []
+    for filename in all_files:
+        df = pd.read_csv(filename, index_col=None, header=0)
+        token = filename.split("_")[-2]
+        # skip the file with token name "WBTC2"
+        if token == "WBTC2":
+            continue
+
+        if token == "ETH":
+            df["token"] = "WETH"
+        else:
+            df["token"] = token
+
+        li.append(df)
+
+    # combine all csv files into one dataframe
+    frame = pd.concat(li, axis=0, ignore_index=True)
+
+    frame = frame[
+        frame["token"].isin(["WETH", "WBTC", "MATIC", "USDC", "USDT", "DAI", "FEI"])
+    ]
+
+    # convert the date to datetime format for the frame
+    frame["block_timestamp"] = pd.to_datetime(frame["block_timestamp"])
+
+    token_col_name = "token"
+    y_col_name = "borrow_rate" if graph_type == "borrow_apy" else "supply_rates"
+    x_col_name = "block_timestamp"
+
+    # each day from 2020-08-01 to 2022-12-31, calculate the past 30-day moving average of borrow share of each token
+    plot_df = (
+        frame.groupby(["token"])[y_col_name].rolling(window=30).mean().reset_index()
+    )
+
+    return plot_df, token_col_name, x_col_name, y_col_name, frame
+
+
 def plot_ma(graph_type, source):
     """
     Function to plot the
@@ -216,10 +267,16 @@ def plot_ma(graph_type, source):
         plot_df, token_col_name, x_col_name, y_col_name, frame = borrow_supply_prep(
             graph_type
         )
-    else:
-        plot_df, token_col_name, x_col_name, y_col_name, frame = betweenness_prep(
-            graph_type, source
+    elif graph_type in ["borrow_apy", "supply_apy"]:
+        plot_df, token_col_name, x_col_name, y_col_name, frame = borrow_supply_apy_prep(
+            graph_type
         )
+    else:
+        pass
+    # else:
+    #     plot_df, token_col_name, x_col_name, y_col_name, frame = betweenness_prep(
+    #         graph_type, source
+    #     )
 
     # specify the color for each token
     color_dict = {
@@ -244,6 +301,10 @@ def plot_ma(graph_type, source):
             label=token,
             color=color_dict[token],
         )
+
+        # fix the y-axis to be between 0 and 0.3 if the graph is apy
+        if graph_type in ["borrow_apy", "supply_apy"]:
+            ax.set_ylim([0, 0.3])
 
     # draw a thick vertical lines  with some transparency
     ax.axvline(
@@ -296,8 +357,8 @@ if __name__ == "__main__":
         ]:
             plot_ma(graph_type, source)
 
-        for graph_type in ["borrow_share", "supply_share"]:
-            plot_ma(graph_type, source)
-
-    for souce in ["v2", "v3", "v2v3"]:
+    for graph_type in ["borrow_share", "supply_share", "borrow_apy", "supply_apy"]:
         plot_ma(graph_type, source)
+
+    # for souce in ["v2", "v3", "v2v3"]:
+    #     plot_ma(graph_type, source)
