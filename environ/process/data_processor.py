@@ -106,7 +106,7 @@ def process_data():
             partial(
                 get_betweenness_centrality,
                 top_list_label=label,
-                uniswap_version="v2",
+                uniswap_version="v3",
             ),
             date_list_betweenness,
         )

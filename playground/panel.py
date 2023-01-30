@@ -2,6 +2,7 @@ import pandas as pd
 import glob
 import matplotlib.pyplot as plt
 import seaborn as sns
+import numpy as np
 
 naming_dict = {
     "TVL_share": "${\it LiquidityShare}$",
@@ -243,6 +244,41 @@ def reg_panel():
 
     # rename the column "token" to "Token"
     reg_panel = reg_panel.rename(columns={"token": "Token"})
+
+    # load in the data in data/data_global/token_market/primary_token_price_2.csv
+    # the dataframe has colume: Date, Token, Price
+    # the dataframe has row number
+    # the dataframe is sorted by Date and Token
+
+    # read in the csv file
+    ret = pd.read_csv(
+        rf"data/data_global/token_market/primary_token_price_2.csv",
+        index_col=None,
+        header=0,
+    )
+
+    # convert date in "YYYY-MM-DD" to datetime
+    ret["Date"] = pd.to_datetime(ret["Date"], format="%Y-%m-%d")
+
+    # read in the csv file in /Users/yichenluo/Desktop/ResearchAssistant/LBS/defi-econ/data/data_global/gas_fee/data_source/etherscan_avg_gas_price.csv
+    # the dataframe has colume: Date, Price
+    # the dataframe has row number
+    # the dataframe is sorted by Date
+
+    # read in the csv file
+    gas = pd.read_csv(
+        rf"data/data_global/gas_fee/data_source/etherscan_avg_gas_price.csv",
+        index_col=None,
+        header=0,
+    )
+
+    # convert date
+    gas["Date"] = pd.to_datetime(gas["Date"])
+
+    # merge the two dataframe into one panel dataset via Date
+    reg_panel = pd.merge(reg_panel, ret, how="left", on=["Date"])
+
+    # rename the column "token" to "Token"
 
     # create the correlation matrix
     corr = reg_panel.corr()
