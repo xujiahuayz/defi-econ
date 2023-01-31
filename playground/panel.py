@@ -4,6 +4,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 import matplotlib.colors as colors
+import statsmodels.formula.api as smf
+import statsmodels.api as sm
+from stargazer.stargazer import Stargazer
+
 
 naming_dict = {
     "TVL_share": "${\it LiquidityShare}$",
@@ -214,8 +218,6 @@ def reg_panel():
 
     # only keep the columne "borrow_rate" and "supply_rates" and block_timestamp and token
     frame = frame[["Date", "Token", "borrow_rate", "supply_rates"]]
-
-    print(frame)
 
     # merge the two dataframe into one panel dataset via outer join
     reg_panel = pd.merge(reg_panel, frame, how="outer", on=["Date", "Token"])
@@ -537,8 +539,6 @@ def reg_panel():
     # change the column names to be more readable
     corr = corr.rename(columns=naming_dict)
 
-    print(corr)
-
     # set the borrow_rate, borrow_rate to 1
     # TODO: check why
     corr.loc["borrow_rate", "${\it BorrowAPY}^{USD}$"] = 1
@@ -591,11 +591,88 @@ def reg_panel():
     # save the figure
     plt.savefig(rf"figures/correlation_matrix.pdf")
 
-    plt.show()
-
     # save the correlation matrix as a csv file
     corr.to_csv(rf"tables/correlation_matrix.csv")
+
+    # calculate the summary statistics of the panel dataset
+    summary = reg_panel.describe()
+
+    # take the transpose of the summary statistics
+    summary = summary.T
+
+    # save the summary statistics as a csv file
+    summary.to_csv(rf"tables/summary_statistics.csv")
+
+    # rename the panel column names to be more readable
+    reg_panel = reg_panel.rename(columns=naming_dict)
+
+    # save the summary statistics as a latex file
+    with open(rf"tables/summary_statistics.tex", "w") as tf:
+        tf.write(summary.to_latex())
+
+    # simple linear regress the Inflow_centrality with Volume_share
+
+    X = reg_panel["${\it VShare}$"]
+    X = sm.add_constant(X)
+    Y = reg_panel["${\it EigenCent}^{In}$"]
+
+    # create the model_1
+    model_1 = sm.OLS(Y, X, missing="drop")
+
+    # fit the model_1
+    results_1 = model_1.fit()
+
+    # simple linear regress the Inflow_centrality with volume_in_share
+
+    X = reg_panel["${\it VShare}^{\it In}$"]
+    X = sm.add_constant(X)
+
+    # create the model_2
+    model_2 = sm.OLS(Y, X, missing="drop")
+
+    # fit the model_2
+    results_2 = model_2.fit()
+
+    # simple linear regress the Inflow_centrality with volume_out_share
+
+    X = reg_panel["${\it VShare}^{\it Out}$"]
+    X = sm.add_constant(X)
+
+    # create the model_3
+    model_3 = sm.OLS(Y, X, missing="drop")
+
+    # fit the model_3
+    results_3 = model_3.fit()
+
+    # use stargazer to create the regression table
+    stargazer = Stargazer([results_1, results_2, results_3])
+
+    # set the title of the table
+    stargazer.title("Simple Linear Regression")
+
+    # save the table to a latex file
+    with open(rf"tables/regression_table.tex", "w") as tf:
+        tf.write(stargazer.render_latex())
 
 
 if __name__ == "__main__":
     reg_panel()
+    naming_dict = {
+        "TVL_share": "${\it LiquidityShare}$",
+        "Inflow_centrality": "${\it EigenCent}^{In}$",
+        "Outflow_centrality": "${\it EigenCent}^{Out}$",
+        "Volume_share": "${\it VShare}$",
+        "volume_in_share": "${\it VShare}^{\it In}$",
+        "volume_out_share": "${\it VShare}^{\it Out}$",
+        "Borrow_share": "${\it BorrowShare}$",
+        "Supply_share": "${\it SupplyShare}$",
+        "betweenness_centrality_count": "${\it BetwCent}^C$",
+        "betweenness_centrality_volume": "${\it BetwCent}^V$",
+        "cov_gas": "${\it CovGas}$",
+        "cov_sp": "${\it CovSP}$",
+        "cov_eth": "${\it CovETH}$",
+        "log_return": "${R}^{\it USD}$",
+        "std": "${\it \sigma}^{USD}$",
+        "borrow_rate": "${\it BorrowAPY}^{USD}$",
+        "supply_rates": "${\it SupplyAPY}^{USD}$",
+    }
