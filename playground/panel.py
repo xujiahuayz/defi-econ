@@ -3,6 +3,7 @@ import glob
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+import matplotlib.colors as colors
 
 naming_dict = {
     "TVL_share": "${\it LiquidityShare}$",
@@ -11,6 +12,8 @@ naming_dict = {
     "Volume_share": "${\it VShare}$",
     "Borrow_share": "${\it BorrowShare}$",
     "Supply_share": "${\it SupplyShare}$",
+    "betweenness_centrality_count": "${\it BetwCent}^C$",
+    "betweenness_centrality_volume": "${\it BetwCent}^V$",
 }
 
 
@@ -245,10 +248,31 @@ def reg_panel():
     # rename the column "token" to "Token"
     reg_panel = reg_panel.rename(columns={"token": "Token"})
 
-    # load in the data in data/data_global/token_market/primary_token_price_2.csv
-    # the dataframe has colume: Date, Token, Price
-    # the dataframe has row number
-    # the dataframe is sorted by Date and Token
+    # get all csv files in data/data_betweenness/betweenness
+    path = rf"data/data_betweenness/betweenness"  # use your path
+    all_files = glob.glob(path + "/*.csv")
+
+    # extract date from file name
+    # combine data from all csv files into one dataframe, dropping row number of each csv file
+    li = []
+    for filename in all_files:
+        if filename.split("_")[-2].split(".")[0] == "v2v3":
+            df = pd.read_csv(filename, index_col=None, header=0)
+            date = filename.split("_")[-1].split(".")[0]
+            df["Date"] = date
+            li.append(df)
+
+    # combine all csv files into one dataframe
+    frame = pd.concat(li, axis=0, ignore_index=True)
+
+    # convert date in "YYYYMMDD" to datetime
+    frame["Date"] = pd.to_datetime(frame["Date"], format="%Y%m%d")
+
+    # rename the column "node" to "Token"
+    frame = frame.rename(columns={"node": "Token"})
+
+    # merge the two dataframe into one panel dataset via outer join
+    reg_panel = pd.merge(reg_panel, frame, how="outer", on=["Date", "Token"])
 
     # read in the csv file
     prc = pd.read_csv(
@@ -368,11 +392,45 @@ def reg_panel():
     # # merge the reg_panel and ret dataframe into one panel dataset via outer join on "Date" and "Token"
     # reg_panel = pd.merge(reg_panel, ret, how="left", on=["Date", "Token"])
 
+    # drop the unnecessary column "Unnamed: 0"
+    # TODO: check how it is generated
+    reg_panel = reg_panel.drop(columns=["Unnamed: 0"])
+
     # create the correlation matrix
     corr = reg_panel.corr()
 
     # change the column names to be more readable
     corr = corr.rename(columns=naming_dict)
+
+    # This dictionary defines the colormap
+    cdict3 = {
+        "red": (
+            (0.0, 0.0, 0.0),
+            (0.25, 0.0, 0.0),
+            (0.5, 0.8, 1.0),
+            (0.75, 1.0, 1.0),
+            (1.0, 0.4, 1.0),
+        ),
+        "green": (
+            (0.0, 0.0, 0.0),
+            (0.25, 0.0, 0.0),
+            (0.5, 0.9, 0.9),
+            (0.75, 0.0, 0.0),
+            (1.0, 0.0, 0.0),
+        ),
+        "blue": (
+            (0.0, 0.0, 0.4),
+            (0.25, 1.0, 1.0),
+            (0.5, 1.0, 0.8),
+            (0.75, 0.0, 0.0),
+            (1.0, 0.0, 0.0),
+        ),
+        "alpha": ((0.0, 1.0, 1.0), (0.5, 0.3, 0.3), (1.0, 1.0, 1.0)),
+    }
+
+    # Create the colormap using the dictionary with the range of -1 to 1
+    # make sure the range of the ledgend is -1 to 1
+    GnRd = colors.LinearSegmentedColormap("GnRd", cdict3)
 
     # plot the heatmap
     sns.heatmap(
@@ -380,7 +438,9 @@ def reg_panel():
         xticklabels=corr.columns,
         yticklabels=corr.columns,
         annot=True,
-        cmap="Greens",
+        cmap=GnRd,
+        vmin=-1,
+        vmax=1,
     )
 
     # tight layout
