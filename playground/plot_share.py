@@ -357,7 +357,7 @@ if __name__ == "__main__":
     for graph_type in ["borrow_share", "supply_share", "borrow_apy", "supply_apy"]:
         plot_ma(graph_type, source)
 
-    for source in ["v2", "v3"]:
+    for source in ["v2", "v3", "v2v3"]:
         for graph_type in [
             "betweenness_centrality_count",
             "betweenness_centrality_volume",
