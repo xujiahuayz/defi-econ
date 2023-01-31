@@ -7,7 +7,7 @@ import matplotlib.colors as colors
 import statsmodels.formula.api as smf
 import statsmodels.api as sm
 from stargazer.stargazer import Stargazer
-
+from linearmodels.panel import PanelOLS
 
 naming_dict = {
     "TVL_share": "${\it LiquidityShare}$",
@@ -610,49 +610,76 @@ def reg_panel():
     with open(rf"tables/summary_statistics.tex", "w") as tf:
         tf.write(summary.to_latex())
 
-    # simple linear regress the Inflow_centrality with Volume_share
+    # # create the dummy variable for the Date
+    # time_dummies = pd.get_dummies(reg_panel["Date"])
 
-    X = reg_panel["${\it VShare}$"]
+    # # reg_panel['year'] = reg_panel['date'].dt.year
+    # reg_panel["year_month"] = reg_panel["Date"].dt.to_period("M")
+    # # time_dummies = pd.get_dummies(reg_panel['year'], prefix='year')
+    # time_dummies = pd.get_dummies(reg_panel["year_month"], prefix="month")
+
+    # reg_panel = pd.concat([reg_panel, time_dummies], axis=1)
+
+    # # panel regression with time fixed effects of Date between the Inflow_centrality with Volume_share
+    # # create the dependent variable
+    Y = reg_panel["${\it VShare}$"]
+
+    # # drop all variables except for the "${\it InflowCentrality}$", "${\it BetwCent}^C$", "${\it \sigma}^{USD}$" and dummy variables
+
+    # # create the independent variable
+    # X = reg_panel.drop(
+    #     [
+    #         "${\it VShare}$",
+    #         "${\it LiquidityShare}$",
+    #         "${\it EigenCent}^{Out}$",
+    #         "${\it VShare}^{\it In}$",
+    #         "${\it VShare}^{\it Out}$",
+    #         "${\it BorrowShare}$",
+    #         "${\it SupplyShare}$",
+    #         "${\it BetwCent}^V$",
+    #         "${\it BorrowAPY}^{USD}$",
+    #         "${\it SupplyAPY}^{USD}$",
+    #         "Token",
+    #         "Date",
+    #         "year_month",
+    #     ],
+    #     axis=1,
+    # )
+
+    # # save the independent variable as a csv file
+    # X.to_csv(rf"tables/independent_variables.csv")
+    # print(X)
+
+    X = reg_panel[
+        ["${\it EigenCent}^{In}$", "${\it BetwCent}^C$", "${\it SupplyShare}$"]
+    ]
+
     X = sm.add_constant(X)
-    Y = reg_panel["${\it EigenCent}^{In}$"]
 
-    # create the model_1
     model_1 = sm.OLS(Y, X, missing="drop")
 
     # fit the model_1
     results_1 = model_1.fit()
 
-    # simple linear regress the Inflow_centrality with volume_in_share
-
-    X = reg_panel["${\it VShare}^{\it In}$"]
-    X = sm.add_constant(X)
-
-    # create the model_2
-    model_2 = sm.OLS(Y, X, missing="drop")
-
-    # fit the model_2
-    results_2 = model_2.fit()
-
-    # simple linear regress the Inflow_centrality with volume_out_share
-
-    X = reg_panel["${\it VShare}^{\it Out}$"]
-    X = sm.add_constant(X)
-
-    # create the model_3
-    model_3 = sm.OLS(Y, X, missing="drop")
-
-    # fit the model_3
-    results_3 = model_3.fit()
+    # save the regression results as a latex file
+    with open(rf"tables/regression_results.tex", "w") as rf:
+        rf.write(results_1.summary().as_latex())
 
     # use stargazer to create the regression table
-    stargazer = Stargazer([results_1, results_2, results_3])
+    stargazer = Stargazer([results_1])
 
     # set the title of the table
     stargazer.title("Simple Linear Regression")
 
+    # customize the column name
+    stargazer.custom_columns(["${\it VShare}$"], [1])
+
     # save the table to a latex file
     with open(rf"tables/regression_table.tex", "w") as tf:
         tf.write(stargazer.render_latex())
+
+    # save the panel dataset as a csv file
+    reg_panel.to_csv(rf"tables/regression_panel.csv")
 
 
 if __name__ == "__main__":
