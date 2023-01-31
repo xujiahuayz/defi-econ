@@ -202,7 +202,7 @@ names(df_snp) <- c("date","S&P_digital_Market_Index")
 setDT(df_snp)[,date := as.Date(date)]
 df_snp <- pad(df_snp)
 
-df_snp$`S&P_digital_Market_Index` <- na.approx(df_snp$`S&P_digital_Market_Index`)
+df_snp$`_digital_Market_Index` <- na.approx(df_snp$`S&P_digital_Market_Index`)
 
 ### Merge in everything ###
 ###########################

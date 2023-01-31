@@ -2,6 +2,7 @@ import pandas as pd
 import glob
 import matplotlib.pyplot as plt
 import seaborn as sns
+import numpy as np
 
 naming_dict = {
     "TVL_share": "${\it LiquidityShare}$",
@@ -243,6 +244,129 @@ def reg_panel():
 
     # rename the column "token" to "Token"
     reg_panel = reg_panel.rename(columns={"token": "Token"})
+
+    # load in the data in data/data_global/token_market/primary_token_price_2.csv
+    # the dataframe has colume: Date, Token, Price
+    # the dataframe has row number
+    # the dataframe is sorted by Date and Token
+
+    # read in the csv file
+    prc = pd.read_csv(
+        rf"data/data_global/token_market/primary_token_price_2.csv",
+        index_col=None,
+        header=0,
+    )
+
+    # convert date in "YYYY-MM-DD" to datetime
+    prc["Date"] = pd.to_datetime(prc["Date"], format="%Y-%m-%d")
+    # load in the data in data/data_global/gas_fee/avg_gas_fee.csv
+    # the dataframe has colume: Date, Gas_fee
+    # the dataframe has row number
+    # the dataframe is sorted by Date
+
+    # save the column name into a list except for the Date and unnamed column
+    col = list(prc.columns)
+    col.remove("Date")
+    col.remove("Unnamed: 0")
+
+    # read in the csv file
+    gas = pd.read_csv(
+        rf"data/data_global/gas_fee/avg_gas_fee.csv", index_col=None, header=0
+    )
+
+    # convert date to datetime
+    gas["Date(UTC)"] = pd.to_datetime(gas["Date(UTC)"])
+
+    # rename the column "Date(UTC)" to "Date"
+    gas = gas.rename(columns={"Date(UTC)": "Date"})
+    gas = gas.rename(columns={"Gas Fee USD": "Gas_fee"})
+    gas = gas.rename(columns={"ETH Price (USD)": "ETH_price"})
+
+    # only keep columnes of "Date", "Gas_fee" and "ETH_price"
+    gas = gas[["Date", "Gas_fee", "ETH_price"]]
+
+    # merge the prc and gas dataframe into one panel dataset via outer join on "Date"
+    prc = pd.merge(prc, gas, how="left", on=["Date"])
+
+    # load in the data in data/data_global/token_market/PerformanceGraphExport.xls
+    # the dataframe has colume: Date, Token, Price
+    # the dataframe has row number
+    # the dataframe is sorted by Date and Token
+
+    # read in the csv file and ignore the first six rows
+    idx = pd.read_excel(
+        rf"data/data_global/token_market/PerformanceGraphExport.xls",
+        index_col=None,
+        header=6,
+    )
+
+    # convert Effective date to datetime
+    idx["Date"] = pd.to_datetime(idx["Date"])
+
+    # merge the prc and idx dataframe into one panel dataset via outer join on "Date"
+    prc = pd.merge(prc, idx, how="left", on=["Date"])
+
+    # drop the unnecessary column "Unnamed: 0"
+    prc = prc.drop(columns=["Unnamed: 0"])
+
+    # calculate the log prcurn of price for each token (column) and save them in new columns _log_prcurn
+
+    ret = prc.set_index("Date").copy()
+    ret = ret.apply(lambda x: np.log(x) - np.log(x.shift(1)))
+
+    # copy the ret as a new dataframe named cov
+    cov_gas = ret.copy()
+    cov_eth = ret.copy()
+    cov_sp = ret.copy()
+
+    # sort the dataframe by ascending Date for cov_gas, cov_eth and cov_sp
+    cov_gas = cov_gas.sort_values(by="Date", ascending=True)
+    cov_eth = cov_eth.sort_values(by="Date", ascending=True)
+    cov_sp = cov_sp.sort_values(by="Date", ascending=True)
+
+    # calcuate the covariance between past 30 days log return of each column in col and that of Gas_fee
+    for i in col:
+        cov_gas[i] = ret[i].rolling(30).cov(ret["Gas_fee"])
+
+    # calcuate the covariance between past 30 days log return of each column in col and that of ETH_price
+    for i in col:
+        cov_eth[i] = ret[i].rolling(30).cov(ret["ETH_price"])
+
+    # caculate the covariance between past 30 days log return of each column in col and that of S&P
+    for i in col:
+        cov_sp[i] = ret[i].rolling(30).cov(ret["S&P"])
+
+    print(ret["S&P"])
+
+    # drop the Gas_fee and ETH_price and S&P500 columns for ret and cov
+    ret = ret.drop(columns=["Gas_fee", "ETH_price", "S&P"])
+    cov_gas = cov_gas.drop(columns=["Gas_fee", "ETH_price", "S&P"])
+    cov_eth = cov_eth.drop(columns=["Gas_fee", "ETH_price", "S&P"])
+    cov_sp = cov_sp.drop(columns=["Gas_fee", "ETH_price", "S&P"])
+
+    # ret and cov to panel dataset, column: Date, Token, log return and covariance
+    ret = ret.stack().reset_index()
+    cov_gas = cov_gas.stack().reset_index()
+    cov_eth = cov_eth.stack().reset_index()
+    cov_sp = cov_sp.stack().reset_index()
+
+    # rename the column "level_1" to "Token"
+    ret = ret.rename(columns={"level_1": "Token"})
+    cov_gas = cov_gas.rename(columns={"level_1": "Token"})
+    cov_eth = cov_eth.rename(columns={"level_1": "Token"})
+    cov_sp = cov_sp.rename(columns={"level_1": "Token"})
+
+    # rename the column "0" to "log_return" and "0" to "covariance"
+    ret = ret.rename(columns={0: "log_return"})
+    cov_gas = cov_gas.rename(columns={0: "cov_gas"})
+    cov_eth = cov_eth.rename(columns={0: "cov_eth"})
+    cov_sp = cov_sp.rename(columns={0: "cov_sp"})
+
+    # # merge the reg_panel and cov dataframe into one panel dataset via outer join on "Date" and "Token"
+    # reg_panel = pd.merge(ret, cov, how="left", on=["Date", "Token"])
+
+    # # merge the reg_panel and ret dataframe into one panel dataset via outer join on "Date" and "Token"
+    # reg_panel = pd.merge(reg_panel, ret, how="left", on=["Date", "Token"])
 
     # create the correlation matrix
     corr = reg_panel.corr()

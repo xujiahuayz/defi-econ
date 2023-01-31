@@ -2,9 +2,6 @@ import glob
 import matplotlib.pyplot as plt
 import pandas as pd
 
-graph_type = "volume_share"
-source = "merged"
-
 
 def betweenness_prep(graph_type, source):
     """
@@ -40,13 +37,13 @@ def betweenness_prep(graph_type, source):
     # plot the 30-day moving average of betweenness centrality of each token
     # the x-axis is date, the y-axis is betweenness centrality
     # the plot is saved in data/data_betweenness/betweenness/betweenness.png
-    frame["graph_type"] = frame["graph_type"].astype(float)
+    frame[graph_type] = frame[graph_type].astype(float)
     frame["Date"] = pd.to_datetime(frame["Date"])
     frame = frame.sort_values(by=["node", "Date"])
 
     # each day from 2020-08-01 to 2022-12-31, calculate the past 30-day moving average of betweenness centrality of each token
     plot_df = (
-        frame.groupby(["node"])["graph_type"].rolling(window=30).mean().reset_index()
+        frame.groupby(["node"])[graph_type].rolling(window=30).mean().reset_index()
     )
     x_col_name = "Date"
     return plot_df, "node", x_col_name, graph_type, frame
@@ -198,6 +195,57 @@ def borrow_supply_prep(graph_type):
     return plot_df, token_col_name, x_col_name, y_col_name, frame
 
 
+def borrow_supply_apy_prep(graph_type):
+    """
+    Function to preprocess the data for the borrow
+    """
+
+    # combine all csv files with "_processed" at the end of the name in data/data_compound into a panel dataset.
+    # each csv file's title contains the date, and has columes: Token, Borrow, and has row number
+    # the new combined dataframe has colume: Date, Token, Borrow
+
+    # get all csv files in data/data_compound
+    path = rf"data/data_compound"  # use your path
+    all_files = glob.glob(path + "/*_processed.csv")
+
+    # merge all csv files into one dataframe with token name in the file name as the primary key
+    li = []
+    for filename in all_files:
+        df = pd.read_csv(filename, index_col=None, header=0)
+        token = filename.split("_")[-2]
+        # skip the file with token name "WBTC2"
+        if token == "WBTC2":
+            continue
+
+        if token == "ETH":
+            df["token"] = "WETH"
+        else:
+            df["token"] = token
+
+        li.append(df)
+
+    # combine all csv files into one dataframe
+    frame = pd.concat(li, axis=0, ignore_index=True)
+
+    frame = frame[
+        frame["token"].isin(["WETH", "WBTC", "MATIC", "USDC", "USDT", "DAI", "FEI"])
+    ]
+
+    # convert the date to datetime format for the frame
+    frame["block_timestamp"] = pd.to_datetime(frame["block_timestamp"])
+
+    token_col_name = "token"
+    y_col_name = "borrow_rate" if graph_type == "borrow_apy" else "supply_rates"
+    x_col_name = "block_timestamp"
+
+    # each day from 2020-08-01 to 2022-12-31, calculate the past 30-day moving average of borrow share of each token
+    plot_df = (
+        frame.groupby(["token"])[y_col_name].rolling(window=30).mean().reset_index()
+    )
+
+    return plot_df, token_col_name, x_col_name, y_col_name, frame
+
+
 def plot_ma(graph_type, source):
     """
     Function to plot the
@@ -214,6 +262,10 @@ def plot_ma(graph_type, source):
         )
     elif graph_type in ["borrow_share", "supply_share"]:
         plot_df, token_col_name, x_col_name, y_col_name, frame = borrow_supply_prep(
+            graph_type
+        )
+    elif graph_type in ["borrow_apy", "supply_apy"]:
+        plot_df, token_col_name, x_col_name, y_col_name, frame = borrow_supply_apy_prep(
             graph_type
         )
     else:
@@ -244,6 +296,10 @@ def plot_ma(graph_type, source):
             label=token,
             color=color_dict[token],
         )
+
+        # fix the y-axis to be between 0 and 0.3 if the graph is apy
+        if graph_type in ["borrow_apy", "supply_apy"]:
+            ax.set_ylim([0, 0.3])
 
     # draw a thick vertical lines  with some transparency
     ax.axvline(
@@ -278,6 +334,8 @@ def plot_ma(graph_type, source):
         "tvl_share",
         "volume_in_share",
         "volume_out_share",
+        "betweenness_centrality_count",
+        "betweenness_centrality_volume",
     ]:
         plt.savefig(f"figures/{graph_type}_{source}.pdf")
     else:
@@ -296,8 +354,12 @@ if __name__ == "__main__":
         ]:
             plot_ma(graph_type, source)
 
-        for graph_type in ["borrow_share", "supply_share"]:
-            plot_ma(graph_type, source)
-
-    for souce in ["v2", "v3", "v2v3"]:
+    for graph_type in ["borrow_share", "supply_share", "borrow_apy", "supply_apy"]:
         plot_ma(graph_type, source)
+
+    for source in ["v2", "v3"]:
+        for graph_type in [
+            "betweenness_centrality_count",
+            "betweenness_centrality_volume",
+        ]:
+            plot_ma(graph_type, source)
