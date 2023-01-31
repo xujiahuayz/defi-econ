@@ -1,29 +1,33 @@
 \begin{table}[!htbp] \centering
   \caption{Simple Linear Regression}
-\begin{tabular}{@{\extracolsep{5pt}}lc}
+\begin{tabular}{@{\extracolsep{5pt}}lcc}
 \\[-1.8ex]\hline
 \hline \\[-1.8ex]
-& \multicolumn{1}{c}{\textit{Dependent variable:}} \
-\cr \cline{1-2}
-\\[-1.8ex] & \multicolumn{1}{c}{${\it VShare}$}  \\
-\\[-1.8ex] & (1) \\
+& \multicolumn{2}{c}{\textit{Dependent variable:}} \
+\cr \cline{2-3}
+\\[-1.8ex] & \multicolumn{1}{c}{${\it VShare}$} & \multicolumn{1}{c}{${\it VShare}$}  \\
+\\[-1.8ex] & (1) & (2) \\
 \hline \\[-1.8ex]
- ${\it BetwCent}^C$ & 0.262$^{***}$ \\
-  & (0.002) \\
- ${\it EigenCent}^{In}$ & 0.392$^{***}$ \\
-  & (0.002) \\
- ${\it SupplyShare}$ & 0.002$^{}$ \\
-  & (0.003) \\
- const & -0.008$^{***}$ \\
-  & (0.001) \\
+ ${\it BetwCent}^C$ & 0.262$^{***}$ & \\
+  & (0.002) & \\
+ ${\it BetwCent}^V$ & & 0.265$^{***}$ \\
+  & & (0.003) \\
+ ${\it EigenCent}^{In}$ & 0.392$^{***}$ & \\
+  & (0.002) & \\
+ ${\it EigenCent}^{Out}$ & & 0.423$^{***}$ \\
+  & & (0.003) \\
+ ${\it SupplyShare}$ & 0.002$^{}$ & 0.011$^{**}$ \\
+  & (0.003) & (0.004) \\
+ const & -0.008$^{***}$ & -0.012$^{***}$ \\
+  & (0.001) & (0.001) \\
 \hline \\[-1.8ex]
- Observations & 5,473 \\
- $R^2$ & 0.967 \\
- Adjusted $R^2$ & 0.967 \\
- Residual Std. Error & 0.028(df = 5469)  \\
- F Statistic & 54089.310$^{***}$ (df = 3.0; 5469.0) \\
+ Observations & 5,473 & 5,473 \\
+ $R^2$ & 0.967 & 0.948 \\
+ Adjusted $R^2$ & 0.967 & 0.948 \\
+ Residual Std. Error & 0.028(df = 5469) & 0.036(df = 5469)  \\
+ F Statistic & 54089.310$^{***}$ (df = 3.0; 5469.0) & 33110.592$^{***}$ (df = 3.0; 5469.0) \\
 \hline
 \hline \\[-1.8ex]
-\textit{Note:} & \multicolumn{1}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\
+\textit{Note:} & \multicolumn{2}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\
 \end{tabular}
 \end{table}

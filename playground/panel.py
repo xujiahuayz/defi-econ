@@ -594,6 +594,9 @@ def reg_panel():
     # save the correlation matrix as a csv file
     corr.to_csv(rf"tables/correlation_matrix.csv")
 
+    # rename the panel column names to be more readable
+    reg_panel = reg_panel.rename(columns=naming_dict)
+
     # calculate the summary statistics of the panel dataset
     summary = reg_panel.describe()
 
@@ -602,9 +605,6 @@ def reg_panel():
 
     # save the summary statistics as a csv file
     summary.to_csv(rf"tables/summary_statistics.csv")
-
-    # rename the panel column names to be more readable
-    reg_panel = reg_panel.rename(columns=naming_dict)
 
     # save the summary statistics as a latex file
     with open(rf"tables/summary_statistics.tex", "w") as tf:
@@ -661,18 +661,25 @@ def reg_panel():
     # fit the model_1
     results_1 = model_1.fit()
 
-    # save the regression results as a latex file
-    with open(rf"tables/regression_results.tex", "w") as rf:
-        rf.write(results_1.summary().as_latex())
+    X_2 = reg_panel[
+        ["${\it EigenCent}^{Out}$", "${\it BetwCent}^V$", "${\it SupplyShare}$"]
+    ]
+
+    X_2 = sm.add_constant(X_2)
+
+    model_2 = sm.OLS(Y, X_2, missing="drop")
+
+    # fit the model_1
+    results_2 = model_2.fit()
 
     # use stargazer to create the regression table
-    stargazer = Stargazer([results_1])
+    stargazer = Stargazer([results_1, results_2])
 
     # set the title of the table
     stargazer.title("Simple Linear Regression")
 
     # customize the column name
-    stargazer.custom_columns(["${\it VShare}$"], [1])
+    stargazer.custom_columns(["${\it VShare}$", "${\it VShare}$"], [1, 1])
 
     # save the table to a latex file
     with open(rf"tables/regression_table.tex", "w") as tf:
