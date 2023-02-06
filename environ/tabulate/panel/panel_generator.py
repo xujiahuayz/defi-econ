@@ -191,9 +191,9 @@ def _merge_compound_rate(reg_panel: pd.DataFrame) -> pd.DataFrame:
     return reg_panel
 
 
-def _merge_compound_share(reg_panel: pd.DataFrame) -> pd.DataFrame:
+def _merge_compound_supply_share(reg_panel: pd.DataFrame) -> pd.DataFrame:
     """
-    Merge compound share data.
+    Merge compound supply share data.
     """
 
     # combine all csv files with "_processed" at the end
@@ -243,6 +243,65 @@ def _merge_compound_share(reg_panel: pd.DataFrame) -> pd.DataFrame:
 
     # only keep columnes of "Date", "Token", "Borrow_share"
     frame = frame[["Date", "Token", "Supply_share"]]
+
+    # merge the two dataframe into one panel dataset via outer join
+    reg_panel = pd.merge(reg_panel, frame, how="outer", on=["Date", "Token"])
+
+    return reg_panel
+
+
+def _merge_compound_borrow_share(reg_panel: pd.DataFrame) -> pd.DataFrame:
+    """
+    Merge compound borrow share data.
+    """
+
+    # combine all csv files with "_processed" at the end
+    # of the name in data/data_compound into a panel dataset.
+    # each csv file's title contains the date, and has columes: Token, Borrow, and has row number
+    # the new combined dataframe has colume: Date, Token, Borrow
+    # get all csv files in data/data_compound
+    path = rf"{COMPOUND_DATA_PATH}"  # use your path
+    all_files = glob.glob(path + "/*_processed.csv")
+
+    # merge all csv files into one dataframe with token name in the file name as the primary key
+    list_df = []
+    for filename in all_files:
+        df_comp_share = pd.read_csv(filename, index_col=None, header=0)
+        token = filename.split("_")[-2]
+        # skip the file with token name "WBTC2"
+        if token == "WBTC2":
+            continue
+
+        if token == "ETH":
+            df_comp_share["token"] = "WETH"
+        else:
+            df_comp_share["token"] = token
+
+        list_df.append(df_comp_share)
+
+    # combine all csv files into one dataframe
+    frame = pd.concat(list_df, axis=0, ignore_index=True)
+
+    # calculate the supply share of each token each day
+    frame["total_borrow_usd"] = frame["total_borrow_usd"].astype(float)
+    frame["total_borrow"] = frame.groupby("block_timestamp")[
+        "total_borrow_usd"
+    ].transform("sum")
+    frame["total_borrow_usd"] = frame["total_borrow_usd"] / frame["total_borrow"]
+    frame = frame.drop(columns=["total_borrow"])
+
+    # convert date in "YYYY-MM-DD" to datetime
+    frame["block_timestamp"] = pd.to_datetime(
+        frame["block_timestamp"], format="%Y-%m-%d"
+    )
+
+    # rename the column "block_timestamp" to "Date"
+    frame = frame.rename(columns={"block_timestamp": "Date"})
+    frame = frame.rename(columns={"token": "Token"})
+    frame = frame.rename(columns={"total_borrow_usd": "Borrow_share"})
+
+    # only keep columnes of "Date", "Token", "Borrow_share"
+    frame = frame[["Date", "Token", "Borrow_share"]]
 
     # merge the two dataframe into one panel dataset via outer join
     reg_panel = pd.merge(reg_panel, frame, how="outer", on=["Date", "Token"])
@@ -554,7 +613,9 @@ def generate_panel() -> pd.DataFrame:
     reg_panel = _merge_volume_in_share(reg_panel)
     reg_panel = _merge_volume_out_share(reg_panel)
     reg_panel = _merge_compound_rate(reg_panel)
-    reg_panel = _merge_compound_share(reg_panel)
+    reg_panel = _merge_compound_supply_share(reg_panel)
+    reg_panel = _merge_compound_borrow_share(reg_panel)
+    reg_panel = _merge_tvl_share(reg_panel)
     reg_panel = _merge_in_centrality(reg_panel)
     reg_panel = _merge_out_centrality(reg_panel)
     reg_panel = _merge_betweenness(reg_panel)

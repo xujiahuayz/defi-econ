@@ -22,6 +22,9 @@ def tabulate_result() -> None:
     """
 
     print_info_log("Tabulating the results.", "process")
+    print_info_log("Generating the panel.", "process")
     reg_panel = generate_panel()
+    print_info_log("Generating the summary.", "process")
     reg_panel = generate_sum(reg_panel)
+    print_info_log("Generating the regression.", "process")
     generate_reg(reg_panel)
