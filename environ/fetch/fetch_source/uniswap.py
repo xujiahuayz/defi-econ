@@ -122,47 +122,47 @@ def fetch_uni(
         if "uniswap_v3_swaps_" + top50_list_label + ".csv" not in done_v3_swap_list
     ]
 
-    # Step 1: determine the list of monthly top 50 pools as candidates
-    print_info_log("Fetch the list of monthly top 50 pools", "Uniswap V2")
+    # # Step 1: determine the list of monthly top 50 pools as candidates
+    # print_info_log("Fetch the list of monthly top 50 pools", "Uniswap V2")
 
-    if "top50_pairs_list_v2_" + top50_list_label + ".csv" not in done_v2_pool_list:
-        select_top50_pairs_v2(
-            end_date - datetime.timedelta(1), period, top50_list_label
-        )
-    else:
-        print_info_log("The list of monthly top 50 pools was fetched", "Uniswap V2")
+    # if "top50_pairs_list_v2_" + top50_list_label + ".csv" not in done_v2_pool_list:
+    #     select_top50_pairs_v2(
+    #         end_date - datetime.timedelta(1), period, top50_list_label
+    #     )
+    # else:
+    #     print_info_log("The list of monthly top 50 pools was fetched", "Uniswap V2")
 
-    print_info_log("Fetch the list of monthly top 50 pools", "Uniswap V3")
+    # print_info_log("Fetch the list of monthly top 50 pools", "Uniswap V3")
 
-    if "top50_pairs_list_v3_" + top50_list_label + ".csv" not in done_v3_pool_list:
-        select_top50_pairs_v3(
-            end_date - datetime.timedelta(1), period, top50_list_label
-        )
-    else:
-        print_info_log("The list of monthly top 50 pools was fetched", "Uniswap V3")
+    # if "top50_pairs_list_v3_" + top50_list_label + ".csv" not in done_v3_pool_list:
+    #     select_top50_pairs_v3(
+    #         end_date - datetime.timedelta(1), period, top50_list_label
+    #     )
+    # else:
+    #     print_info_log("The list of monthly top 50 pools was fetched", "Uniswap V3")
 
-    # Step 2: get directional daily volume for all dates based on the list in Step 1
-    print_info_log("Fetch daily directional volume", "Uniswap V2")
+    # # Step 2: get directional daily volume for all dates based on the list in Step 1
+    # print_info_log("Fetch daily directional volume", "Uniswap V2")
 
-    for date in tqdm(date_list_v2):
-        try:
-            top50_pair_directional_volume_v2(date, top50_list_label)
-        except:
-            print_info_log(
-                f"Failed to fetch daily directional volume for {date} for Uniswap V2.",
-                "Error",
-            )
+    # for date in tqdm(date_list_v2):
+    #     try:
+    #         top50_pair_directional_volume_v2(date, top50_list_label)
+    #     except:
+    #         print_info_log(
+    #             f"Failed to fetch daily directional volume for {date} for Uniswap V2.",
+    #             "Error",
+    #         )
 
-    print_info_log("Fetch daily directional volume", "Uniswap V3")
+    # print_info_log("Fetch daily directional volume", "Uniswap V3")
 
-    for date in tqdm(date_list_v3):
-        try:
-            top50_pair_directional_volume_v3(date, top50_list_label)
-        except:
-            print_info_log(
-                f"Failed to fetch daily directional volume for {date} for Uniswap V3.",
-                "Error",
-            )
+    # for date in tqdm(date_list_v3):
+    #     try:
+    #         top50_pair_directional_volume_v3(date, top50_list_label)
+    #     except:
+    #         print_info_log(
+    #             f"Failed to fetch daily directional volume for {date} for Uniswap V3.",
+    #             "Error",
+    #         )
 
     # Step 3: Fetch raw swap data
     print_info_log("Fetch raw swap data", "Uniswap V2")
