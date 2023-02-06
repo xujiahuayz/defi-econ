@@ -19,8 +19,8 @@ from environ.utils.config_parser import Config
 config = Config()
 
 # Initialize the path
-FIGURE_PATH = config["dev"]["config"]["data"]["FIGURE_PATH"]
-TABLE_PATH = config["dev"]["config"]["data"]["TABLE_PATH"]
+FIGURE_PATH = config["dev"]["config"]["result"]["FIGURE_PATH"]
+TABLE_PATH = config["dev"]["config"]["result"]["TABLE_PATH"]
 
 
 # Initialize constants
