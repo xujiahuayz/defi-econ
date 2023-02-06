@@ -16,6 +16,9 @@ from environ.utils.info_logger import print_info_log
 
 warnings.filterwarnings("ignore")
 
+# Initialize configuration
+config = Config()
+
 
 def query_swaps_trading_v3(start_timestamp: int, end_timestamp: int) -> pd.DataFrame:
     """
@@ -56,7 +59,9 @@ def query_swaps_trading_v3(start_timestamp: int, end_timestamp: int) -> pd.DataF
   """
 
     get_swaps_batch0 = subgraph.run_query_var(
-        subgraph.http_v3, get_swaps_query_0, params_start_gt
+        config["dev"]["config"]["subgraph"]["HTTP_V3"],
+        get_swaps_query_0,
+        params_start_gt,
     )
 
     # Create a dataframe to store the basic structure of attributes,
@@ -111,7 +116,9 @@ def query_swaps_trading_v3(start_timestamp: int, end_timestamp: int) -> pd.DataF
       }
     }
     """
-        result_iter = subgraph.run_query_var(subgraph.http_v3, query_iter, params_gt)
+        result_iter = subgraph.run_query_var(
+            config["dev"]["config"]["subgraph"]["HTTP_V3"], query_iter, params_gt
+        )
         if list(result_iter.keys()) == ["data"]:
 
             # List of swaps for this batch

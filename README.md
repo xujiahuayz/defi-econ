@@ -106,6 +106,14 @@ python scripts/plot_main.py --start "YYYY-MM-DD" --end "YYYY-MM-DD"
 
 Notes: This script runs on a daily basis. This script will plot defi-related data from the date specified by the --start to the the day specified by the --end (different from fetch_main.py). For example python scripts/fetch_main.py --start "2022-05-01" -- end "2022-12-01" will plot the data from 2022-05-01 to 2022-12-01. The graphs generated will be placed under ['data/data_network'](data/data_network)
 
+- Third, run the following command to generate results
+
+```zsh
+python scripts/result_main.py
+```
+
+Notes: This scripts will generate analytical graphs and tables based on existing data.
+
 ## Python Project Documentation
 
 python project documentation is save in [`doc/`](doc/)
