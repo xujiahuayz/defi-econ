@@ -165,21 +165,21 @@ def fetch_uni(
     #         )
 
     # Step 3: Fetch raw swap data
-    print_info_log("Fetch raw swap data", "Uniswap V2")
+    # print_info_log("Fetch raw swap data", "Uniswap V2")
 
-    for date in tqdm(swap_date_list_v2):
-        try:
-            date_str = date.strftime("%Y%m%d")
-            start_timestamp = int(calendar.timegm(date.timetuple()))  # include
-            end_date = date + datetime.timedelta(days=1)
-            end_timestamp = int(calendar.timegm(end_date.timetuple()))  # exclude
+    # for date in tqdm(swap_date_list_v2):
+    #     try:
+    #         date_str = date.strftime("%Y%m%d")
+    #         start_timestamp = int(calendar.timegm(date.timetuple()))  # include
+    #         end_date = date + datetime.timedelta(days=1)
+    #         end_timestamp = int(calendar.timegm(end_date.timetuple()))  # exclude
 
-            uniswap_v2_swaps(start_timestamp, end_timestamp, date_str)
-        except:
-            print_info_log(
-                f"Failed to fetch raw sawp data for {date} for Uniswap V2.",
-                "Error",
-            )
+    #         uniswap_v2_swaps(start_timestamp, end_timestamp, date_str)
+    #     except:
+    #         print_info_log(
+    #             f"Failed to fetch raw sawp data for {date} for Uniswap V2.",
+    #             "Error",
+    #         )
 
     print_info_log("Fetch raw swap data", "Uniswap V3")
 
@@ -191,8 +191,8 @@ def fetch_uni(
             end_timestamp = int(calendar.timegm(end_date.timetuple()))  # exclude
 
             uniswap_v3_swaps(start_timestamp, end_timestamp, date_str)
-        except:
+        except Exception as e:
             print_info_log(
                 f"Failed to fetch raw sawp data for {date} for Uniswap V3.",
-                "Error",
+                f"Error {e}",
             )

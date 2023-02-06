@@ -7,11 +7,10 @@ dev:
       AAVE_DATA_PATH: "data/data_aave"
       GLOBAL_DATA_PATH: "data/data_global"
       NETWORK_DATA_PATH: "data/data_network"
-      REGRESSION_DATA_PATH: "data/data_regression"
       BETWEENNESS_DATA_PATH: "data/data_betweenness"
     result:
       FIGURE_PATH: "figures"
-      TABLE_PAHT: "tables"
+      TABLE_PATH: "tables"
     moving_average_plot:
       KEY_TOKEN_LIST: ["WETH", "WBTC", "MATIC", "USDC", "USDT", "DAI", "FEI"]
       EVENT_DATE_LIST: ["2020-11-26", "2021-05-05", "2022-05-10", "2022-11-11"]

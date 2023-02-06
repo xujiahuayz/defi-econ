@@ -1,35 +1,33 @@
-import pandas as pd
+"""
+
+University College London
+Project : defi_econ
+Topic   : panel_generator.py
+Author  : Yichen Luo
+Date    : 2023-02-06
+Desc    : Generate the panel for regression.
+
+"""
+
 import glob
-import matplotlib.pyplot as plt
-import seaborn as sns
+import pandas as pd
 import numpy as np
-import matplotlib.colors as colors
-import statsmodels.api as sm
-from stargazer.stargazer import Stargazer
+from environ.utils.config_parser import Config
 
-naming_dict = {
-    "TVL_share": "${\it LiquidityShare}$",
-    "Inflow_centrality": "${\it EigenCent}^{In}$",
-    "Outflow_centrality": "${\it EigenCent}^{Out}$",
-    "Volume_share": "${\it VShare}$",
-    "volume_in_share": "${\it VShare}^{\it In}$",
-    "volume_out_share": "${\it VShare}^{\it Out}$",
-    "Borrow_share": "${\it BorrowShare}$",
-    "Supply_share": "${\it SupplyShare}$",
-    "betweenness_centrality_count": "${\it BetwCent}^C$",
-    "betweenness_centrality_volume": "${\it BetwCent}^V$",
-    "cov_gas": "${\it CovGas}$",
-    "cov_sp": "${\it CovSP}$",
-    "cov_eth": "${\it CovETH}$",
-    "log_return": "${R}^{\it USD}$",
-    "std": "${\it \sigma}^{USD}$",
-    "borrow_rate": "${\it BorrowAPY}^{USD}$",
-    "supply_rates": "${\it SupplyAPY}^{USD}$",
-}
+# Initialize config
+config = Config()
+
+# Initialize data path
+NETWORK_DATA_PATH = config["dev"]["config"]["data"]["NETWORK_DATA_PATH"]
+COMPOUND_DATA_PATH = config["dev"]["config"]["data"]["COMPOUND_DATA_PATH"]
+GLOBAL_DATA_PATH = config["dev"]["config"]["data"]["GLOBAL_DATA_PATH"]
+BETWEENNESS_DATA_PATH = config["dev"]["config"]["data"]["BETWEENNESS_DATA_PATH"]
 
 
-def reg_panel():
-
+def _merge_volume_share() -> pd.DataFrame:
+    """
+    Merge volume share data.
+    """
     reg_panel = []
 
     # combine all csv files in data/data_network/merged/volume_share.
@@ -37,20 +35,20 @@ def reg_panel():
     # the new combined dataframe has colume: Date, Token, Volume
 
     # get all csv files in data/data_network/merged/volume_share
-    path = rf"data/data_network/merged/volume_share"  # use your path
+    path = rf"{NETWORK_DATA_PATH}/merged/volume_share"  # use your path
     all_files = glob.glob(path + "/*.csv")
 
     # extract date from file name
     # combine data from all csv files into one dataframe, dropping row number of each csv file
-    li = []
+    list_df = []
     for filename in all_files:
-        df = pd.read_csv(filename, index_col=None, header=0)
+        df_vol_share = pd.read_csv(filename, index_col=None, header=0)
         date = filename.split("_")[-1].split(".")[0]
-        df["Date"] = date
-        li.append(df)
+        df_vol_share["Date"] = date
+        list_df.append(df_vol_share)
 
     # combine all csv files into one dataframe
-    reg_panel = pd.concat(li, axis=0, ignore_index=True)
+    reg_panel = pd.concat(list_df, axis=0, ignore_index=True)
 
     # convert date to datetime
     reg_panel["Date"] = pd.to_datetime(reg_panel["Date"], format="%Y%m%d")
@@ -61,25 +59,33 @@ def reg_panel():
     # rename the Volume column to Volume_share
     reg_panel = reg_panel.rename(columns={"Volume": "Volume_share"})
 
-    # combine all csv files in data/data_network/merged/volume_in_share
+    return reg_panel
+
+
+def _merge_volume_in_share(reg_panel: pd.DataFrame) -> pd.DataFrame:
+    """
+    Merge volume in share data.
+    """
+
+    # combine all csv files in data/data_network/merged/volume_in_share.
     # each csv file's title contains the date, and has columes: Token, Volume, and has row number
     # the new combined dataframe has colume: Date, Token, Volume
 
     # get all csv files in data/data_network/merged/volume_in_share
-    path = rf"data/data_network/merged/volume_in_share"  # use your path
+    path = rf"{NETWORK_DATA_PATH}/merged/volume_in_share"  # use your path
     all_files = glob.glob(path + "/*.csv")
 
     # extract date from file name
     # combine data from all csv files into one dataframe, dropping row number of each csv file
-    li = []
+    list_df = []
     for filename in all_files:
-        df = pd.read_csv(filename, index_col=None, header=0)
+        df_vol_in_share = pd.read_csv(filename, index_col=None, header=0)
         date = filename.split("_")[-1].split(".")[0]
-        df["Date"] = date
-        li.append(df)
+        df_vol_in_share["Date"] = date
+        list_df.append(df_vol_in_share)
 
     # combine all csv files into one dataframe
-    frame = pd.concat(li, axis=0, ignore_index=True)
+    frame = pd.concat(list_df, axis=0, ignore_index=True)
 
     # convert date to datetime
     frame["Date"] = pd.to_datetime(frame["Date"], format="%Y%m%d")
@@ -95,25 +101,33 @@ def reg_panel():
         reg_panel, frame, how="outer", on=["Date", "Token"], sort=False
     )
 
-    # combine all csv files in data/data_network/merged/volume_out_share
+    return reg_panel
+
+
+def _merge_volume_out_share(reg_panel: pd.DataFrame) -> pd.DataFrame:
+    """
+    Merge volume out share data.
+    """
+
+    # combine all csv files in data/data_network/merged/volume_out_share.
     # each csv file's title contains the date, and has columes: Token, Volume, and has row number
     # the new combined dataframe has colume: Date, Token, Volume
 
     # get all csv files in data/data_network/merged/volume_out_share
-    path = rf"data/data_network/merged/volume_out_share"  # use your path
+    path = rf"{NETWORK_DATA_PATH}/merged/volume_out_share"  # use your path
     all_files = glob.glob(path + "/*.csv")
 
     # extract date from file name
     # combine data from all csv files into one dataframe, dropping row number of each csv file
-    li = []
+    list_df = []
     for filename in all_files:
-        df = pd.read_csv(filename, index_col=None, header=0)
+        df_vol_out_share = pd.read_csv(filename, index_col=None, header=0)
         date = filename.split("_")[-1].split(".")[0]
-        df["Date"] = date
-        li.append(df)
+        df_vol_out_share["Date"] = date
+        list_df.append(df_vol_out_share)
 
     # combine all csv files into one dataframe
-    frame = pd.concat(li, axis=0, ignore_index=True)
+    frame = pd.concat(list_df, axis=0, ignore_index=True)
 
     # convert date to datetime
     frame["Date"] = pd.to_datetime(frame["Date"], format="%Y%m%d")
@@ -129,81 +143,35 @@ def reg_panel():
         reg_panel, frame, how="outer", on=["Date", "Token"], sort=False
     )
 
-    # combine all csv files with "_processed" at the end of the name in data/data_compound into a panel dataset.
-    # each csv file's title contains the date, and has columes: Token, Borrow, and has row number
-    # the new combined dataframe has colume: Date, Token, Borrow
-    # get all csv files in data/data_compound
-    path = rf"data/data_compound"  # use your path
+    return reg_panel
+
+
+def _merge_compound_rate(reg_panel: pd.DataFrame) -> pd.DataFrame:
+    """
+    Merge compound rate data.
+    """
+
+    path = rf"{COMPOUND_DATA_PATH}"  # use your path
     all_files = glob.glob(path + "/*_processed.csv")
 
     # merge all csv files into one dataframe with token name in the file name as the primary key
-    li = []
+    list_df = []
     for filename in all_files:
-        df = pd.read_csv(filename, index_col=None, header=0)
+        df_comp_rate = pd.read_csv(filename, index_col=None, header=0)
         token = filename.split("_")[-2]
         # skip the file with token name "WBTC2"
         if token == "WBTC2":
             continue
 
         if token == "ETH":
-            df["token"] = "WETH"
+            df_comp_rate["token"] = "WETH"
         else:
-            df["token"] = token
+            df_comp_rate["token"] = token
 
-        li.append(df)
+        list_df.append(df_comp_rate)
 
     # combine all csv files into one dataframe
-    frame = pd.concat(li, axis=0, ignore_index=True)
-
-    # calculate the borrow share of each token each day
-    frame["total_borrow_usd"] = frame["total_borrow_usd"].astype(float)
-    frame["total_borrow"] = frame.groupby("block_timestamp")[
-        "total_borrow_usd"
-    ].transform("sum")
-    frame["total_borrow_usd"] = frame["total_borrow_usd"] / frame["total_borrow"]
-    frame = frame.drop(columns=["total_borrow"])
-
-    # convert date in "YYYY-MM-DD" to datetime
-    frame["block_timestamp"] = pd.to_datetime(
-        frame["block_timestamp"], format="%Y-%m-%d"
-    )
-
-    # rename the column "block_timestamp" to "Date"
-    frame = frame.rename(columns={"block_timestamp": "Date"})
-    frame = frame.rename(columns={"token": "Token"})
-    frame = frame.rename(columns={"total_borrow_usd": "Borrow_share"})
-
-    # only keep columnes of "Date", "Token", "Borrow_share"
-    frame = frame[["Date", "Token", "Borrow_share"]]
-
-    # merge the two dataframe into one panel dataset via outer join
-    reg_panel = pd.merge(reg_panel, frame, how="outer", on=["Date", "Token"])
-
-    # combine all csv files with "_processed" at the end of the name in data/data_compound into a panel dataset.
-    # each csv file's title contains the date, and has columes: Token, Borrow, and has row number
-    # the new combined dataframe has colume: Date, Token, Borrow
-    # get all csv files in data/data_compound
-    path = rf"data/data_compound"  # use your path
-    all_files = glob.glob(path + "/*_processed.csv")
-
-    # merge all csv files into one dataframe with token name in the file name as the primary key
-    li = []
-    for filename in all_files:
-        df = pd.read_csv(filename, index_col=None, header=0)
-        token = filename.split("_")[-2]
-        # skip the file with token name "WBTC2"
-        if token == "WBTC2":
-            continue
-
-        if token == "ETH":
-            df["token"] = "WETH"
-        else:
-            df["token"] = token
-
-        li.append(df)
-
-    # combine all csv files into one dataframe
-    frame = pd.concat(li, axis=0, ignore_index=True)
+    frame = pd.concat(list_df, axis=0, ignore_index=True)
 
     # convert date in "YYYY-MM-DD" to datetime
     frame["block_timestamp"] = pd.to_datetime(
@@ -220,31 +188,40 @@ def reg_panel():
     # merge the two dataframe into one panel dataset via outer join
     reg_panel = pd.merge(reg_panel, frame, how="outer", on=["Date", "Token"])
 
-    # combine all csv files with "_processed" at the end of the name in data/data_compound into a panel dataset.
+    return reg_panel
+
+
+def _merge_compound_share(reg_panel: pd.DataFrame) -> pd.DataFrame:
+    """
+    Merge compound share data.
+    """
+
+    # combine all csv files with "_processed" at the end
+    # of the name in data/data_compound into a panel dataset.
     # each csv file's title contains the date, and has columes: Token, Borrow, and has row number
     # the new combined dataframe has colume: Date, Token, Borrow
     # get all csv files in data/data_compound
-    path = rf"data/data_compound"  # use your path
+    path = rf"{COMPOUND_DATA_PATH}"  # use your path
     all_files = glob.glob(path + "/*_processed.csv")
 
     # merge all csv files into one dataframe with token name in the file name as the primary key
-    li = []
+    list_df = []
     for filename in all_files:
-        df = pd.read_csv(filename, index_col=None, header=0)
+        df_comp_share = pd.read_csv(filename, index_col=None, header=0)
         token = filename.split("_")[-2]
         # skip the file with token name "WBTC2"
         if token == "WBTC2":
             continue
 
         if token == "ETH":
-            df["token"] = "WETH"
+            df_comp_share["token"] = "WETH"
         else:
-            df["token"] = token
+            df_comp_share["token"] = token
 
-        li.append(df)
+        list_df.append(df_comp_share)
 
     # combine all csv files into one dataframe
-    frame = pd.concat(li, axis=0, ignore_index=True)
+    frame = pd.concat(list_df, axis=0, ignore_index=True)
 
     # calculate the supply share of each token each day
     frame["total_supply_usd"] = frame["total_supply_usd"].astype(float)
@@ -269,25 +246,30 @@ def reg_panel():
 
     # merge the two dataframe into one panel dataset via outer join
     reg_panel = pd.merge(reg_panel, frame, how="outer", on=["Date", "Token"])
-    # combine all csv files in data/data_network/merged/volume_share.
-    # each csv file's title contains the date, and has columes: Token, Volume, and has row number
-    # the new combined dataframe has colume: Date, Token, Volume
+
+    return reg_panel
+
+
+def _merge_tvl_share(reg_panel: pd.DataFrame) -> pd.DataFrame:
+    """
+    Merge tvl share data.
+    """
 
     # get all csv files in data/data_network/merged/volume_share
-    path = rf"data/data_network/merged/tvl_share"  # use your path
+    path = rf"{NETWORK_DATA_PATH}/merged/tvl_share"  # use your path
     all_files = glob.glob(path + "/*.csv")
 
     # extract date from file name
     # combine data from all csv files into one dataframe, dropping row number of each csv file
-    li = []
+    list_df = []
     for filename in all_files:
-        df = pd.read_csv(filename, index_col=None, header=0)
+        df_tvl_share = pd.read_csv(filename, index_col=None, header=0)
         date = filename.split("_")[-1].split(".")[0]
-        df["Date"] = date
-        li.append(df)
+        df_tvl_share["Date"] = date
+        list_df.append(df_tvl_share)
 
     # combine all csv files into one dataframe
-    frame = pd.concat(li, axis=0, ignore_index=True)
+    frame = pd.concat(list_df, axis=0, ignore_index=True)
 
     # convert date in "YYYYMMDD" to datetime
     frame["Date"] = pd.to_datetime(frame["Date"], format="%Y%m%d")
@@ -299,25 +281,29 @@ def reg_panel():
     # merge the two dataframe into one panel dataset via outer join
     reg_panel = pd.merge(reg_panel, frame, how="outer", on=["Date", "Token"])
 
-    # combine all csv files in data/data_network/merged/inflow_centrality
-    # each csv file's title contains the date, and has columes: Token, eigenvector_centrality, and has row number
-    # the new combined dataframe has colume: Date, Token, eigenvector_centrality
+    return reg_panel
+
+
+def _merge_in_centrality(reg_panel: pd.DataFrame) -> pd.DataFrame:
+    """
+    Merge inflow eigenvector centrality data.
+    """
 
     # get all csv files in data/data_network/merged/inflow_centrality
-    path = rf"data/data_network/merged/inflow_centrality"  # use your path
+    path = rf"{NETWORK_DATA_PATH}/merged/inflow_centrality"  # use your path
     all_files = glob.glob(path + "/*.csv")
 
     # extract date from file name
     # combine data from all csv files into one dataframe, dropping row number of each csv file
-    li = []
+    list_df = []
     for filename in all_files:
-        df = pd.read_csv(filename, index_col=None, header=0)
+        df_in_cent = pd.read_csv(filename, index_col=None, header=0)
         date = filename.split("_")[-1].split(".")[0]
-        df["Date"] = date
-        li.append(df)
+        df_in_cent["Date"] = date
+        list_df.append(df_in_cent)
 
     # combine all csv files into one dataframe
-    frame = pd.concat(li, axis=0, ignore_index=True)
+    frame = pd.concat(list_df, axis=0, ignore_index=True)
 
     # convert date in "YYYYMMDD" to datetime
     frame["Date"] = pd.to_datetime(frame["Date"], format="%Y%m%d")
@@ -332,25 +318,29 @@ def reg_panel():
     # merge the two dataframe into one panel dataset via outer join
     reg_panel = pd.merge(reg_panel, frame, how="outer", on=["Date", "Token"])
 
-    # combine all csv files in data/data_network/merged/outflow_centrality
-    # each csv file's title contains the date, and has columes: Token, eigenvector_centrality, and has row number
-    # the new combined dataframe has colume: Date, Token, eigenvector_centrality
+    return reg_panel
+
+
+def _merge_out_centrality(reg_panel: pd.DataFrame) -> pd.DataFrame:
+    """
+    Merge outflow eigenvector centrality data.
+    """
 
     # get all csv files in data/data_network/merged/outflow_centrality
-    path = rf"data/data_network/merged/outflow_centrality"  # use your path
+    path = rf"{NETWORK_DATA_PATH}/merged/outflow_centrality"  # use your path
     all_files = glob.glob(path + "/*.csv")
 
     # extract date from file name
     # combine data from all csv files into one dataframe, dropping row number of each csv file
-    li = []
+    list_df = []
     for filename in all_files:
-        df = pd.read_csv(filename, index_col=None, header=0)
+        df_out_cent = pd.read_csv(filename, index_col=None, header=0)
         date = filename.split("_")[-1].split(".")[0]
-        df["Date"] = date
-        li.append(df)
+        df_out_cent["Date"] = date
+        list_df.append(df_out_cent)
 
     # combine all csv files into one dataframe
-    frame = pd.concat(li, axis=0, ignore_index=True)
+    frame = pd.concat(list_df, axis=0, ignore_index=True)
 
     # convert date in "YYYYMMDD" to datetime
     frame["Date"] = pd.to_datetime(frame["Date"], format="%Y%m%d")
@@ -368,22 +358,30 @@ def reg_panel():
     # rename the column "token" to "Token"
     reg_panel = reg_panel.rename(columns={"token": "Token"})
 
+    return reg_panel
+
+
+def _merge_betweenness(reg_panel: pd.DataFrame) -> pd.DataFrame:
+    """
+    Merge betweenness centrality data.
+    """
+
     # get all csv files in data/data_betweenness/betweenness
-    path = rf"data/data_betweenness/betweenness"  # use your path
+    path = rf"{BETWEENNESS_DATA_PATH}/betweenness"  # use your path
     all_files = glob.glob(path + "/*.csv")
 
     # extract date from file name
     # combine data from all csv files into one dataframe, dropping row number of each csv file
-    li = []
+    list_df = []
     for filename in all_files:
         if filename.split("_")[-2].split(".")[0] == "v2v3":
-            df = pd.read_csv(filename, index_col=None, header=0)
+            df_between = pd.read_csv(filename, index_col=None, header=0)
             date = filename.split("_")[-1].split(".")[0]
-            df["Date"] = date
-            li.append(df)
+            df_between["Date"] = date
+            list_df.append(df_between)
 
     # combine all csv files into one dataframe
-    frame = pd.concat(li, axis=0, ignore_index=True)
+    frame = pd.concat(list_df, axis=0, ignore_index=True)
 
     # convert date in "YYYYMMDD" to datetime
     frame["Date"] = pd.to_datetime(frame["Date"], format="%Y%m%d")
@@ -394,9 +392,17 @@ def reg_panel():
     # merge the two dataframe into one panel dataset via outer join
     reg_panel = pd.merge(reg_panel, frame, how="outer", on=["Date", "Token"])
 
+    return reg_panel
+
+
+def _merge_prc_gas(reg_panel: pd.DataFrame) -> pd.DataFrame:
+    """
+    Merge price and gas data.
+    """
+
     # read in the csv file
     prc = pd.read_csv(
-        rf"data/data_global/token_market/primary_token_price_2.csv",
+        rf"{GLOBAL_DATA_PATH}/token_market/primary_token_price_2.csv",
         index_col=None,
         header=0,
     )
@@ -415,7 +421,7 @@ def reg_panel():
 
     # read in the csv file
     gas = pd.read_csv(
-        rf"data/data_global/gas_fee/avg_gas_fee.csv", index_col=None, header=0
+        rf"{GLOBAL_DATA_PATH}/gas_fee/avg_gas_fee.csv", index_col=None, header=0
     )
 
     # convert date to datetime
@@ -439,7 +445,7 @@ def reg_panel():
 
     # read in the csv file and ignore the first six rows
     idx = pd.read_excel(
-        rf"data/data_global/token_market/PerformanceGraphExport.xls",
+        rf"{GLOBAL_DATA_PATH}/token_market/PerformanceGraphExport.xls",
         index_col=None,
         skiprows=6,
         skipfooter=4,
@@ -458,7 +464,8 @@ def reg_panel():
     # sort the dataframe by ascending Date and Token
     prc = prc.sort_values(by=["Date"], ascending=True)
 
-    # calculate the log prcurn of price for each token (column) and save them in new columns _log_prcurn
+    # calculate the log prcurn of price for each token (column)
+    # and save them in new columns _log_prcurn
 
     ret = prc.set_index("Date").copy()
     ret = ret.apply(lambda x: np.log(x) - np.log(x.shift(1)))
@@ -476,15 +483,18 @@ def reg_panel():
     cov_sp = cov_sp.sort_values(by="Date", ascending=True)
     std = std.sort_values(by="Date", ascending=True)
 
-    # calcuate the covariance between past 30 days log return of each column in col and that of Gas_fee
+    # calcuate the covariance between past 30 days log
+    # return of each column in col and that of Gas_fee
     for i in col:
         cov_gas[i] = ret[i].rolling(30).cov(ret["Gas_fee"])
 
-    # calcuate the covariance between past 30 days log return of each column in col and that of ETH_price
+    # calcuate the covariance between past 30 days log
+    # return of each column in col and that of ETH_price
     for i in col:
         cov_eth[i] = ret[i].rolling(30).cov(ret["ETH_price"])
 
-    # caculate the covariance between past 30 days log return of each column in col and that of S&P
+    # caculate the covariance between past 30 days log
+    # return of each column in col and that of S&P
     for i in col:
         cov_sp[i] = ret[i].rolling(30).cov(ret["S&P"])
 
@@ -520,7 +530,8 @@ def reg_panel():
     cov_sp = cov_sp.rename(columns={0: "cov_sp"})
     std = std.rename(columns={0: "std"})
 
-    # merge the ret, cov_gas, cov_eth, cov_sp dataframe into one panel dataset via outer join on "Date" and "Token
+    # merge the ret, cov_gas, cov_eth, cov_sp dataframe into
+    # one panel dataset via outer join on "Date" and "Token
     # reg_panel = pd.merge(reg_panel, ret, how="outer", on=["Date", "Token"])
     # reg_panel = pd.merge(reg_panel, cov_gas, how="outer", on=["Date", "Token"])
     # reg_panel = pd.merge(reg_panel, cov_eth, how="outer", on=["Date", "Token"])
@@ -528,183 +539,25 @@ def reg_panel():
     reg_panel = pd.merge(reg_panel, std, how="outer", on=["Date", "Token"])
 
     # drop the unnecessary column "Unnamed: 0"
-    # TODO: check how it is generated
     reg_panel = reg_panel.drop(columns=["Unnamed: 0"])
 
-    # create the correlation matrix and set the decimal places to 2 and keep the digits
-    corr = reg_panel.corr().round(2)
-
-    # change the column names to be more readable
-    corr = corr.rename(columns=naming_dict)
-
-    # set the borrow_rate, borrow_rate to 1
-    # TODO: check why
-    corr.loc["borrow_rate", "${\it BorrowAPY}^{USD}$"] = 1
-
-    # This dictionary defines the colormap
-    cdict3 = {
-        "red": (
-            (0.0, 0.0, 0.0),
-            (0.25, 0.0, 0.0),
-            (0.5, 0.8, 1.0),
-            (0.75, 1.0, 1.0),
-            (1.0, 0.4, 1.0),
-        ),
-        "green": (
-            (0.0, 0.0, 0.0),
-            (0.25, 0.0, 0.0),
-            (0.5, 0.9, 0.9),
-            (0.75, 0.0, 0.0),
-            (1.0, 0.0, 0.0),
-        ),
-        "blue": (
-            (0.0, 0.0, 0.4),
-            (0.25, 1.0, 1.0),
-            (0.5, 1.0, 0.8),
-            (0.75, 0.0, 0.0),
-            (1.0, 0.0, 0.0),
-        ),
-        "alpha": ((0.0, 1.0, 1.0), (0.5, 0.3, 0.3), (1.0, 1.0, 1.0)),
-    }
-
-    # Create the colormap using the dictionary with the range of -1 to 1
-    # make sure the range of the ledgend is -1 to 1
-    GnRd = colors.LinearSegmentedColormap("GnRd", cdict3)
-
-    # plot the heatmap
-    sns.heatmap(
-        corr,
-        xticklabels=corr.columns,
-        yticklabels=corr.columns,
-        annot=True,
-        cmap=GnRd,
-        vmin=-1,
-        vmax=1,
-        annot_kws={"size": 7},
-    )
-
-    # tight layout
-    plt.tight_layout()
-
-    # save the figure
-    plt.savefig(rf"figures/correlation_matrix.pdf")
-
-    # save the correlation matrix as a csv file
-    corr.to_csv(rf"tables/correlation_matrix.csv")
-
-    # rename the panel column names to be more readable
-    reg_panel = reg_panel.rename(columns=naming_dict)
-
-    # calculate the summary statistics of the panel dataset
-    summary = reg_panel.describe()
-
-    # take the transpose of the summary statistics
-    summary = summary.T
-
-    # save the summary statistics as a csv file
-    summary.to_csv(rf"tables/summary_statistics.csv")
-
-    # save the summary statistics as a latex file
-    with open(rf"tables/summary_statistics.tex", "w") as tf:
-        tf.write(summary.to_latex())
-
-    # # create the dummy variable for the Date
-    # time_dummies = pd.get_dummies(reg_panel["Date"])
-
-    # # reg_panel['year'] = reg_panel['date'].dt.year
-    # reg_panel["year_month"] = reg_panel["Date"].dt.to_period("M")
-    # # time_dummies = pd.get_dummies(reg_panel['year'], prefix='year')
-    # time_dummies = pd.get_dummies(reg_panel["year_month"], prefix="month")
-
-    # reg_panel = pd.concat([reg_panel, time_dummies], axis=1)
-
-    # # panel regression with time fixed effects of Date between the Inflow_centrality with Volume_share
-    # # create the dependent variable
-    Y = reg_panel["${\it VShare}$"]
-
-    # # drop all variables except for the "${\it InflowCentrality}$", "${\it BetwCent}^C$", "${\it \sigma}^{USD}$" and dummy variables
-
-    # # create the independent variable
-    # X = reg_panel.drop(
-    #     [
-    #         "${\it VShare}$",
-    #         "${\it LiquidityShare}$",
-    #         "${\it EigenCent}^{Out}$",
-    #         "${\it VShare}^{\it In}$",
-    #         "${\it VShare}^{\it Out}$",
-    #         "${\it BorrowShare}$",
-    #         "${\it SupplyShare}$",
-    #         "${\it BetwCent}^V$",
-    #         "${\it BorrowAPY}^{USD}$",
-    #         "${\it SupplyAPY}^{USD}$",
-    #         "Token",
-    #         "Date",
-    #         "year_month",
-    #     ],
-    #     axis=1,
-    # )
-
-    # # save the independent variable as a csv file
-    # X.to_csv(rf"tables/independent_variables.csv")
-    # print(X)
-
-    X = reg_panel[
-        ["${\it EigenCent}^{In}$", "${\it BetwCent}^C$", "${\it SupplyShare}$"]
-    ]
-
-    X = sm.add_constant(X)
-
-    model_1 = sm.OLS(Y, X, missing="drop")
-
-    # fit the model_1
-    results_1 = model_1.fit()
-
-    X_2 = reg_panel[
-        ["${\it EigenCent}^{Out}$", "${\it BetwCent}^V$", "${\it SupplyShare}$"]
-    ]
-
-    X_2 = sm.add_constant(X_2)
-
-    model_2 = sm.OLS(Y, X_2, missing="drop")
-
-    # fit the model_1
-    results_2 = model_2.fit()
-
-    # use stargazer to create the regression table
-    stargazer = Stargazer([results_1, results_2])
-
-    # set the title of the table
-    stargazer.title("Simple Linear Regression")
-
-    # customize the column name
-    stargazer.custom_columns(["${\it VShare}$", "${\it VShare}$"], [1, 1])
-
-    # save the table to a latex file
-    with open(rf"tables/regression_table.tex", "w") as tf:
-        tf.write(stargazer.render_latex())
-
-    # save the panel dataset as a csv file
-    reg_panel.to_csv(rf"tables/regression_panel.csv")
+    return reg_panel
 
 
-if __name__ == "__main__":
-    reg_panel()
-    naming_dict = {
-        "TVL_share": "${\it LiquidityShare}$",
-        "Inflow_centrality": "${\it EigenCent}^{In}$",
-        "Outflow_centrality": "${\it EigenCent}^{Out}$",
-        "Volume_share": "${\it VShare}$",
-        "volume_in_share": "${\it VShare}^{\it In}$",
-        "volume_out_share": "${\it VShare}^{\it Out}$",
-        "Borrow_share": "${\it BorrowShare}$",
-        "Supply_share": "${\it SupplyShare}$",
-        "betweenness_centrality_count": "${\it BetwCent}^C$",
-        "betweenness_centrality_volume": "${\it BetwCent}^V$",
-        "cov_gas": "${\it CovGas}$",
-        "cov_sp": "${\it CovSP}$",
-        "cov_eth": "${\it CovETH}$",
-        "log_return": "${R}^{\it USD}$",
-        "std": "${\it \sigma}^{USD}$",
-        "borrow_rate": "${\it BorrowAPY}^{USD}$",
-        "supply_rates": "${\it SupplyAPY}^{USD}$",
-    }
+def generate_panel() -> pd.DataFrame:
+    """
+    generate the panel dataset
+    """
+
+    # Merge the panel dataset with the volume, share, centrality and betweenness
+    reg_panel = _merge_volume_share()
+    reg_panel = _merge_volume_in_share(reg_panel)
+    reg_panel = _merge_volume_out_share(reg_panel)
+    reg_panel = _merge_compound_rate(reg_panel)
+    reg_panel = _merge_compound_share(reg_panel)
+    reg_panel = _merge_in_centrality(reg_panel)
+    reg_panel = _merge_out_centrality(reg_panel)
+    reg_panel = _merge_betweenness(reg_panel)
+    reg_panel = _merge_prc_gas(reg_panel)
+
+    return reg_panel
