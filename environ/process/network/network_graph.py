@@ -203,7 +203,9 @@ def prepare_volume(date: datetime.datetime, data_srouce: str) -> None:
 
 
 # def plot_network(date: datetime.datetime, uniswap_version: str) -> None:
-def prepare_network_graph(date: datetime.datetime, data_source: str) -> None:
+def prepare_network_graph(
+    date: datetime.datetime, data_source: str, directed: bool
+) -> None:
     """
     Plot the network by networkx
     """
@@ -211,22 +213,11 @@ def prepare_network_graph(date: datetime.datetime, data_source: str) -> None:
     # Convert the datetime to the string
     date_str = date.strftime("%Y%m%d")
 
-    # Define the network instance, for directional graph
-    G = nx.MultiDiGraph()
-
-    # token data
-    # token_data = pd.read_csv(
-    #     path.join(
-    #         config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
-    #         uniswap_version
-    #         + "/primary_tokens/primary_tokens_"
-    #         + uniswap_version
-    #         + "_"
-    #         + date_str
-    #         + ".csv",
-    #     ),
-    #     index_col=0,
-    # )
+    # Define the graph
+    if directed:
+        G = nx.MultiDiGraph()
+    else:
+        G = nx.MultiGraph()
 
     # token data
     token_data = []
@@ -305,26 +296,6 @@ def prepare_network_graph(date: datetime.datetime, data_source: str) -> None:
         index=False,
     )
 
-    # # Change data format at the presentation layer
-    # if uniswap_version == "v2":
-    #     token_data["token_symbol"] = [i[12:-2] for i in token_data["token"]]
-    #     token_data = token_data.drop(columns=["token"]).rename(
-    #         columns={"token_symbol": "token"}
-    #     )[["token", "total_tvl"]]
-
-    # token library
-    # token_lib = pd.read_csv(
-    #     path.join(
-    #         config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
-    #         "token_library_" + uniswap_version + ".csv",
-    #     ),
-    #     index_col=0,
-    # )
-
-    # token_lib = pd.DataFrame.from_dict(
-    #     config["dev"]["config"]["token_library"][uniswap_version]
-    # ).set_index("token")
-
     token_lib = []
 
     if (data_source == "v2") | (data_source == "merged"):
@@ -395,34 +366,11 @@ def prepare_network_graph(date: datetime.datetime, data_source: str) -> None:
             node_data = node_data.drop(labels=current_index, axis=0)
             node_data = node_data.sort_index().reset_index(drop=True)
 
-    # Node data
-    # node_data = pd.read_csv(
-    #     path.join(
-    #         config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
-    #         "primary_tokens_" + uniswap_version + "_" + date_str + ".csv",
-    #     ),
-    #     index_col=0,
-    # )
-
     for _, row in node_data.iterrows():
         token = row["token"]
         # total_tvl = row["total_tvl"]
         # stable = row["stable"]
         G.add_node(token, tvl=row["total_tvl"], stable=row["stable"])
-
-    # Edge data
-    # edge_data = pd.read_csv(
-    #     path.join(
-    #         config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
-    #         uniswap_version
-    #         + "/inout_flow/inout_flow_tokens_"
-    #         + uniswap_version
-    #         + "_"
-    #         + date_str
-    #         + ".csv",
-    #     ),
-    #     index_col=0,
-    # )
 
     # Edge data
     edge_data = []
@@ -480,6 +428,19 @@ def prepare_network_graph(date: datetime.datetime, data_source: str) -> None:
 
     edge_data = pd.concat(edge_data)
     edge_data = edge_data.groupby(["Source", "Target"])["Volume"].sum().reset_index()
+
+    # If the graph is undirected, we need to sum the volume of the two directions
+    if not directed:
+        edge_data["token_pair"] = edge_data.apply(
+            lambda x: frozenset([x["Source"], x["Target"]]), axis=1
+        )
+        # sum up the volume for the same token pair and keep the source and target
+        edge_data = (
+            edge_data.groupby("token_pair")
+            .agg({"Source": "first", "Target": "first", "Volume": "sum"})
+            .reset_index()
+            .drop(columns=["token_pair"])
+        )
 
     for _, row in edge_data.iterrows():
         source = row["Source"]

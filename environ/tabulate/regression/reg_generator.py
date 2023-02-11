@@ -71,8 +71,7 @@ def generate_reg(reg_panel: pd.DataFrame) -> None:
                 for supply in ["${\it SupplyShare}$", "${\it BorrowShare}$"]:
                     for apy in ["${\it BorrowAPY}^{USD}$", "${\it SupplyAPY}^{USD}$"]:
                         # record the dependet variables
-                        stargazer_col_list.append(eigen)
-
+                        stargazer_col_list.append(dependent_variable)
                         # create the independent variable
                         independent_variable = reg_panel[[eigen, betw, supply, apy]]
                         independent_variable = sm.add_constant(independent_variable)
@@ -91,14 +90,18 @@ def generate_reg(reg_panel: pd.DataFrame) -> None:
         stargazer.title("Simple Linear Regression")
 
         # customize the column name
-        stargazer.custom_columns(
-            stargazer_col_list,
-            [1 for _ in stargazer_col_list],
-        )
+        # stargazer.custom_columns(
+        #     [stargazer_col_list],
+        #     [1 for _ in stargazer_col_list],
+        # )
 
         # save the table to a latex file
         with open(rf"{TABLE_PATH}/regression_table.tex", "w") as to_file:
             to_file.write(stargazer.render_latex())
+
+        # save the table to a html file
+        with open(rf"{TABLE_PATH}/regression_table.html", "w") as to_file:
+            to_file.write(stargazer.render_html())
 
     # save the panel dataset as a csv file
     reg_panel.to_csv(rf"{TABLE_PATH}/regression_panel.csv")

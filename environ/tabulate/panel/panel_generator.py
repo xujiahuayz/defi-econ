@@ -468,6 +468,9 @@ def _merge_prc_gas(reg_panel: pd.DataFrame) -> pd.DataFrame:
 
     # convert date in "YYYY-MM-DD" to datetime
     prc["Date"] = pd.to_datetime(prc["Date"], format="%Y-%m-%d")
+
+    # TODO: shift the price by -1 day
+
     # load in the data in data/data_global/gas_fee/avg_gas_fee.csv
     # the dataframe has colume: Date, Gas_fee
     # the dataframe has row number
@@ -495,7 +498,7 @@ def _merge_prc_gas(reg_panel: pd.DataFrame) -> pd.DataFrame:
     gas = gas[["Date", "Gas_fee", "ETH_price"]]
 
     # merge the prc and gas dataframe into one panel dataset via outer join on "Date"
-    prc = pd.merge(prc, gas, how="left", on=["Date"])
+    prc = pd.merge(prc, gas, how="outer", on=["Date"])
 
     # load in the data in data/data_global/token_market/PerformanceGraphExport.xls
     # the dataframe has colume: Date, Token, Price
@@ -515,19 +518,20 @@ def _merge_prc_gas(reg_panel: pd.DataFrame) -> pd.DataFrame:
     idx["Date"] = pd.to_datetime(idx["Date"])
 
     # merge the prc and idx dataframe into one panel dataset via outer join on "Date"
-    prc = pd.merge(prc, idx, how="left", on=["Date"])
+    prc = pd.merge(prc, idx, how="outer", on=["Date"])
+
+    # imputation for S&P via forward fill
+    prc = prc.sort_values(by=["Date"], ascending=True)
+    prc["S&P"] = prc["S&P"].interpolate()
 
     # drop the unnecessary column "Unnamed: 0"
     prc = prc.drop(columns=["Unnamed: 0"])
 
-    # sort the dataframe by ascending Date and Token
-    prc = prc.sort_values(by=["Date"], ascending=True)
-
     # calculate the log prcurn of price for each token (column)
     # and save them in new columns _log_prcurn
-
+    # reminder: np.log(0) = -inf
     ret = prc.set_index("Date").copy()
-    ret = ret.apply(lambda x: np.log(x) - np.log(x.shift(1)))
+    ret = ret.apply(lambda x: (np.log(x) - np.log(x.shift(1))))
 
     # copy the ret as a new dataframe named cov
     cov_gas = ret.copy()
@@ -561,6 +565,13 @@ def _merge_prc_gas(reg_panel: pd.DataFrame) -> pd.DataFrame:
     for i in col:
         std[i] = ret[i].rolling(30).std()
 
+    # save these dataframes into csv files
+    # ret.to_csv(rf"{GLOBAL_DATA_PATH}/token_market/ret.csv")
+    # prc.to_csv(rf"{GLOBAL_DATA_PATH}/token_market/prc.csv")
+    # cov_gas.to_csv(rf"{GLOBAL_DATA_PATH}/token_market/cov_gas.csv")
+    # cov_eth.to_csv(rf"{GLOBAL_DATA_PATH}/token_market/cov_eth.csv")
+    # cov_sp.to_csv(rf"{GLOBAL_DATA_PATH}/token_market/cov_sp.csv")
+
     # drop the Gas_fee and ETH_price and S&P500 columns for ret and cov
     ret = ret.drop(columns=["Gas_fee", "ETH_price", "S&P"])
     cov_gas = cov_gas.drop(columns=["Gas_fee", "ETH_price", "S&P"])
@@ -591,10 +602,10 @@ def _merge_prc_gas(reg_panel: pd.DataFrame) -> pd.DataFrame:
 
     # merge the ret, cov_gas, cov_eth, cov_sp dataframe into
     # one panel dataset via outer join on "Date" and "Token
-    # reg_panel = pd.merge(reg_panel, ret, how="outer", on=["Date", "Token"])
-    # reg_panel = pd.merge(reg_panel, cov_gas, how="outer", on=["Date", "Token"])
-    # reg_panel = pd.merge(reg_panel, cov_eth, how="outer", on=["Date", "Token"])
-    # reg_panel = pd.merge(reg_panel, cov_sp, how="outer", on=["Date", "Token"])
+    reg_panel = pd.merge(reg_panel, ret, how="outer", on=["Date", "Token"])
+    reg_panel = pd.merge(reg_panel, cov_gas, how="outer", on=["Date", "Token"])
+    reg_panel = pd.merge(reg_panel, cov_eth, how="outer", on=["Date", "Token"])
+    reg_panel = pd.merge(reg_panel, cov_sp, how="outer", on=["Date", "Token"])
     reg_panel = pd.merge(reg_panel, std, how="outer", on=["Date", "Token"])
 
     # drop the unnecessary column "Unnamed: 0"
