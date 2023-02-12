@@ -12,6 +12,7 @@ Desc    : Generate the regression.
 import warnings
 import pandas as pd
 import statsmodels.api as sm
+from matplotlib import pyplot as plt
 from stargazer.stargazer import Stargazer
 from environ.utils.config_parser import Config
 
@@ -23,36 +24,13 @@ config = Config()
 
 # Initialize the path
 TABLE_PATH = config["dev"]["config"]["result"]["TABLE_PATH"]
+FIGURE_PATH = config["dev"]["config"]["result"]["FIGURE_PATH"]
 
 
 def generate_reg(reg_panel: pd.DataFrame) -> None:
     """
     Generage the regression.
     """
-
-    # dependent_variable = reg_panel["${\it VShare}$"]
-
-    # independent_variable_1 = reg_panel[
-    #     ["${\it EigenCent}^{In}$", "${\it BetwCent}^C$", "${\it SupplyShare}$"]
-    # ]
-
-    # independent_variable_1 = sm.add_constant(independent_variable_1)
-
-    # model_1 = sm.OLS(dependent_variable, independent_variable_1, missing="drop")
-
-    # # fit the model_1
-    # results_1 = model_1.fit()
-
-    # independent_variable_2 = reg_panel[
-    #     ["${\it EigenCent}^{Out}$", "${\it BetwCent}^V$", "${\it SupplyShare}$"]
-    # ]
-
-    # independent_variable_2 = sm.add_constant(independent_variable_2)
-
-    # model_2 = sm.OLS(dependent_variable, independent_variable_2, missing="drop")
-
-    # # fit the model_2
-    # results_2 = model_2.fit()
 
     # create a list to store the results
     stargazer_list = []
@@ -105,3 +83,80 @@ def generate_reg(reg_panel: pd.DataFrame) -> None:
 
     # save the panel dataset as a csv file
     reg_panel.to_csv(rf"{TABLE_PATH}/regression_panel.csv")
+
+
+def change_in_r_squared(reg_panel: pd.DataFrame) -> None:
+    """
+    Function to plot the increase of R square.
+    """
+    _, ax = plt.subplots(figsize=(16, 9))
+
+    for dependent_variable, d_str in [
+        ("${\it VShare}$", "V"),
+        ("${\it VShare}^{\it In}$", "VIn"),
+        ("${\it VShare}^{\it Out}$", "VOut"),
+    ]:
+        dependent_variable = reg_panel[dependent_variable]
+        # loop through the independent variables
+        for betw, betw_str in [
+            ("${\it BetwCent}^C$", "BetwC"),
+            ("${\it BetwCent}^V$", "BetwV"),
+        ]:
+            for safe, safe_str in [
+                ("beta", "Beta"),
+                ("sentiment", "Senti"),
+                ("average_return", "Rmean"),
+                ("${\it \sigma}^{USD}$", "Vol"),
+            ]:
+                for eigen, eigen_str in [
+                    ("${\it EigenCent}^{In}$", "EigenIn"),
+                    ("${\it EigenCent}^{Out}$", "EigenOut"),
+                ]:
+                    r_list = []
+                    # graduatelly add the independent variables
+                    independent_variable = reg_panel[[betw]]
+                    independent_variable = sm.add_constant(independent_variable)
+                    model = sm.OLS(
+                        dependent_variable, independent_variable, missing="drop"
+                    )
+                    # calculate the R square
+                    r_list.append(model.fit().rsquared)
+
+                    independent_variable = reg_panel[[betw, safe]]
+                    independent_variable = sm.add_constant(independent_variable)
+                    model = sm.OLS(
+                        dependent_variable, independent_variable, missing="drop"
+                    )
+                    # calculate the R square
+                    r_list.append(model.fit().rsquared)
+
+                    independent_variable = reg_panel[[betw, safe, eigen]]
+                    independent_variable = sm.add_constant(independent_variable)
+                    model = sm.OLS(
+                        dependent_variable, independent_variable, missing="drop"
+                    )
+                    # calculate the R square
+                    r_list.append(model.fit().rsquared)
+
+                    # Plot numerous changes in R square in one graph using subplots
+                    ax.plot(
+                        [
+                            "Betw",
+                            "Betw + " + "Safe",
+                            "Betw + " + "Safe" + " + " + "Eigen",
+                        ],
+                        r_list,
+                        label=f"{d_str}~{betw_str}+{safe_str}+{eigen_str}",
+                    )
+                    ax.set_title("Change in R square")
+                    ax.set_xlabel("Independent Variables")
+                    ax.set_ylabel("R square")
+    # show the legend in the right hand side of the graph in one column
+    ax.legend(loc="center left", bbox_to_anchor=(1, 0.5), ncol=1)
+
+    # save the figure
+    plt.savefig(
+        rf"{FIGURE_PATH}/R_square.pdf",
+        dpi=300,
+        bbox_inches="tight",
+    )

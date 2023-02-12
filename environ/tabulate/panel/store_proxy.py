@@ -10,6 +10,7 @@ from tqdm import tqdm
 import statsmodels.api as sm
 from statsmodels.regression.rolling import RollingOLS
 from environ.utils.config_parser import Config
+from environ.utils.info_logger import print_info_log
 
 # ignore the warnings
 warnings.filterwarnings("ignore")
@@ -25,6 +26,9 @@ def _beta(reg_panel: pd.DataFrame) -> pd.DataFrame:
     """
     Construct a value store proxy for the beta-hedge value store.
     """
+
+    # information log
+    print_info_log("Constructing the beta-hedge value store proxy.", "process")
 
     # Load in the token price data
     prc = pd.read_csv(
@@ -171,9 +175,6 @@ def _beta(reg_panel: pd.DataFrame) -> pd.DataFrame:
     # beta row
     ret = ret.rename(columns={0: "beta"})
 
-    # save the dataframe to the test folder
-    ret.to_csv("test/ret.csv", index=False)
-
     # merge the ret into reg_panel
     reg_panel = pd.merge(reg_panel, ret, how="outer", on=["Date", "Token"])
 
@@ -185,8 +186,14 @@ def _sentiment(reg_panel: pd.DataFrame) -> pd.DataFrame:
     Merge the sentiment score with the regression panel dataset
     """
 
+    # information log
+    print_info_log("Constructing the sentiment value store proxy.", "process")
+
     # load in the sentiment score
     sentiment = pd.read_csv(rf"{GLOBAL_DATA_PATH}/sentiment/sentiment.csv")
+
+    # convert date in "YYYY-MM-DD" to datetime
+    sentiment["Date"] = pd.to_datetime(sentiment["Date"], format="%Y-%m-%d")
 
     # merge the sentiment into reg_panel
     reg_panel = pd.merge(reg_panel, sentiment, how="outer", on=["Date"])
@@ -194,10 +201,15 @@ def _sentiment(reg_panel: pd.DataFrame) -> pd.DataFrame:
     return reg_panel
 
 
-def _rolling_average_return() -> pd.DataFrame:
+def _rolling_average_return(reg_panel: pd.DataFrame) -> pd.DataFrame:
     """
     Calculate the last 30 day average return of each token
     """
+
+    # information log
+    print_info_log(
+        "Constructing the 30-day average return value store proxy.", "process"
+    )
 
     # Load in the token price data
     prc = pd.read_csv(
@@ -229,13 +241,25 @@ def _rolling_average_return() -> pd.DataFrame:
     for col_name in tqdm(col):
         ret[col_name] = ret[col_name].rolling(30).mean()
 
-    # save the dataframe to the test folder
-    ret.to_csv("test/ret.csv")
+    # drop Unnamed: 0 column
+    ret = ret.drop(columns=["Unnamed: 0"])
 
-    return ret
+    # convert the dataframe to panel dataset
+    ret = ret.stack().reset_index()
+
+    # rename the columns
+    ret = ret.rename(columns={"level_1": "Token"})
+
+    # average return row
+    ret = ret.rename(columns={0: "average_return"})
+
+    # merge the ret into reg_panel
+    reg_panel = pd.merge(reg_panel, ret, how="outer", on=["Date", "Token"])
+
+    return reg_panel
 
 
-def merge_store_proxy(reg_panel: pd.DataFrame) -> pd.DataFrame:
+def merge_safeness_measurement(reg_panel: pd.DataFrame) -> pd.DataFrame:
     """
     Merge the proxy variables with the regression panel dataset
     """
@@ -245,6 +269,9 @@ def merge_store_proxy(reg_panel: pd.DataFrame) -> pd.DataFrame:
 
     # merge the sentiment
     reg_panel = _sentiment(reg_panel)
+
+    # merge the rolling average return
+    reg_panel = _rolling_average_return(reg_panel)
 
     return reg_panel
 
