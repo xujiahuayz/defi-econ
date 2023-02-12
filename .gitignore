@@ -155,3 +155,4 @@ dmypy.json
 # data/data_uniswap_v3/directional_volume/
 # data/data_uniswap_v3/pool_list/
 data/
+test/
