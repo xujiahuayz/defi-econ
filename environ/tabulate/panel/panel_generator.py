@@ -12,6 +12,9 @@ Desc    : Generate the panel for regression.
 import glob
 import pandas as pd
 import numpy as np
+from tqdm import tqdm
+import datetime
+import matplotlib.pyplot as plt
 from environ.utils.config_parser import Config
 
 # Initialize config
@@ -22,6 +25,10 @@ NETWORK_DATA_PATH = config["dev"]["config"]["data"]["NETWORK_DATA_PATH"]
 COMPOUND_DATA_PATH = config["dev"]["config"]["data"]["COMPOUND_DATA_PATH"]
 GLOBAL_DATA_PATH = config["dev"]["config"]["data"]["GLOBAL_DATA_PATH"]
 BETWEENNESS_DATA_PATH = config["dev"]["config"]["data"]["BETWEENNESS_DATA_PATH"]
+TOKEN_LIB_V2_TOKEN = config["dev"]["config"]["token_library"]["v2"]["token"]
+TOKEN_LIB_V2_STABLE = config["dev"]["config"]["token_library"]["v2"]["stable"]
+TOKEN_LIB_V3_TOKEN = config["dev"]["config"]["token_library"]["v3"]["token"]
+TOKEN_LIB_V3_STABLE = config["dev"]["config"]["token_library"]["v3"]["stable"]
 
 
 def _merge_volume_share() -> pd.DataFrame:
@@ -469,7 +476,8 @@ def _merge_prc_gas(reg_panel: pd.DataFrame) -> pd.DataFrame:
     # convert date in "YYYY-MM-DD" to datetime
     prc["Date"] = pd.to_datetime(prc["Date"], format="%Y-%m-%d")
 
-    # TODO: shift the price by -1 day
+    # shift the date by one day
+    prc["Date"] = prc["Date"] + pd.DateOffset(days=-1)
 
     # load in the data in data/data_global/gas_fee/avg_gas_fee.csv
     # the dataframe has colume: Date, Gas_fee
@@ -527,17 +535,27 @@ def _merge_prc_gas(reg_panel: pd.DataFrame) -> pd.DataFrame:
     # drop the unnecessary column "Unnamed: 0"
     prc = prc.drop(columns=["Unnamed: 0"])
 
+    # save the prc to test folder
+    prc.to_csv(rf"test/prc.csv", index=False)
+
     # calculate the log prcurn of price for each token (column)
     # and save them in new columns _log_prcurn
     # reminder: np.log(0) = -inf
     ret = prc.set_index("Date").copy()
     ret = ret.apply(lambda x: (np.log(x) - np.log(x.shift(1))))
 
+    # # reset the index of ret
+    # ret = ret.reset_index()
+
     # copy the ret as a new dataframe named cov
     cov_gas = ret.copy()
     cov_eth = ret.copy()
     cov_sp = ret.copy()
     std = ret.copy()
+
+    # # set the Date column as index
+    # ret = ret.set_index("Date")
+    # std = std.set_index("Date")
 
     # sort the dataframe by ascending Date for cov_gas, cov_eth and cov_sp
     ret = ret.sort_values(by="Date", ascending=True)
@@ -549,28 +567,21 @@ def _merge_prc_gas(reg_panel: pd.DataFrame) -> pd.DataFrame:
     # calcuate the covariance between past 30 days log
     # return of each column in col and that of Gas_fee
     for i in col:
-        cov_gas[i] = ret[i].rolling(30).cov(ret["Gas_fee"])
+        cov_gas[i] = cov_gas[i].rolling(30).cov(cov_gas["Gas_fee"])
 
     # calcuate the covariance between past 30 days log
     # return of each column in col and that of ETH_price
     for i in col:
-        cov_eth[i] = ret[i].rolling(30).cov(ret["ETH_price"])
+        cov_eth[i] = cov_eth[i].rolling(30).cov(cov_eth["ETH_price"])
 
     # caculate the covariance between past 30 days log
     # return of each column in col and that of S&P
     for i in col:
-        cov_sp[i] = ret[i].rolling(30).cov(ret["S&P"])
+        cov_sp[i] = cov_sp[i].rolling(30).cov(cov_sp["S&P"])
 
     # calculate the standard deviation of each column in col
     for i in col:
-        std[i] = ret[i].rolling(30).std()
-
-    # save these dataframes into csv files
-    # ret.to_csv(rf"{GLOBAL_DATA_PATH}/token_market/ret.csv")
-    # prc.to_csv(rf"{GLOBAL_DATA_PATH}/token_market/prc.csv")
-    # cov_gas.to_csv(rf"{GLOBAL_DATA_PATH}/token_market/cov_gas.csv")
-    # cov_eth.to_csv(rf"{GLOBAL_DATA_PATH}/token_market/cov_eth.csv")
-    # cov_sp.to_csv(rf"{GLOBAL_DATA_PATH}/token_market/cov_sp.csv")
+        std[i] = std[i].rolling(30).std()
 
     # drop the Gas_fee and ETH_price and S&P500 columns for ret and cov
     ret = ret.drop(columns=["Gas_fee", "ETH_price", "S&P"])
@@ -578,6 +589,7 @@ def _merge_prc_gas(reg_panel: pd.DataFrame) -> pd.DataFrame:
     cov_eth = cov_eth.drop(columns=["Gas_fee", "ETH_price", "S&P"])
     cov_sp = cov_sp.drop(columns=["Gas_fee", "ETH_price", "S&P"])
     std = std.drop(columns=["Gas_fee", "ETH_price", "S&P"])
+    gas = gas.drop(columns=["ETH_price"])
 
     # ret and cov to panel dataset, column: Date, Token, log return and covariance
     ret = ret.stack().reset_index()
@@ -607,9 +619,53 @@ def _merge_prc_gas(reg_panel: pd.DataFrame) -> pd.DataFrame:
     reg_panel = pd.merge(reg_panel, cov_eth, how="outer", on=["Date", "Token"])
     reg_panel = pd.merge(reg_panel, cov_sp, how="outer", on=["Date", "Token"])
     reg_panel = pd.merge(reg_panel, std, how="outer", on=["Date", "Token"])
+    reg_panel = pd.merge(reg_panel, gas, how="outer", on=["Date"])
 
     # drop the unnecessary column "Unnamed: 0"
     reg_panel = reg_panel.drop(columns=["Unnamed: 0"])
+
+    return reg_panel
+
+
+def _merge_nonstable(reg_panel: pd.DataFrame) -> pd.DataFrame:
+    """
+    Merge the dummy variable for non-stablecoin
+    """
+
+    # load in the token library for v2 and v3
+    token_lib_v2 = pd.DataFrame(
+        {"Token": TOKEN_LIB_V2_TOKEN, "Stable": TOKEN_LIB_V2_STABLE}
+    )
+    token_lib_v3 = pd.DataFrame(
+        {"Token": TOKEN_LIB_V3_TOKEN, "Stable": TOKEN_LIB_V3_STABLE}
+    )
+
+    # change the Stable to Nonstable
+    token_lib_v2["Nonstable"] = 1 - token_lib_v2["Stable"]
+    token_lib_v3["Nonstable"] = 1 - token_lib_v3["Stable"]
+
+    # drop the Stable column
+    token_lib_v2 = token_lib_v2.drop(columns=["Stable"])
+    token_lib_v3 = token_lib_v3.drop(columns=["Stable"])
+
+    # merge the token library for v2 and v3
+    token_lib = pd.concat([token_lib_v2, token_lib_v3], ignore_index=True)
+
+    # drop the duplicate token
+    token_lib = token_lib.drop_duplicates(subset=["Token"])
+
+    # merge the token library with the panel dataset
+    reg_panel = pd.merge(reg_panel, token_lib, how="left", on=["Token"])
+
+    return reg_panel
+
+
+def _merge_isweth(reg_panel: pd.DataFrame) -> pd.DataFrame:
+    """
+    Merge the dummy variable for weth
+    """
+
+    reg_panel["IsWETH"] = reg_panel["Token"].apply(lambda x: 1 if x == "WETH" else 0)
 
     return reg_panel
 
@@ -631,5 +687,7 @@ def generate_panel() -> pd.DataFrame:
     reg_panel = _merge_out_centrality(reg_panel)
     reg_panel = _merge_betweenness(reg_panel)
     reg_panel = _merge_prc_gas(reg_panel)
+    reg_panel = _merge_nonstable(reg_panel)
+    reg_panel = _merge_isweth(reg_panel)
 
     return reg_panel

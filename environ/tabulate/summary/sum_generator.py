@@ -42,6 +42,11 @@ NAMING_DIC = {
     "std": "${\it \sigma}^{USD}$",
     "borrow_rate": "${\it BorrowAPY}^{USD}$",
     "supply_rates": "${\it SupplyAPY}^{USD}$",
+    "mcap": "${\it MCap}^{USD}$",
+    "Nonstable": "${\i Nonstable}$",
+    "IsWETH": "${\i IsWETH}$",
+    "Gas_fee": "${\t GasPrice}$",
+    "dollar_exchange_rate": "${\it ExchangeRate}^{USD}$",
 }
 
 
@@ -98,8 +103,11 @@ def generate_sum(reg_panel: pd.DataFrame) -> pd.DataFrame:
         cmap=GnRd,
         vmin=-1,
         vmax=1,
-        annot_kws={"size": 7},
+        annot_kws={"size": 4},
     )
+
+    # font size smaller
+    plt.rcParams.update({"font.size": 4})
 
     # tight layout
     plt.tight_layout()

@@ -37,6 +37,9 @@ dev:
     aave:
       DUNE_ACCOUNT: "hileoo"
       DUNE_PASSWORD: "QWERtyui123"
+    coingecko:
+      START_DATE: "2019-01-01"
+      END_DATE: "2023-02-01"
     dynamic:
       HEIGHT: 1600
       WIDTH: 1200
