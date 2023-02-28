@@ -484,7 +484,7 @@ def _merge_prc_gas(reg_panel: pd.DataFrame) -> pd.DataFrame:
     # save the column name into a list except for the Date and unnamed column
     col = list(prc.columns)
     col.remove("Date")
-    # col.remove("Unnamed: 0")
+    col.remove("Unnamed: 0")
 
     # read in the csv file
     gas = pd.read_csv(
@@ -529,8 +529,8 @@ def _merge_prc_gas(reg_panel: pd.DataFrame) -> pd.DataFrame:
     prc = prc.sort_values(by=["Date"], ascending=True)
     prc["S&P"] = prc["S&P"].interpolate()
 
-    # # drop the unnecessary column "Unnamed: 0"
-    # prc = prc.drop(columns=["Unnamed: 0"])
+    # drop the unnecessary column "Unnamed: 0"
+    prc = prc.drop(columns=["Unnamed: 0"])
 
     # save the prc to test folder
     prc.to_csv(rf"test/prc.csv", index=False)
@@ -693,7 +693,7 @@ def _merge_exceedance(reg_panel: pd.DataFrame) -> pd.DataFrame:
     # save the column name into a list except for the Date and unnamed column
     col = list(prc.columns)
     col.remove("Date")
-    # col.remove("Unnamed: 0")
+    col.remove("Unnamed: 0")
 
     # read in the csv file and ignore the first six rows
     idx = pd.read_excel(
@@ -714,8 +714,8 @@ def _merge_exceedance(reg_panel: pd.DataFrame) -> pd.DataFrame:
     prc = prc.sort_values(by=["Date"], ascending=True)
     prc["S&P"] = prc["S&P"].interpolate()
 
-    # # drop the unnecessary column "Unnamed: 0"
-    # prc = prc.drop(columns=["Unnamed: 0"])
+    # drop the unnecessary column "Unnamed: 0"
+    prc = prc.drop(columns=["Unnamed: 0"])
 
     # calculate the log prcurn of price for each token (column)
     # and save them in new columns _log_prcurn
@@ -723,16 +723,33 @@ def _merge_exceedance(reg_panel: pd.DataFrame) -> pd.DataFrame:
     ret = prc.set_index("Date").copy()
     ret = ret.apply(lambda x: (np.log(x) - np.log(x.shift(1))))
 
+    # reset the index
+    ret = ret.reset_index()
+
     # remove inf and -inf
     ret = ret.replace([np.inf, -np.inf], np.nan)
 
+    # drop the nan
+    ret = ret.dropna()
+
     # create a new column "exceedance" for the market return
-    # if the market return is lower than the mean value minus
-    # 1.5 times of the standard deviation of the market return
-    # then the exceedance is np.nan, otherwise (includes np.nan) 1
-    ret["exceedance"] = ret["S&P"].apply(
-        lambda x: 1 if x < ret["S&P"].mean() - 1.5 * ret["S&P"].std() else np.nan
-    )
+    # if the market return is lower than the historical mean value minus
+    # 1.5 times of the historical standard deviation of the market return
+    # then the exceedance is 1, otherwise (includes np.nan) np.nan
+    # using iterrows() to iterate over the rows of the dataframe
+    # TODO: Check the error here
+    for index, row in ret.iterrows():
+        if (
+            row["S&P"]
+            < ret.loc[ret["Date"] <= row["Date"], "S&P"].mean()
+            - 1.5 * ret.loc[ret["Date"] <= row["Date"], "S&P"].std()
+        ):
+            ret.at[index, "exceedance"] = 1
+        else:
+            ret.at[index, "exceedance"] = np.nan
+
+    # set the index to Date
+    ret = ret.set_index("Date")
 
     # sort the dataframe by ascending Date for cov_gas, cov_eth and cov_sp
     ret = ret.sort_values(by=["Date"], ascending=True)
@@ -824,11 +841,11 @@ def generate_panel() -> pd.DataFrame:
     reg_panel = _merge_prc_gas(reg_panel)
     reg_panel = _merge_nonstable(reg_panel)
     reg_panel = _merge_isweth(reg_panel)
-    reg_panel = _merge_exceedance(reg_panel)
+    # reg_panel = _merge_exceedance(reg_panel)
     reg_panel = _merge_gas_volatility(reg_panel)
 
     return reg_panel.loc[
-        (reg_panel["Date"] >= "2020-06-01") & (reg_panel["Date"] <= "2023-02-01")
+        (reg_panel["Date"] >= "2020-06-01") & (reg_panel["Date"] < "2023-02-01")
     ]
 
 
