@@ -105,7 +105,8 @@ def fetch_uni(
     swap_date_list_v2 = [
         to_do_date
         for to_do_date in date_list
-        if "uniswap_v2_swaps_" + top50_list_label + ".csv" not in done_v2_swap_list
+        if "uniswap_v2_swaps_" + to_do_date.strftime("%Y%m%d") + ".csv"
+        not in done_v2_swap_list
     ]
 
     # List for to-do dates of Uniswap V3 for raw swap data
@@ -119,8 +120,13 @@ def fetch_uni(
     swap_date_list_v3 = [
         to_do_date
         for to_do_date in date_list
-        if "uniswap_v3_swaps_" + top50_list_label + ".csv" not in done_v3_swap_list
+        if "uniswap_v3_swaps_" + to_do_date.strftime("%Y%m%d") + ".csv"
+        not in done_v3_swap_list
     ]
+
+    # # Check point
+    # print(swap_date_list_v2)
+    # print(swap_date_list_v3)
 
     # # Step 1: determine the list of monthly top 50 pools as candidates
     # print_info_log("Fetch the list of monthly top 50 pools", "Uniswap V2")
@@ -165,21 +171,21 @@ def fetch_uni(
     #         )
 
     # Step 3: Fetch raw swap data
-    # print_info_log("Fetch raw swap data", "Uniswap V2")
+    print_info_log("Fetch raw swap data", "Uniswap V2")
 
-    # for date in tqdm(swap_date_list_v2):
-    #     try:
-    #         date_str = date.strftime("%Y%m%d")
-    #         start_timestamp = int(calendar.timegm(date.timetuple()))  # include
-    #         end_date = date + datetime.timedelta(days=1)
-    #         end_timestamp = int(calendar.timegm(end_date.timetuple()))  # exclude
+    for date in tqdm(swap_date_list_v2):
+        try:
+            date_str = date.strftime("%Y%m%d")
+            start_timestamp = int(calendar.timegm(date.timetuple()))  # include
+            end_date = date + datetime.timedelta(days=1)
+            end_timestamp = int(calendar.timegm(end_date.timetuple()))  # exclude
 
-    #         uniswap_v2_swaps(start_timestamp, end_timestamp, date_str)
-    #     except:
-    #         print_info_log(
-    #             f"Failed to fetch raw sawp data for {date} for Uniswap V2.",
-    #             "Error",
-    #         )
+            uniswap_v2_swaps(start_timestamp, end_timestamp, date_str)
+        except:
+            print_info_log(
+                f"Failed to fetch raw sawp data for {date} for Uniswap V2.",
+                "Error",
+            )
 
     print_info_log("Fetch raw swap data", "Uniswap V3")
 

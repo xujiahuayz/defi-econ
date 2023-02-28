@@ -63,14 +63,14 @@ def fetch_data():
             f"Fetch Uniswap Data from {start_date_str} to {end_date_str}",
             "progress",
         )
-        fetch_uni(label, start_date, end_date)
+        # fetch_uni(label, start_date, end_date)
 
         # Fetch compound-related data
-        # print_info_log(
-        #     f"Fetch Compound Data from {start_date_str} to {end_date_str}",
-        #     "progress",
-        # )
-        # fetch_comp(start_date, end_date)
+        print_info_log(
+            f"Fetch Compound Data from {start_date_str} to {end_date_str}",
+            "progress",
+        )
+        fetch_comp(start_date, end_date)
 
         # Fetch aave-related data
         # print_info_log("Fetch AAVE Data", "progress")

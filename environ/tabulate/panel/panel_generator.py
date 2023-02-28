@@ -12,9 +12,6 @@ Desc    : Generate the panel for regression.
 import glob
 import pandas as pd
 import numpy as np
-from tqdm import tqdm
-import datetime
-import matplotlib.pyplot as plt
 from environ.utils.config_parser import Config
 
 # Initialize config
@@ -487,7 +484,7 @@ def _merge_prc_gas(reg_panel: pd.DataFrame) -> pd.DataFrame:
     # save the column name into a list except for the Date and unnamed column
     col = list(prc.columns)
     col.remove("Date")
-    col.remove("Unnamed: 0")
+    # col.remove("Unnamed: 0")
 
     # read in the csv file
     gas = pd.read_csv(
@@ -532,8 +529,8 @@ def _merge_prc_gas(reg_panel: pd.DataFrame) -> pd.DataFrame:
     prc = prc.sort_values(by=["Date"], ascending=True)
     prc["S&P"] = prc["S&P"].interpolate()
 
-    # drop the unnecessary column "Unnamed: 0"
-    prc = prc.drop(columns=["Unnamed: 0"])
+    # # drop the unnecessary column "Unnamed: 0"
+    # prc = prc.drop(columns=["Unnamed: 0"])
 
     # save the prc to test folder
     prc.to_csv(rf"test/prc.csv", index=False)
@@ -567,17 +564,17 @@ def _merge_prc_gas(reg_panel: pd.DataFrame) -> pd.DataFrame:
     # calcuate the covariance between past 30 days log
     # return of each column in col and that of Gas_fee
     for i in col:
-        cov_gas[i] = cov_gas[i].rolling(30).cov(cov_gas["Gas_fee"])
+        cov_gas[i] = cov_gas[i].rolling(30).corr(cov_gas["Gas_fee"])
 
     # calcuate the covariance between past 30 days log
     # return of each column in col and that of ETH_price
     for i in col:
-        cov_eth[i] = cov_eth[i].rolling(30).cov(cov_eth["ETH_price"])
+        cov_eth[i] = cov_eth[i].rolling(30).corr(cov_eth["ETH_price"])
 
     # caculate the covariance between past 30 days log
     # return of each column in col and that of S&P
     for i in col:
-        cov_sp[i] = cov_sp[i].rolling(30).cov(cov_sp["S&P"])
+        cov_sp[i] = cov_sp[i].rolling(30).corr(cov_sp["S&P"])
 
     # calculate the standard deviation of each column in col
     for i in col:
@@ -607,9 +604,9 @@ def _merge_prc_gas(reg_panel: pd.DataFrame) -> pd.DataFrame:
 
     # rename the column "0" to "log_return" and "0" to "covariance"
     ret = ret.rename(columns={0: "log_return"})
-    cov_gas = cov_gas.rename(columns={0: "cov_gas"})
-    cov_eth = cov_eth.rename(columns={0: "cov_eth"})
-    cov_sp = cov_sp.rename(columns={0: "cov_sp"})
+    cov_gas = cov_gas.rename(columns={0: "corr_gas"})
+    cov_eth = cov_eth.rename(columns={0: "corr_eth"})
+    cov_sp = cov_sp.rename(columns={0: "corr_sp"})
     std = std.rename(columns={0: "std"})
 
     # merge the ret, cov_gas, cov_eth, cov_sp dataframe into
@@ -670,6 +667,144 @@ def _merge_isweth(reg_panel: pd.DataFrame) -> pd.DataFrame:
     return reg_panel
 
 
+def _merge_exceedance(reg_panel: pd.DataFrame) -> pd.DataFrame:
+    """
+    Merge the exceedance correlation
+    """
+
+    # read in the csv file
+    prc = pd.read_csv(
+        rf"{GLOBAL_DATA_PATH}/token_market/primary_token_price_2.csv",
+        index_col=None,
+        header=0,
+    )
+
+    # convert date in "YYYY-MM-DD" to datetime
+    prc["Date"] = pd.to_datetime(prc["Date"], format="%Y-%m-%d")
+
+    # shift the date by one day
+    prc["Date"] = prc["Date"] + pd.DateOffset(days=-1)
+
+    # load in the data in data/data_global/gas_fee/avg_gas_fee.csv
+    # the dataframe has colume: Date, Gas_fee
+    # the dataframe has row number
+    # the dataframe is sorted by Date
+
+    # save the column name into a list except for the Date and unnamed column
+    col = list(prc.columns)
+    col.remove("Date")
+    # col.remove("Unnamed: 0")
+
+    # read in the csv file and ignore the first six rows
+    idx = pd.read_excel(
+        rf"{GLOBAL_DATA_PATH}/token_market/PerformanceGraphExport.xls",
+        index_col=None,
+        skiprows=6,
+        skipfooter=4,
+        usecols="A:B",
+    )
+
+    # convert Effective date to datetime
+    idx["Date"] = pd.to_datetime(idx["Date"])
+
+    # merge the prc and idx dataframe into one panel dataset via outer join on "Date"
+    prc = pd.merge(prc, idx, how="outer", on=["Date"])
+
+    # imputation for S&P via forward fill
+    prc = prc.sort_values(by=["Date"], ascending=True)
+    prc["S&P"] = prc["S&P"].interpolate()
+
+    # # drop the unnecessary column "Unnamed: 0"
+    # prc = prc.drop(columns=["Unnamed: 0"])
+
+    # calculate the log prcurn of price for each token (column)
+    # and save them in new columns _log_prcurn
+    # reminder: np.log(0) = -inf
+    ret = prc.set_index("Date").copy()
+    ret = ret.apply(lambda x: (np.log(x) - np.log(x.shift(1))))
+
+    # remove inf and -inf
+    ret = ret.replace([np.inf, -np.inf], np.nan)
+
+    # create a new column "exceedance" for the market return
+    # if the market return is lower than the mean value minus
+    # 1.5 times of the standard deviation of the market return
+    # then the exceedance is np.nan, otherwise (includes np.nan) 1
+    ret["exceedance"] = ret["S&P"].apply(
+        lambda x: 1 if x < ret["S&P"].mean() - 1.5 * ret["S&P"].std() else np.nan
+    )
+
+    # sort the dataframe by ascending Date for cov_gas, cov_eth and cov_sp
+    ret = ret.sort_values(by=["Date"], ascending=True)
+
+    # caculate the covariance between past 30 days log
+    # return of each column in col and that of S&P
+    for i in col:
+        ret[i] = ret[i].rolling(30).cov(ret["S&P"]) / ret["S&P"].rolling(30).var()
+
+    # each column in col times the exceedance
+    for i in col:
+        ret[i] = ret[i] * ret["exceedance"]
+
+    # drop the Gas_fee and ETH_price and S&P500 columns for ret and cov
+    ret = ret.drop(columns=["S&P", "exceedance"])
+
+    # ret and cov to panel dataset, column: Date, Token, log return and covariance
+    ret = ret.stack().reset_index()
+
+    # rename the column "level_1" to "Token"
+    ret = ret.rename(columns={"level_1": "Token"})
+
+    # rename the column "0" to "log_return" and "0" to "covariance"
+    ret = ret.rename(columns={0: "exceedance"})
+
+    # merge the ret, cov_gas, cov_eth, cov_sp dataframe into
+    # one panel dataset via outer join on "Date" and "Token
+    reg_panel = pd.merge(reg_panel, ret, how="outer", on=["Date", "Token"])
+
+    return reg_panel
+
+
+def _merge_gas_volatility(reg_panel: pd.DataFrame) -> pd.DataFrame:
+    """
+    Function to merge the gas price volatility.
+    """
+
+    # read in the csv file
+    gas = pd.read_csv(
+        rf"{GLOBAL_DATA_PATH}/gas_fee/avg_gas_fee.csv", index_col=None, header=0
+    )
+
+    # convert date to datetime
+    gas["Date(UTC)"] = pd.to_datetime(gas["Date(UTC)"])
+
+    # rename the column "Date(UTC)" to "Date"
+    gas = gas.rename(columns={"Date(UTC)": "Date"})
+    gas = gas.rename(columns={"Gas Fee USD": "Gas_fee"})
+
+    # only keep columnes of "Date", "Gas_fee" and "ETH_price"
+    gas = gas[["Date", "Gas_fee"]]
+
+    # calculate the log return of the gas price
+    gas["Gas_fee_log_return"] = np.log(gas["Gas_fee"] / gas["Gas_fee"].shift(1))
+
+    # calculate the 30-day rolling volatility for column "Gas_fee"
+    gas["Gas_fee_volatility"] = gas["Gas_fee_log_return"].rolling(30).std()
+
+    # drop the column "Gas_fee_log_return" and "Gas_fee"
+    gas = gas.drop(columns=["Gas_fee_log_return", "Gas_fee"])
+
+    # merge the gas price using outer join
+    reg_panel = pd.merge(
+        reg_panel,
+        gas,
+        how="outer",
+        on=["Date"],
+    )
+
+    return reg_panel
+
+
 def generate_panel() -> pd.DataFrame:
     """
     generate the panel dataset
@@ -689,5 +824,14 @@ def generate_panel() -> pd.DataFrame:
     reg_panel = _merge_prc_gas(reg_panel)
     reg_panel = _merge_nonstable(reg_panel)
     reg_panel = _merge_isweth(reg_panel)
+    reg_panel = _merge_exceedance(reg_panel)
+    reg_panel = _merge_gas_volatility(reg_panel)
 
-    return reg_panel
+    return reg_panel.loc[
+        (reg_panel["Date"] >= "2020-06-01") & (reg_panel["Date"] <= "2023-02-01")
+    ]
+
+
+if __name__ == "__main__":
+    # test the function
+    pass

@@ -59,7 +59,7 @@ def process_data():
 
     # for date in tqdm(date_list, total=len(date_list)):
     #     prepare_network_data(date, "v2")
-    # prepare_network_data(date, "v3")
+    #     prepare_network_data(date, "v3")
 
     # # Prepare eigenvector centrality data
     # print_info_log(
@@ -68,9 +68,9 @@ def process_data():
     # )
 
     # for date in tqdm(date_list_volume, total=len(date_list)):
-    # prepare_network_graph(date, "v2")
-    # prepare_network_graph(date, "v3")
-    # prepare_network_graph(date, "merged")
+    #     prepare_network_graph(date, "v2", directed=True)
+    #     prepare_network_graph(date, "v3", directed=True)
+    #     prepare_network_graph(date, "merged", directed=True)
 
     # Prepare betweenness centrality data
     print_info_log(
@@ -106,7 +106,7 @@ def process_data():
             partial(
                 get_betweenness_centrality,
                 top_list_label=label,
-                uniswap_version="v3",
+                uniswap_version="v2v3",
             ),
             date_list_betweenness,
         )
@@ -118,6 +118,6 @@ def process_data():
     # )
 
     # for date in tqdm(date_list_volume, total=len(date_list_volume)):
-    # prepare_volume(date, "v2")
-    # prepare_volume(date, "v3")
-    # prepare_volume(date, "merged")
+    #     prepare_volume(date, "v2")
+    #     prepare_volume(date, "v3")
+    #     prepare_volume(date, "merged")

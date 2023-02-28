@@ -45,7 +45,7 @@ def _beta(reg_panel: pd.DataFrame) -> pd.DataFrame:
     # save the column name into a list except for the Date and unnamed column
     col = list(prc.columns)
     col.remove("Date")
-    col.remove("Unnamed: 0")
+    # col.remove("Unnamed: 0")
 
     # load in the data in data/data_global/token_market/PerformanceGraphExport.xls
     # read in the csv file and ignore the first six rows
@@ -67,8 +67,8 @@ def _beta(reg_panel: pd.DataFrame) -> pd.DataFrame:
     prc = prc.sort_values(by=["Date"], ascending=True)
     prc["S&P"] = prc["S&P"].interpolate()
 
-    # drop the unnecessary column "Unnamed: 0"
-    prc = prc.drop(columns=["Unnamed: 0"])
+    # # drop the unnecessary column "Unnamed: 0"
+    # prc = prc.drop(columns=["Unnamed: 0"])
 
     # calculate the simple return of price for each token (column)
     # and save them in new columns _ret
@@ -115,50 +115,48 @@ def _beta(reg_panel: pd.DataFrame) -> pd.DataFrame:
     # sort the dataframe by date
     ret = ret.sort_values(by=["Date"], ascending=True)
 
-    ## Test the rolling linear regression
-    # print(
-    #     sm.OLS(
-    #         endog=ret["ETH"].values[1:31], exog=sm.add_constant(ret["S&P"].values[1:31])
-    #     )
-    #     .fit()
-    #     .params
-    # )
+    # # get the 30-day rolling beta of each token via rolling linear regression using statsmodels
+    # for col_name in tqdm(col):
+    #     for _, row in ret.iterrows():
 
-    # get the 30-day rolling beta of each token via rolling linear regression using statsmodels
-    for col_name in tqdm(col):
-        for _, row in ret.iterrows():
+    #         # skip the sample with missing values
+    #         if (
+    #             ret.loc[
+    #                 (ret["Date"] > row["Date"] - datetime.timedelta(days=30))
+    #                 & (ret["Date"] <= row["Date"]),
+    #                 [col_name, "S&P"],
+    #             ]
+    #             .isnull()
+    #             .values.any()
+    #         ):
+    #             continue
 
-            # skip the sample with missing values
-            if (
-                ret.loc[
-                    (ret["Date"] > row["Date"] - datetime.timedelta(days=30))
-                    & (ret["Date"] <= row["Date"]),
-                    [col_name, "S&P"],
-                ]
-                .isnull()
-                .values.any()
-            ):
-                continue
+    #         # calculate the beta
+    #         ret.loc[ret["Date"] == row["Date"], f"{col_name}_beta"] = (
+    #             sm.OLS(
+    #                 endog=ret.loc[
+    #                     (ret["Date"] > row["Date"] - datetime.timedelta(days=30))
+    #                     & (ret["Date"] <= row["Date"]),
+    #                     col_name,
+    #                 ],
+    #                 exog=sm.add_constant(
+    #                     ret.loc[
+    #                         (ret["Date"] > row["Date"] - datetime.timedelta(days=30))
+    #                         & (ret["Date"] <= row["Date"]),
+    #                         "S&P",
+    #                     ]
+    #                 ),
+    #             )
+    #             .fit()
+    #             .params[1]
+    #         )
 
-            # calculate the beta
-            ret.loc[ret["Date"] == row["Date"], f"{col_name}_beta"] = (
-                sm.OLS(
-                    endog=ret.loc[
-                        (ret["Date"] > row["Date"] - datetime.timedelta(days=30))
-                        & (ret["Date"] <= row["Date"]),
-                        col_name,
-                    ],
-                    exog=sm.add_constant(
-                        ret.loc[
-                            (ret["Date"] > row["Date"] - datetime.timedelta(days=30))
-                            & (ret["Date"] <= row["Date"]),
-                            "S&P",
-                        ]
-                    ),
-                )
-                .fit()
-                .params[1]
-            )
+    for i in col:
+        rolling_cov = ret[i].rolling(30).cov(ret["S&P"])
+        rolling_var = ret["S&P"].rolling(30).var()
+        rolling_beta = rolling_cov / rolling_var
+        ret[f"{i}_beta"] = rolling_beta
+
     # set the date as index
     ret = ret.set_index("Date")
 
@@ -213,7 +211,7 @@ def _sentiment(reg_panel: pd.DataFrame) -> pd.DataFrame:
     # save the column name into a list except for the Date and unnamed column
     col = list(prc.columns)
     col.remove("Date")
-    col.remove("Unnamed: 0")
+    # col.remove("Unnamed: 0")
 
     # merge the prc and sentiment dataframe into one panel dataset via outer join on "Date"
     prc = pd.merge(prc, sentiment, how="outer", on=["Date"])
@@ -221,8 +219,8 @@ def _sentiment(reg_panel: pd.DataFrame) -> pd.DataFrame:
     # sort the dataframe by date
     prc = prc.sort_values(by=["Date"], ascending=True)
 
-    # drop the unnecessary column "Unnamed: 0"
-    prc = prc.drop(columns=["Unnamed: 0"])
+    # # drop the unnecessary column "Unnamed: 0"
+    # prc = prc.drop(columns=["Unnamed: 0"])
 
     # calculate the log prcurn of price for each token (column)
     # and save them in new columns _log_prcurn
@@ -230,34 +228,9 @@ def _sentiment(reg_panel: pd.DataFrame) -> pd.DataFrame:
     ret = prc.set_index("Date").copy()
     ret = ret.apply(lambda x: (np.log(x) - np.log(x.shift(1))))
 
-    # # reset_index
-    # ret = ret.reset_index()
-
-    # for col_name in tqdm(col):
-    #     for _, row in ret.iterrows():
-    #         # skip the sample with missing values
-
-    #         rolling_window = ret.loc[
-    #             (ret["Date"] > row["Date"] - datetime.timedelta(days=30))
-    #             & (ret["Date"] <= row["Date"]),
-    #             [col_name, "sentiment"],
-    #         ].copy()
-
-    #         if rolling_window.isnull().values.any():
-    #             continue
-    #         # cov_eth.loc[cov_eth["Date"] == row["Date"], col_name] = np.cov(
-    #         #     rolling_window
-    #         # )
-    #         ret.loc[ret["Date"] == row["Date"], col_name] = rolling_window[
-    #             col_name
-    #         ].cov(rolling_window["sentiment"])
-
-    # set the date as index
-    # ret = ret.set_index("Date")
-
     # caculate the covariance between past 30 days
     for col_name in col:
-        ret[col_name] = ret[col_name].rolling(30).cov(ret["sentiment"])
+        ret[col_name] = ret[col_name].rolling(30).corr(ret["sentiment"])
 
     # drop the column "sentiment"
     cov_stm = ret.drop(columns=["sentiment"])
@@ -267,7 +240,7 @@ def _sentiment(reg_panel: pd.DataFrame) -> pd.DataFrame:
 
     # rename the columns
     cov_stm = cov_stm.rename(columns={"level_1": "Token"})
-    cov_stm = cov_stm.rename(columns={0: "cov_semtiment"})
+    cov_stm = cov_stm.rename(columns={0: "corr_sentiment"})
 
     # merge the sentiment into reg_panel
     reg_panel = pd.merge(reg_panel, cov_stm, how="outer", on=["Date", "Token"])
@@ -304,7 +277,7 @@ def _rolling_average_return(reg_panel: pd.DataFrame) -> pd.DataFrame:
     # save the column name into a list except for the Date and unnamed column
     col = list(prc.columns)
     col.remove("Date")
-    col.remove("Unnamed: 0")
+    # col.remove("Unnamed: 0")
 
     # calculate the simple return of price for each token (column)
     # and save them in new columns _ret
@@ -318,8 +291,8 @@ def _rolling_average_return(reg_panel: pd.DataFrame) -> pd.DataFrame:
     for col_name in tqdm(col):
         ret[col_name] = ret[col_name].rolling(30).mean()
 
-    # drop Unnamed: 0 column
-    ret = ret.drop(columns=["Unnamed: 0"])
+    # # drop Unnamed: 0 column
+    # ret = ret.drop(columns=["Unnamed: 0"])
 
     # convert the dataframe to panel dataset
     ret = ret.stack().reset_index()
