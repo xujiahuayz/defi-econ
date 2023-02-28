@@ -29,7 +29,7 @@ if __name__ == "__main__":
     # fetch_data()
 
     # Process data
-    process_data()
+    # process_data()
 
     # Finish.
     print_info_log("Fetch script finished", "progress")
