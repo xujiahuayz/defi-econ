@@ -18,6 +18,7 @@ from environ.tabulate.regression.reg_generator import (
     generate_unit_of_account,
     generate_regression_herfindahl,
     generate_regression_specification,
+    realized_holding_period,
 )
 from environ.tabulate.panel.series_herfin import generate_series_herfin
 from environ.tabulate.panel.safeness_measurement import merge_safeness_measurement
@@ -94,11 +95,15 @@ def tabulate_result() -> None:
 
     # Regression: herfindahl index
     print_info_log("Generating the regression of herfindahl index.", "process")
-    generate_regression_herfindahl(reg_herfin, lag=False)
+    generate_regression_herfindahl(reg_herfin, lag=True)
 
     # Regression: specification
     print_info_log("Generating the regression of specification.", "process")
     generate_regression_specification(reg_panel, lag=False)
+
+    # Regression: realized holding period
+    print_info_log("Generating the regression of realized holding period.", "process")
+    realized_holding_period(reg_panel, lag=True)
 
     # Change in r-squared
     print_info_log("Generating the change in r-squared.", "process")

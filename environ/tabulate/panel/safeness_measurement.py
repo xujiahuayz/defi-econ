@@ -45,7 +45,7 @@ def _beta(reg_panel: pd.DataFrame) -> pd.DataFrame:
     # save the column name into a list except for the Date and unnamed column
     col = list(prc.columns)
     col.remove("Date")
-    # col.remove("Unnamed: 0")
+    col.remove("Unnamed: 0")
 
     # load in the data in data/data_global/token_market/PerformanceGraphExport.xls
     # read in the csv file and ignore the first six rows
@@ -67,8 +67,8 @@ def _beta(reg_panel: pd.DataFrame) -> pd.DataFrame:
     prc = prc.sort_values(by=["Date"], ascending=True)
     prc["S&P"] = prc["S&P"].interpolate()
 
-    # # drop the unnecessary column "Unnamed: 0"
-    # prc = prc.drop(columns=["Unnamed: 0"])
+    # drop the unnecessary column "Unnamed: 0"
+    prc = prc.drop(columns=["Unnamed: 0"])
 
     # calculate the simple return of price for each token (column)
     # and save them in new columns _ret
@@ -211,7 +211,7 @@ def _sentiment(reg_panel: pd.DataFrame) -> pd.DataFrame:
     # save the column name into a list except for the Date and unnamed column
     col = list(prc.columns)
     col.remove("Date")
-    # col.remove("Unnamed: 0")
+    col.remove("Unnamed: 0")
 
     # merge the prc and sentiment dataframe into one panel dataset via outer join on "Date"
     prc = pd.merge(prc, sentiment, how="outer", on=["Date"])
@@ -219,8 +219,8 @@ def _sentiment(reg_panel: pd.DataFrame) -> pd.DataFrame:
     # sort the dataframe by date
     prc = prc.sort_values(by=["Date"], ascending=True)
 
-    # # drop the unnecessary column "Unnamed: 0"
-    # prc = prc.drop(columns=["Unnamed: 0"])
+    # drop the unnecessary column "Unnamed: 0"
+    prc = prc.drop(columns=["Unnamed: 0"])
 
     # calculate the log prcurn of price for each token (column)
     # and save them in new columns _log_prcurn
@@ -277,7 +277,7 @@ def _rolling_average_return(reg_panel: pd.DataFrame) -> pd.DataFrame:
     # save the column name into a list except for the Date and unnamed column
     col = list(prc.columns)
     col.remove("Date")
-    # col.remove("Unnamed: 0")
+    col.remove("Unnamed: 0")
 
     # calculate the simple return of price for each token (column)
     # and save them in new columns _ret
@@ -291,8 +291,8 @@ def _rolling_average_return(reg_panel: pd.DataFrame) -> pd.DataFrame:
     for col_name in tqdm(col):
         ret[col_name] = ret[col_name].rolling(30).mean()
 
-    # # drop Unnamed: 0 column
-    # ret = ret.drop(columns=["Unnamed: 0"])
+    # drop Unnamed: 0 column
+    ret = ret.drop(columns=["Unnamed: 0"])
 
     # convert the dataframe to panel dataset
     ret = ret.stack().reset_index()

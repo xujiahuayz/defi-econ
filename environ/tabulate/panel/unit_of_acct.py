@@ -29,7 +29,7 @@ def _market_cap(reg_panel: pd.DataFrame) -> pd.DataFrame:
     mcap["Date"] = pd.to_datetime(mcap["Date"], format="%Y-%m-%d")
 
     # drop the column "Unnamed: 0"
-    # mcap = mcap.drop(columns=["Unnamed: 0"])
+    mcap = mcap.drop(columns=["Unnamed: 0"])
 
     # sort the time series
     mcap = mcap.sort_values(by="Date", ascending=True)
@@ -48,6 +48,12 @@ def _market_cap(reg_panel: pd.DataFrame) -> pd.DataFrame:
 
     # take the log of mcap
     mcap["mcap"] = mcap["mcap"].apply(lambda x: np.log(x))
+
+    # remove inf and -inf
+    mcap = mcap.replace([np.inf, -np.inf], np.nan)
+
+    # drop the rows with NaN
+    mcap = mcap.dropna()
 
     # merge the mcap into reg_panel
     reg_panel = pd.merge(reg_panel, mcap, how="outer", on=["Date", "Token"])
@@ -74,7 +80,7 @@ def _dollar_exchange_rate(reg_panel: pd.DataFrame) -> pd.DataFrame:
     dollar["Date"] = dollar["Date"] + pd.DateOffset(days=-1)
 
     # drop the column "Unnamed: 0"
-    # dollar = dollar.drop(columns=["Unnamed: 0"])
+    dollar = dollar.drop(columns=["Unnamed: 0"])
 
     # sort the time series
     dollar = dollar.sort_values(by="Date", ascending=True)
@@ -90,6 +96,17 @@ def _dollar_exchange_rate(reg_panel: pd.DataFrame) -> pd.DataFrame:
 
     # rename the column "0" to "dollar"
     dollar = dollar.rename(columns={0: "dollar_exchange_rate"})
+
+    # take the log of dollar
+    dollar["dollar_exchange_rate"] = dollar["dollar_exchange_rate"].apply(
+        lambda x: np.log(x)
+    )
+
+    # remove inf and -inf
+    dollar = dollar.replace([np.inf, -np.inf], np.nan)
+
+    # drop the rows with nan
+    dollar = dollar.dropna()
 
     # merge the dollar into reg_panel
     reg_panel = pd.merge(reg_panel, dollar, how="outer", on=["Date", "Token"])
