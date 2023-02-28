@@ -8,6 +8,7 @@ import glob
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 from environ.utils.config_parser import Config
+from environ.utils.computations import boom_bust
 
 # Initialize config
 config = Config()
@@ -288,10 +289,17 @@ def _merge_sp(herfindahl: pd.DataFrame) -> pd.DataFrame:
     herfindahl = herfindahl.sort_values(by="Date", ascending=True)
 
     # interpolate the S&P column
-    herfindahl["S&P"] = herfindahl["S&P"].interpolate()
+    herfindahl["price"] = herfindahl["S&P"].interpolate()
+
+    # # plot the S&P column
+    # plt.plot(herfindahl["Date"], herfindahl["price"])
+    # plt.xlabel("Date")
+    # plt.ylabel("S&P")
+    # plt.title("S&P")
+    # plt.show()
 
     # calculate the log return of the S&P column
-    herfindahl["S&P"] = np.log(herfindahl["S&P"] / herfindahl["S&P"].shift(1))
+    herfindahl["S&P"] = np.log(herfindahl["price"] / herfindahl["price"].shift(1))
 
     # calculate the 30-day rolling volatility of the S&P column
     herfindahl["S&P_volatility"] = herfindahl["S&P"].rolling(30).std()
@@ -347,24 +355,38 @@ def _merge_boom_bust(herfindahl: pd.DataFrame) -> pd.DataFrame:
     # sort the dataframe by date
     herfindahl = herfindahl.sort_values(by="Date", ascending=True)
 
+    # convert the date column to unix
+    herfindahl["time"] = herfindahl["Date"].apply(lambda x: x.timestamp())
+
+    # create a copy of the herfindahl dataframe
+    boom_bust_df = herfindahl.copy()
+
+    # only keep the column of S&P and time
+    boom_bust_df = boom_bust_df[["time", "price"]]
+
+    # dropna
+    boom_bust_df = boom_bust_df.dropna()
+
+    # computation
+    BOOM_BUST = boom_bust(boom_bust_df)
+
     herfindahl["boom"] = 0
     herfindahl["bust"] = 0
 
     for boom in BOOM_BUST["boom"]:
         herfindahl.loc[
-            (herfindahl["Date"] >= pd.to_datetime(boom[0]))
-            & (herfindahl["Date"] <= pd.to_datetime(boom[1])),
+            (herfindahl["time"] >= boom[0]) & (herfindahl["time"] <= boom[1]),
             "boom",
         ] = 1
 
     for bust in BOOM_BUST["bust"]:
         herfindahl.loc[
-            (herfindahl["Date"] >= pd.to_datetime(bust[0]))
-            & (herfindahl["Date"] <= pd.to_datetime(bust[1])),
+            (herfindahl["time"] >= bust[0]) & (herfindahl["time"] <= bust[1]),
             "bust",
         ] = 1
 
-    print(herfindahl)
+    # drop the column of time and price and index
+    herfindahl = herfindahl.drop(columns=["time", "price"])
 
     return herfindahl
 
@@ -383,36 +405,32 @@ def generate_series_herfin() -> pd.DataFrame:
     herfindahl = _merge_gas(herfindahl)
     herfindahl = _merge_boom_bust(herfindahl)
 
-    # save the dataframe to table/herfindahl_index.csv
-    herfindahl.to_csv(
-        rf"{GLOBAL_DATA_PATH}/token_market/herfindahl_index.csv",
-        index=False,
-    )
-
-    # # plot the all kinds of herfindahl index
-    # plt.plot(herfindahl["Date"], herfindahl["herfindahl_volume"])
+    # plot the all kinds of herfindahl index
+    plt.plot(herfindahl["Date"], herfindahl["herfindahl_volume"])
     # plt.plot(herfindahl["Date"], herfindahl["herfindahl_inflow_centrality"])
     # plt.plot(herfindahl["Date"], herfindahl["herfindahl_outflow_centrality"])
-    # plt.plot(herfindahl["Date"], herfindahl["herfindahl_betweenness_centrality_count"])
-    # plt.plot(herfindahl["Date"], herfindahl["herfindahl_betweenness_centrality_volume"])
-    # plt.xlabel("Date")
-    # plt.ylabel("Herfindahl Index")
-    # plt.title("Herfindahl Index")
-    # plt.legend(
-    #     [
-    #         "herfindahl_volume",
-    #         "herfindahl_inflow_centrality",
-    #         "herfindahl_outflow_centrality",
-    #         "herfindahl_betweenness_centrality_count",
-    #         "herfindahl_betweenness_centrality_volume",
-    #     ]
-    # )
-    # plt.show()
+    plt.plot(herfindahl["Date"], herfindahl["herfindahl_betweenness_centrality_count"])
+    plt.plot(herfindahl["Date"], herfindahl["herfindahl_betweenness_centrality_volume"])
+    plt.xlabel("Date")
+    plt.ylabel("Herfindahl Index")
+    plt.title("Herfindahl Index")
+    plt.legend(
+        [
+            "herfindahl_volume",
+            # "herfindahl_inflow_centrality",
+            # "herfindahl_outflow_centrality",
+            "herfindahl_betweenness_centrality_count",
+            "herfindahl_betweenness_centrality_volume",
+        ]
+    )
+    plt.show()
 
     # save the dataframe to table
+    herfindahl.to_csv(rf"{TABLE_PATH}/series_herfindahl.csv", index=False)
+
     return herfindahl
 
 
 if __name__ == "__main__":
     # test the function
-    generate_series_herfin()
+    print(generate_series_herfin())

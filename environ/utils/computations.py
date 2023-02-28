@@ -58,14 +58,14 @@ def boom_bust(
     time_price = time_price.sort_values(by="time").reset_index(drop=True)
     end = time_price["time"][0]
     while end < time_price["time"].iloc[-1]:
-        print(end)
+        # print(end)
         time_price = time_price[time_price["time"] >= end].reset_index(drop=True)
-        print(time_price)
+        # print(time_price)
         boom_or_bust, (start, end) = boom_bust_one_period(
             time_price, boom_change, bust_change
         )
         boom_bust_dict[boom_or_bust].append((start, end))
-        print(boom_or_bust, start, end, "====")
+        # print(boom_or_bust, start, end, "====")
     return boom_bust_dict
 
 
