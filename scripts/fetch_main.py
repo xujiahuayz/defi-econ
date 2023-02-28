@@ -26,7 +26,7 @@ if __name__ == "__main__":
     parsed_args = args.parse_args()
 
     # Fetch data.
-    fetch_data()
+    # fetch_data()
 
     # Process data
     # process_data()

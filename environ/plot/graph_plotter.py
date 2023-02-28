@@ -10,6 +10,7 @@ Desc    : Fetch DeFi data.
 """
 # Import python modules
 import datetime
+import pandas as pd
 from tqdm import tqdm
 
 # Import internal modules
@@ -42,26 +43,31 @@ def plot_graph():
         date = start_date + datetime.timedelta(i)
         date_list.append(date)
 
-    # Plot network graphs
-    print_info_log(
-        f"Plot network graphs from {parsed_args.start} to {parsed_args.end}", "progress"
-    )
+    date_list_v3 = []
+    for i in range((end_date - pd.to_datetime("2021-05-05")).days):
+        date = pd.to_datetime("2021-05-05") + datetime.timedelta(i)
+        date_list_v3.append(date)
 
-    for date in tqdm(date_list):
-        plot_network(date)
+    # # Plot network graphs
+    # print_info_log(
+    #     f"Plot network graphs from {parsed_args.start} to {parsed_args.end}", "progress"
+    # )
 
-    # Plot dynamic graphs
-    print_info_log("Plot dynamic graphs for v2 and v3", "progress")
+    # for date in tqdm(date_list):
+    #     plot_network(date)
 
-    plot_dynamic("v2")
-    plot_dynamic("v3")
-    plot_dynamic("merged")
+    # # Plot dynamic graphs
+    # print_info_log("Plot dynamic graphs for v2 and v3", "progress")
+
+    # plot_dynamic("v2")
+    # plot_dynamic("v3")
+    # plot_dynamic("merged")
 
     # Plot time-series graphs
     print_info_log("Plot time-series graphs for v2 and v3", "progress")
 
     plot_timeseries(date_list, "v2")
-    plot_timeseries(date_list, "v3")
+    plot_timeseries(date_list_v3, "v3")
     plot_timeseries(date_list, "merged")
 
     # Plot moving average graphs
@@ -84,4 +90,4 @@ def plot_graph():
             "betweenness_centrality_count",
             "betweenness_centrality_volume",
         ]:
-            plot_ma(iter_source, iter_source)
+            plot_ma(iter_graph_type, iter_source)

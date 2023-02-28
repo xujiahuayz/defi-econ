@@ -18,28 +18,37 @@ from tqdm import tqdm
 # Import internal modules
 from environ.utils.config_parser import Config
 
+# specify the color for each token
+color_dict = {
+    "WETH": "blue",
+    "WBTC": "orange",
+    "MATIC": "green",
+    "USDC": "red",
+    "USDT": "purple",
+    "DAI": "brown",
+    "FEI": "pink",
+}
+
+# Initialize configuration
+config = Config()
+
+# Constants
+network_data_path = config["dev"]["config"]["data"]["NETWORK_DATA_PATH"]
+figure_path = config["dev"]["config"]["result"]["FIGURE_PATH"]
+token_list = ["DAI", "FEI", "USDC", "USDT", "WETH", "WBTC", "MATIC"]
+
 
 def plot_timeseries(date_list: list, uniswap_version: str) -> None:
 
     """
     Plot the time series data of eigenvector centrality
     """
-
-    # Initialize configuration
-    config = Config()
-
-    # Constants
-    network_data_path = config["dev"]["config"]["data"]["NETWORK_DATA_PATH"]
-    figure_path = config["dev"]["config"]["figures"]
-    token_list = ["DAI", "FEI", "USDC", "USDT", "WETH", "WBTC", "MATIC"]
     # Load the dataframe for eigenvector centrality
 
-    fig_in, eigen_in_plot = plt.subplots(figsize=(10, 8))
-    fig_out, eigen_out_plot = plt.subplots(figsize=(10, 8))
+    fig_in, eigen_in_plot = plt.subplots(figsize=(15, 10))
 
     # DataFrame to store inflow eigenvector of all tokens
     eigen_in = pd.DataFrame()
-    eigen_out = pd.DataFrame()
 
     for token in tqdm(token_list):
 
@@ -73,21 +82,46 @@ centrality_{uniswap_version}_{date_str}.csv"
         )
         eigen_in_ma_df["eigen_in_ma_30"] = eigen_in_ma_df["eigen_in"].rolling(30).mean()
         eigen_in_plot.plot(
-            pd.to_datetime(date_list), eigen_in_ma_df["eigen_in_ma_30"], label=token
+            pd.to_datetime(date_list),
+            eigen_in_ma_df["eigen_in_ma_30"],
+            label=token,
+            color=color_dict[token],
         )
-        eigen_in_plot.set_xlabel("Date")
-        eigen_in_plot.set_ylabel("Eigenvector Centrality")
-        eigen_in_plot.set_title(
-            "30-day Moving Averages of Inflow Eigenvector Centrality"
-        )
-        eigen_in_plot.tick_params(axis="x", labelrotation=30)
-        eigen_in_plot.legend()
 
         # DataFrame to implement the summary statistics
         eigen_in[token] = eigen_in_ma_df["eigen_in"]
 
+    for event_date in config["dev"]["config"]["moving_average_plot"]["EVENT_DATE_LIST"]:
+        # Compound attack of 2020
+        # Introduction of Uniswap V3
+        # Luna crash
+        # FTX collapse
+        eigen_in_plot.axvline(
+            x=pd.to_datetime(event_date), color="red", linewidth=3, alpha=0.5
+        )
+
+    # place the legend outside the plot without border
+    plt.legend(
+        bbox_to_anchor=(1.01, 1), loc="upper left", borderaxespad=0.0, prop={"size": 40}
+    )
+
+    # enlarge the font of ticker
+    plt.xticks(fontsize=40)
+    plt.yticks(fontsize=40)
+
+    # add some rotation for x tick labels
+    plt.setp(
+        eigen_in_plot.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor"
+    )
+
+    # tight layout
+    plt.tight_layout()
+
     fig_in.savefig(f"{figure_path}/eigen_in_{uniswap_version}.pdf")
     eigen_in.to_csv(f"{network_data_path}/eigen_in_{uniswap_version}.csv", index=False)
+
+    fig_out, eigen_out_plot = plt.subplots(figsize=(15, 10))
+    eigen_out = pd.DataFrame()
 
     for token in tqdm(token_list):
 
@@ -116,25 +150,54 @@ centrality_{uniswap_version}_{date_str}.csv"
                 )
         # Calculate moving averages
         eigen_out_ma_df = pd.DataFrame.from_dict(
-            {"date": pd.to_datetime(date_list), "eigen_in": eigen_out_list}
+            {"date": pd.to_datetime(date_list), "eigen_out": eigen_out_list}
         )
-        eigen_out_ma_df["eigen_in_ma_30"] = (
-            eigen_out_ma_df["eigen_in"].rolling(30).mean()
+        eigen_out_ma_df["eigen_out_ma_30"] = (
+            eigen_out_ma_df["eigen_out"].rolling(30).mean()
         )
 
         eigen_out_plot.plot(
-            pd.to_datetime(date_list), eigen_out_ma_df["eigen_in_ma_30"], label=token
+            pd.to_datetime(date_list),
+            eigen_out_ma_df["eigen_out_ma_30"],
+            label=token,
+            color=color_dict[token],
         )
-        eigen_out_plot.set_xlabel("Date")
-        eigen_out_plot.set_ylabel("Eigenvector Centrality")
-        eigen_out_plot.set_title(
-            "30-Day Moving Averages of Outflow Eigenvector Centrality"
+        for event_date in config["dev"]["config"]["moving_average_plot"][
+            "EVENT_DATE_LIST"
+        ]:
+            # Compound attack of 2020
+            # Introduction of Uniswap V3
+            # Luna crash
+            # FTX collapse
+            eigen_out_plot.axvline(
+                x=pd.to_datetime(event_date), color="red", linewidth=3, alpha=0.5
+            )
+
+        # place the legend outside the plot without border
+        _ = plt.legend(
+            bbox_to_anchor=(1.01, 1),
+            loc="upper left",
+            borderaxespad=0.0,
+            prop={"size": 40},
         )
-        eigen_out_plot.tick_params(axis="x", labelrotation=30)
-        eigen_out_plot.legend()
+
+        # enlarge the font of ticker
+        plt.xticks(fontsize=40)
+        plt.yticks(fontsize=40)
+
+        # add some rotation for x tick labels
+        plt.setp(
+            eigen_out_plot.get_xticklabels(),
+            rotation=45,
+            ha="right",
+            rotation_mode="anchor",
+        )
+
+        # tight layout
+        plt.tight_layout()
 
         # DataFrame to implement the summary statistics
-        eigen_out[token] = eigen_out_ma_df["eigen_in"]
+        eigen_out[token] = eigen_out_ma_df["eigen_out"]
 
     fig_out.savefig(f"{figure_path}/eigen_out_{uniswap_version}.pdf")
     eigen_out.to_csv(

@@ -20,6 +20,7 @@ config = Config()
 # Path constants
 BETWEENNESS_DATA_PATH = config["dev"]["config"]["data"]["BETWEENNESS_DATA_PATH"]
 NETWORK_DATA_PATH = config["dev"]["config"]["data"]["NETWORK_DATA_PATH"]
+GLOBAL_DATA_PATH = config["dev"]["config"]["data"]["GLOBAL_DATA_PATH"]
 COMPOUND_DATA_PATH = config["dev"]["config"]["data"]["COMPOUND_DATA_PATH"]
 COMPOUND_DATA_PATH = config["dev"]["config"]["data"]["COMPOUND_DATA_PATH"]
 FIGURE_PATH = config["dev"]["config"]["result"]["FIGURE_PATH"]
@@ -299,7 +300,7 @@ def plot_ma(graph_type: str, source: str) -> None:
         )
     else:
         plot_df, token_col_name, x_col_name, y_col_name, frame = betweenness_prep(
-            graph_type, source
+            graph_type=graph_type, source=source
         )
 
     # specify the color for each token
@@ -329,6 +330,29 @@ def plot_ma(graph_type: str, source: str) -> None:
         # fix the y-axis to be between 0 and 0.3 if the graph is apy
         if graph_type in ["borrow_apy", "supply_apy"]:
             ax_ma.set_ylim([0, 0.3])
+
+        # # Check point: the correlated of TVL to the WETH price
+        # # if the graph_type is tvl, then load in the data/data_global/gas_fee/avg_gas_fee.csv
+        # # and plot the average gas fee on the same plot ETH Price (USD)
+        # if graph_type == "tvl":
+        #     # load in the data/data_global/gas_fee/avg_gas_fee.csv
+        #     avg_gas_fee_df = pd.read_csv(
+        #         rf"{GLOBAL_DATA_PATH}/gas_fee/avg_gas_fee.csv", index_col=None, header=0
+        #     )
+        #     # convert the date to datetime format for the frame
+        #     avg_gas_fee_df["Date"] = pd.to_datetime(avg_gas_fee_df["Date(UTC)"])
+
+        #     # keep the data after 2020-01-01
+        #     avg_gas_fee_df = avg_gas_fee_df[avg_gas_fee_df["Date"] >= "2020-01-01"]
+
+        #     # plot the ETH Price (USD) in different y-axis
+        #     ax_gas_fee = ax_ma.twinx()
+        #     ax_gas_fee.plot(
+        #         avg_gas_fee_df["Date"],
+        #         avg_gas_fee_df["ETH Price (USD)"],
+        #         label="ETH Price (USD)",
+        #         color="black",
+        #     )
 
     for event_date in config["dev"]["config"]["moving_average_plot"]["EVENT_DATE_LIST"]:
         # Compound attack of 2020
@@ -377,14 +401,14 @@ if __name__ == "__main__":
             "volume_share",
             "tvl_share",
         ]:
-            plot_ma(iter_graph_type, iter_source)
+            plot_ma(graph_type=iter_graph_type, source=iter_source)
 
     for iter_graph_type in ["borrow_share", "supply_share", "borrow_apy", "supply_apy"]:
-        plot_ma(iter_graph_type, iter_source)
+        plot_ma(graph_type=iter_graph_type, source=iter_source)
 
     for iter_source in ["v2", "v3", "v2v3"]:
         for iter_graph_type in [
             "betweenness_centrality_count",
             "betweenness_centrality_volume",
         ]:
-            plot_ma(iter_source, iter_source)
+            plot_ma(graph_type=iter_graph_type, source=iter_source)
