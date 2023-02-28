@@ -330,6 +330,40 @@ def manually_check() -> None:
     )
 
 
+def csv_formatting() -> None:
+    """
+    Function to convert the new csv format to the old csv format.
+    """
+
+    # load in the primary token price information
+    df_primary_token_price = pd.read_csv(
+        rf"{GLOBAL_DATA_PATH}/primary_token/primary_token_price_2.csv"
+    )
+
+    # load in the primary token market cap information
+    df_primary_token_mcap = pd.read_csv(
+        rf"{GLOBAL_DATA_PATH}/primary_token/primary_token_marketcap_2.csv"
+    )
+
+    # rename the column time to Date
+    df_primary_token_price = df_primary_token_price.rename(columns={"time": "Date"})
+
+    # rename the column time to Date
+    df_primary_token_mcap = df_primary_token_mcap.rename(columns={"time": "Date"})
+
+    # save the token price to data/data_global/primary_token/primary_token_price_2.csv
+    df_primary_token_price.to_csv(
+        rf"{GLOBAL_DATA_PATH}/primary_token/primary_token_price_2.csv",
+        encoding="utf-8",
+    )
+
+    # save the token price to data/data_global/primary_token/primary_token_price_2.csv
+    df_primary_token_mcap.to_csv(
+        rf"{GLOBAL_DATA_PATH}/primary_token/primary_token_marketcap_2.csv",
+        encoding="utf-8",
+    )
+
+
 def get_primary_token_price() -> None:
     """
     Function to get the primary token price from the coingecko.
@@ -424,5 +458,6 @@ def get_primary_token_price() -> None:
 if __name__ == "__main__":
     # get_primary_token()
     # print(_coingecko_contract("0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"))
-    get_primary_token_price()
-    manually_check()
+    # get_primary_token_price()
+    # manually_check()
+    csv_formatting()

@@ -243,7 +243,7 @@ def generate_sum(reg_panel: pd.DataFrame, file_name: str, lag=False) -> pd.DataF
     # corr = corr.rename(columns=NAMING_DIC_PROPERTIES_OF_DOMINANCE)
 
     # set the borrow_rate, borrow_rate to 1
-    # corr.loc["borrow_rate", "${\it BorrowAPY}^{USD}$"] = 1
+    corr.loc["${\it BorrowAPY}^{USD}$", "${\it BorrowAPY}^{USD}$"] = 1
 
     # This dictionary defines the colormap
     cdict3 = {

@@ -230,6 +230,15 @@ def _merge_total_market_trading_volume(herfindahl: pd.DataFrame) -> pd.DataFrame
     # plt.title("Total Market Trading Volume")
     # plt.show()
 
+    # remove inf and -inf
+    df_total = df_total.replace([np.inf, -np.inf], np.nan)
+
+    # remove nan
+    df_total = df_total.dropna()
+
+    # take the log of the total market trading volume
+    df_total["total_volumes"] = np.log(df_total["total_volumes"])
+
     # save the dataframe to data/data_global/token_market/total_market_trading_volume.csv
     df_total.to_csv(
         rf"{GLOBAL_DATA_PATH}/token_market/total_market_trading_volume.csv",
@@ -328,6 +337,42 @@ def _merge_gas(herfindahl: pd.DataFrame) -> pd.DataFrame:
     )
 
     return herfindahl
+
+
+def _merge_boom_bust(herfindahl: pd.DataFrame) -> pd.DataFrame:
+    """
+    Function to merge the boom and bust dummy.
+    """
+
+    # sort the dataframe by date
+    herfindahl = herfindahl.sort_values(by="Date", ascending=True)
+
+    herfindahl["Boom"] = 0
+    herfindahl["Bust"] = 0
+
+    for boom in BOOM_BUST["boom"]:
+        herfindahl.loc[
+            (herfindahl["Date"] >= pd.to_datetime(boom[0]))
+            & (herfindahl["Date"] <= pd.to_datetime(boom[1])),
+            "boom",
+        ] = 1
+
+    for bust in BOOM_BUST["bust"]:
+        herfindahl.loc[
+            (herfindahl["Date"] >= pd.to_datetime(bust[0]))
+            & (herfindahl["Date"] <= pd.to_datetime(bust[1])),
+            "bust",
+        ] = 1
+
+    print(herfindahl)
+
+    # # merge the crypto market index using outer join
+    # herfindahl = pd.merge(
+    #     herfindahl,
+    #     idx,
+    #     how="outer",
+    #     on=["Date"],
+    # )
 
 
 def generate_series_herfin() -> pd.DataFrame:

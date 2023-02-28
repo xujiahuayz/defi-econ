@@ -100,7 +100,7 @@ def generate_regression_specification(reg_panel: pd.DataFrame, lag: bool) -> Non
         for stability in [
             "${\it CorrSP}$",
             "${\it \sigma}^{USD}$",
-            "${\it exceedance}^{USD}$",
+            # "${\it exceedance}^{USD}$",
         ]:
             for financial_service in [
                 "${\it BorrowShare}$",
@@ -365,13 +365,14 @@ def generate_reg_property_of_dominance(
                 # for supply in ["${\it SupplyShare}$", "${\it BorrowShare}$"]:
                 #     for apy in ["${\it BorrowAPY}^{USD}$", "${\it SupplyAPY}^{USD}$"]:
                 for store in [
-                    "${\it SupplyShare}$",
-                    "${\it BorrowShare}$",
-                    "${\it BorrowAPY}^{USD}$",
-                    "${\it SupplyAPY}^{USD}$",
-                    "${\it Beta}$",
-                    "${\it \sigma}^{USD}$",
-                    "${\it \mu}^{USD}$",
+                    "${\i Nonstable}$",
+                    # "${\it SupplyShare}$",
+                    # "${\it BorrowShare}$",
+                    # "${\it BorrowAPY}^{USD}$",
+                    # "${\it SupplyAPY}^{USD}$",
+                    # "${\it Beta}$",
+                    # "${\it \sigma}^{USD}$",
+                    # "${\it \mu}^{USD}$",
                 ]:
                     # record the dependet variables
                     stargazer_col_list.append(dep_variable)
@@ -416,60 +417,60 @@ def generate_reg_property_of_dominance(
                     # store the results
                     stargazer_list.append(model.fit())
 
-    # use all store proxies
-    for dep_variable in [
-        "${\it VShare}$",
-        "${\it VShare}^{\it In}$",
-        "${\it VShare}^{\it Out}$",
-    ]:
-        dependent_variable = reg_panel[dep_variable]
-        # loop through the independent variables
-        for eigen in ["${\it EigenCent}^{In}$", "${\it EigenCent}^{Out}$"]:
-            for betw in ["${\it BetwCent}^C$", "${\it BetwCent}^V$"]:
-                # record the dependet variables
-                stargazer_col_list.append(dep_variable)
-                # create the independent variable
-                independent_variable = reg_panel[
-                    [
-                        "Token",
-                        "Date",
-                        eigen,
-                        betw,
-                        "${\it SupplyShare}$",
-                        "${\it BorrowShare}$",
-                        "${\it BorrowAPY}^{USD}$",
-                        "${\it SupplyAPY}^{USD}$",
-                        "${\it Beta}$",
-                        "${\it \sigma}^{USD}$",
-                        "${\it \mu}^{USD}$",
-                    ]
-                ].copy()
+                # # use all store proxies
+                # for dep_variable in [
+                #     "${\it VShare}$",
+                #     "${\it VShare}^{\it In}$",
+                #     "${\it VShare}^{\it Out}$",
+                # ]:
+                #     dependent_variable = reg_panel[dep_variable]
+                #     # loop through the independent variables
+                #     for eigen in ["${\it EigenCent}^{In}$", "${\it EigenCent}^{Out}$"]:
+                #         for betw in ["${\it BetwCent}^C$", "${\it BetwCent}^V$"]:
+                #             # record the dependet variables
+                #             stargazer_col_list.append(dep_variable)
+                #             # create the independent variable
+                #             independent_variable = reg_panel[
+                #                 [
+                #                     "Token",
+                #                     "Date",
+                #                     eigen,
+                #                     betw,
+                #                     "${\it SupplyShare}$",
+                #                     "${\it BorrowShare}$",
+                #                     "${\it BorrowAPY}^{USD}$",
+                #                     "${\it SupplyAPY}^{USD}$",
+                #                     "${\it Beta}$",
+                #                     "${\it \sigma}^{USD}$",
+                #                     "${\it \mu}^{USD}$",
+                #                 ]
+                #             ].copy()
 
-                if lag:
-                    # one lag of in the group of "Token" and "Date"
-                    independent_variable = independent_variable.groupby(
-                        ["Token"]
-                    ).shift(1)
-                    # rename the columns using NAMING_DIC_PROPERTIES_OF_DOMINANCE_LAG
-                    independent_variable = independent_variable.rename(
-                        columns=NAMING_DIC_PROPERTIES_OF_DOMINANCE_LAG
-                    )
-                    # drop the column of "Date"
-                    independent_variable = independent_variable.drop(columns=["Date"])
-                else:
-                    # drop the column of "Date" and "Token"
-                    independent_variable = independent_variable.drop(
-                        columns=["Date", "Token"]
-                    )
+                # if lag:
+                #     # one lag of in the group of "Token" and "Date"
+                #     independent_variable = independent_variable.groupby(
+                #         ["Token"]
+                #     ).shift(1)
+                #     # rename the columns using NAMING_DIC_PROPERTIES_OF_DOMINANCE_LAG
+                #     independent_variable = independent_variable.rename(
+                #         columns=NAMING_DIC_PROPERTIES_OF_DOMINANCE_LAG
+                #     )
+                #     # drop the column of "Date"
+                #     independent_variable = independent_variable.drop(columns=["Date"])
+                # else:
+                #     # drop the column of "Date" and "Token"
+                #     independent_variable = independent_variable.drop(
+                #         columns=["Date", "Token"]
+                #     )
 
-                # add constant
-                independent_variable = sm.add_constant(independent_variable)
+                # # add constant
+                # independent_variable = sm.add_constant(independent_variable)
 
-                # run the regression
-                model = sm.OLS(dependent_variable, independent_variable, missing="drop")
+                # # run the regression
+                # model = sm.OLS(dependent_variable, independent_variable, missing="drop")
 
-                # store the results
-                stargazer_list.append(model.fit())
+                # # store the results
+                # stargazer_list.append(model.fit())
 
     # use stargazer to create the regression table
     # stargazer = Stargazer([results_1, results_2])
