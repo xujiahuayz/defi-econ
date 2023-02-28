@@ -347,8 +347,8 @@ def _merge_boom_bust(herfindahl: pd.DataFrame) -> pd.DataFrame:
     # sort the dataframe by date
     herfindahl = herfindahl.sort_values(by="Date", ascending=True)
 
-    herfindahl["Boom"] = 0
-    herfindahl["Bust"] = 0
+    herfindahl["boom"] = 0
+    herfindahl["bust"] = 0
 
     for boom in BOOM_BUST["boom"]:
         herfindahl.loc[
@@ -366,13 +366,7 @@ def _merge_boom_bust(herfindahl: pd.DataFrame) -> pd.DataFrame:
 
     print(herfindahl)
 
-    # # merge the crypto market index using outer join
-    # herfindahl = pd.merge(
-    #     herfindahl,
-    #     idx,
-    #     how="outer",
-    #     on=["Date"],
-    # )
+    return herfindahl
 
 
 def generate_series_herfin() -> pd.DataFrame:
@@ -387,6 +381,7 @@ def generate_series_herfin() -> pd.DataFrame:
     herfindahl = _merge_total_market_trading_volume(herfindahl)
     herfindahl = _merge_sp(herfindahl)
     herfindahl = _merge_gas(herfindahl)
+    herfindahl = _merge_boom_bust(herfindahl)
 
     # save the dataframe to table/herfindahl_index.csv
     herfindahl.to_csv(

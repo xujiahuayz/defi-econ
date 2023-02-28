@@ -245,9 +245,9 @@ def generate_regression_herfindahl(herfindahl: pd.DataFrame, lag: bool) -> None:
             # one lag of the independent variable
             independent_variables = independent_variables.shift(1)
 
-            # rename the columns using NAMING_DIC_PROPERTIES_OF_DOMINANCE_LAG
+            # rename the columns using NAMING_DIC_HERFINDAHL_LAG
             independent_variables = independent_variables.rename(
-                columns=NAMING_DIC_PROPERTIES_OF_DOMINANCE_LAG
+                columns=NAMING_DIC_HERFINDAHL_LAG
             )
 
         # run the regression
@@ -364,16 +364,7 @@ def generate_reg_property_of_dominance(
             for betw in ["${\it BetwCent}^C$", "${\it BetwCent}^V$"]:
                 # for supply in ["${\it SupplyShare}$", "${\it BorrowShare}$"]:
                 #     for apy in ["${\it BorrowAPY}^{USD}$", "${\it SupplyAPY}^{USD}$"]:
-                for store in [
-                    "${\i Nonstable}$",
-                    # "${\it SupplyShare}$",
-                    # "${\it BorrowShare}$",
-                    # "${\it BorrowAPY}^{USD}$",
-                    # "${\it SupplyAPY}^{USD}$",
-                    # "${\it Beta}$",
-                    # "${\it \sigma}^{USD}$",
-                    # "${\it \mu}^{USD}$",
-                ]:
+                for store in ["${\i Nonstable}$", "${\i IsWETH}$"]:
                     # record the dependet variables
                     stargazer_col_list.append(dep_variable)
                     # create the independent variable
@@ -417,60 +408,55 @@ def generate_reg_property_of_dominance(
                     # store the results
                     stargazer_list.append(model.fit())
 
-                # # use all store proxies
-                # for dep_variable in [
-                #     "${\it VShare}$",
-                #     "${\it VShare}^{\it In}$",
-                #     "${\it VShare}^{\it Out}$",
-                # ]:
-                #     dependent_variable = reg_panel[dep_variable]
-                #     # loop through the independent variables
-                #     for eigen in ["${\it EigenCent}^{In}$", "${\it EigenCent}^{Out}$"]:
-                #         for betw in ["${\it BetwCent}^C$", "${\it BetwCent}^V$"]:
-                #             # record the dependet variables
-                #             stargazer_col_list.append(dep_variable)
-                #             # create the independent variable
-                #             independent_variable = reg_panel[
-                #                 [
-                #                     "Token",
-                #                     "Date",
-                #                     eigen,
-                #                     betw,
-                #                     "${\it SupplyShare}$",
-                #                     "${\it BorrowShare}$",
-                #                     "${\it BorrowAPY}^{USD}$",
-                #                     "${\it SupplyAPY}^{USD}$",
-                #                     "${\it Beta}$",
-                #                     "${\it \sigma}^{USD}$",
-                #                     "${\it \mu}^{USD}$",
-                #                 ]
-                #             ].copy()
+    # use all store proxies
+    for dep_variable in [
+        "${\it VShare}$",
+        "${\it VShare}^{\it In}$",
+        "${\it VShare}^{\it Out}$",
+    ]:
+        dependent_variable = reg_panel[dep_variable]
+        # loop through the independent variables
+        for eigen in ["${\it EigenCent}^{In}$", "${\it EigenCent}^{Out}$"]:
+            for betw in ["${\it BetwCent}^C$", "${\it BetwCent}^V$"]:
+                # record the dependet variables
+                stargazer_col_list.append(dep_variable)
+                # create the independent variable
+                independent_variable = reg_panel[
+                    [
+                        "Token",
+                        "Date",
+                        eigen,
+                        betw,
+                        "${\i Nonstable}$",
+                        "${\i IsWETH}$",
+                    ]
+                ].copy()
 
-                # if lag:
-                #     # one lag of in the group of "Token" and "Date"
-                #     independent_variable = independent_variable.groupby(
-                #         ["Token"]
-                #     ).shift(1)
-                #     # rename the columns using NAMING_DIC_PROPERTIES_OF_DOMINANCE_LAG
-                #     independent_variable = independent_variable.rename(
-                #         columns=NAMING_DIC_PROPERTIES_OF_DOMINANCE_LAG
-                #     )
-                #     # drop the column of "Date"
-                #     independent_variable = independent_variable.drop(columns=["Date"])
-                # else:
-                #     # drop the column of "Date" and "Token"
-                #     independent_variable = independent_variable.drop(
-                #         columns=["Date", "Token"]
-                #     )
+                if lag:
+                    # one lag of in the group of "Token" and "Date"
+                    independent_variable = independent_variable.groupby(
+                        ["Token"]
+                    ).shift(1)
+                    # rename the columns using NAMING_DIC_PROPERTIES_OF_DOMINANCE_LAG
+                    independent_variable = independent_variable.rename(
+                        columns=NAMING_DIC_PROPERTIES_OF_DOMINANCE_LAG
+                    )
+                    # drop the column of "Date"
+                    independent_variable = independent_variable.drop(columns=["Date"])
+                else:
+                    # drop the column of "Date" and "Token"
+                    independent_variable = independent_variable.drop(
+                        columns=["Date", "Token"]
+                    )
 
-                # # add constant
-                # independent_variable = sm.add_constant(independent_variable)
+                # add constant
+                independent_variable = sm.add_constant(independent_variable)
 
-                # # run the regression
-                # model = sm.OLS(dependent_variable, independent_variable, missing="drop")
+                # run the regression
+                model = sm.OLS(dependent_variable, independent_variable, missing="drop")
 
-                # # store the results
-                # stargazer_list.append(model.fit())
+                # store the results
+                stargazer_list.append(model.fit())
 
     # use stargazer to create the regression table
     # stargazer = Stargazer([results_1, results_2])
@@ -499,6 +485,83 @@ def generate_reg_property_of_dominance(
 
     # save the panel dataset as a csv file
     reg_panel.to_csv(rf"{TABLE_PATH}/regression_panel.csv")
+
+
+def realized_holding_period(reg_panel: pd.DataFrame, lag: bool) -> None:
+    """
+    Function to generate the regression of realized holding period.
+    """
+
+    # sort the data by the date
+    reg_panel = reg_panel.sort_values(by=["Token", "Date"], ascending=True)
+
+    # create a list to store the results
+    stargazer_list = []
+    stargazer_col_list = []
+
+    # loop through the dependent variables as eigenvector centrality
+    for dependent_variable in ["${R}^{\it USD}$"]:
+        # set the mcap, cov_gas, cov_eth, dollar_exchange_rate as independent variables
+        for eigen in ["${\it EigenCent}^{In}$", "${\it EigenCent}^{Out}$"]:
+            for betw in ["${\it BetwCent}^C$", "${\it BetwCent}^V$"]:
+                # record the dependet variables
+                stargazer_col_list.append(dependent_variable)
+                independent_variables = reg_panel[
+                    [
+                        "Date",
+                        "Token",
+                        eigen,
+                        betw,
+                    ]
+                ].copy()
+
+                if lag:
+                    # one lag of in the group of "Token" and "Date"
+                    independent_variables = independent_variables.groupby(
+                        ["Token"]
+                    ).shift(1)
+                    # rename the columns using NAMING_DIC_PROPERTIES_OF_DOMINANCE_LAG
+                    independent_variables = independent_variables.rename(
+                        columns=NAMING_DIC_PROPERTIES_OF_DOMINANCE_LAG
+                    )
+                    # drop the column of "Date"
+                    independent_variables = independent_variables.drop(columns=["Date"])
+                else:
+                    # drop the column of "Date" and "Token"
+                    independent_variables = independent_variables.drop(
+                        columns=["Date", "Token"]
+                    )
+
+                # run the regression
+                model = sm.OLS(
+                    reg_panel[dependent_variable],
+                    sm.add_constant(independent_variables),
+                    missing="drop",
+                ).fit()
+
+                # store the results
+                stargazer_list.append(model)
+
+    # use stargazer to create the regression table
+    # stargazer = Stargazer([results_1, results_2])
+    stargazer = Stargazer(stargazer_list)
+
+    # set the title of the table
+    stargazer.title("Realized Holding Period")
+
+    # customize the column name
+    stargazer.custom_columns(
+        stargazer_col_list,
+        [1 for _ in stargazer_col_list],
+    )
+
+    # save the table to a latex file
+    with open(rf"{TABLE_PATH}/realized_holding_period.tex", "w") as to_file:
+        to_file.write(stargazer.render_latex())
+
+    # save the table to a html file
+    with open(rf"{TABLE_PATH}/realized_holding_period.html", "w") as to_file:
+        to_file.write(stargazer.render_html())
 
 
 def change_in_r_squared(reg_panel: pd.DataFrame) -> None:

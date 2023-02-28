@@ -72,6 +72,8 @@ NAMING_DIC_HERFINDAHL = {
     "S&P_volatility": "${\t \sigma}^{USD}_{SP}$",
     "Gas_fee": "${\t GasPrice}$",
     "Gas_fee_volatility": "${\t \sigma}_{Gas}$",
+    "boom": "${\t DeFiboom}$",
+    "bust": "${\t DeFibust}$",
 }
 
 # Initialize constants
@@ -227,23 +229,37 @@ def generate_sum(reg_panel: pd.DataFrame, file_name: str, lag=False) -> pd.DataF
     # rename the panel column names to be more readable
     reg_panel = reg_panel.rename(columns=NAMING_DIC_PROPERTIES_OF_DOMINANCE)
 
+    # only keep value share, eigen centrality and betweenness centrality and liquidity share
+    summary_panel = reg_panel[
+        [
+            "${\it VShare}$",
+            "${\it VShare}^{\it In}$",
+            "${\it VShare}^{\it Out}$",
+            "${\it EigenCent}^{In}$",
+            "${\it EigenCent}^{Out}$",
+            "${\it BetwCent}^C$",
+            "${\it BetwCent}^V$",
+            "${\it LiquidityShare}$",
+        ]
+    ]
+
     # if lag is true
     if lag:
         # create lagged columns except for the token and the date
-        for col_name in reg_panel.keys():
+        for col_name in summary_panel.keys():
             if col_name not in ["Token", "Date"]:
-                reg_panel[f"{col_name}_lag"] = reg_panel.groupby("Token")[
+                summary_panel[f"{col_name}_lag"] = summary_panel.groupby("Token")[
                     col_name
                 ].shift(1)
 
     # create the correlation matrix and set the decimal places to 2 and keep the digits
-    corr = reg_panel.corr().round(2)
+    corr = summary_panel.corr().round(2)
 
     # # change the column names to be more readable
     # corr = corr.rename(columns=NAMING_DIC_PROPERTIES_OF_DOMINANCE)
 
     # set the borrow_rate, borrow_rate to 1
-    corr.loc["${\it BorrowAPY}^{USD}$", "${\it BorrowAPY}^{USD}$"] = 1
+    # corr.loc["${\it BorrowAPY}^{USD}$", "${\it BorrowAPY}^{USD}$"] = 1
 
     # This dictionary defines the colormap
     cdict3 = {
@@ -316,7 +332,7 @@ def generate_sum(reg_panel: pd.DataFrame, file_name: str, lag=False) -> pd.DataF
     corr.to_csv(rf"{TABLE_PATH}/correlation_matrix_{file_name}.csv")
 
     # calculate the summary statistics of the panel dataset
-    summary = reg_panel.describe()
+    summary = summary_panel.describe()
 
     # take the transpose of the summary statistics
     summary = summary.T
