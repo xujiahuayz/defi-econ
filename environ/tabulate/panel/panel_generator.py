@@ -822,6 +822,43 @@ def _merge_gas_volatility(reg_panel: pd.DataFrame) -> pd.DataFrame:
     return reg_panel
 
 
+def _merge_stableshare(reg_panel: pd.DataFrame) -> pd.DataFrame:
+    """
+    Function to merge the stableshare.
+    """
+
+    # load in the data/data_global/stablecoin/stablecoin_share.csv
+    stable = pd.read_csv(
+        rf"{GLOBAL_DATA_PATH}/stablecoin/stablecoin_share.csv", index_col=None, header=0
+    )
+
+    # convert date to datetime
+    stable["Date"] = pd.to_datetime(stable["Date"])
+
+    # merge the stablecoin share using outer join
+    reg_panel = pd.merge(
+        reg_panel,
+        stable,
+        how="outer",
+        on=["Date", "Token"],
+    )
+
+    return reg_panel
+
+
+def _merge_avg_eigenvec(reg_panel: pd.DataFrame) -> pd.DataFrame:
+    """
+    Function to calculate the average eigenvector centrality.
+    """
+
+    # calculate the average eigenvector centrality from Inflow_centrality Outflow_centrality
+    reg_panel["avg_eigenvector_centrality"] = (
+        reg_panel["Inflow_centrality"] + reg_panel["Outflow_centrality"]
+    ) / 2
+
+    return reg_panel
+
+
 def generate_panel() -> pd.DataFrame:
     """
     generate the panel dataset
@@ -843,6 +880,8 @@ def generate_panel() -> pd.DataFrame:
     reg_panel = _merge_isweth(reg_panel)
     # reg_panel = _merge_exceedance(reg_panel)
     reg_panel = _merge_gas_volatility(reg_panel)
+    reg_panel = _merge_stableshare(reg_panel)
+    reg_panel = _merge_avg_eigenvec(reg_panel)
 
     return reg_panel.loc[
         (reg_panel["Date"] >= "2020-06-01") & (reg_panel["Date"] < "2023-02-01")
