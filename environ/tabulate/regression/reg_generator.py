@@ -209,7 +209,9 @@ def generate_regression_specification(reg_panel: pd.DataFrame, lag: bool) -> Non
         to_file.write(stargazer.render_html())
 
 
-def generate_regression_herfindahl(herfindahl: pd.DataFrame, lag: bool) -> None:
+def generate_regression_herfindahl(
+    herfindahl: pd.DataFrame, lag: bool, standardized: bool
+) -> None:
     """
     Generate the regression of herfindahl
     """
@@ -220,13 +222,17 @@ def generate_regression_herfindahl(herfindahl: pd.DataFrame, lag: bool) -> None:
     stargazer_list = []
     stargazer_col_list = []
 
+    # dataframe to store the standardized coefficients
+    standardized_coefficient_df = pd.DataFrame()
+
     # loop through the dependent variables as eigenvector centrality
     for dependent_variable in [
         "${\t HHIVolume}$",
-        "${\t HHIEigenCent}^{In}$",
-        "${\t HHIEigenCent}^{Out}$",
+        # "${\t HHIEigenCent}^{In}$",
+        # "${\t HHIEigenCent}^{Out}$",
         "${\t HHIBetwCent}^C$",
         "${\t HHIBetwCent}^V$",
+        "herfindahl_tvl",
     ]:
 
         # record the dependet variables
@@ -238,6 +244,8 @@ def generate_regression_herfindahl(herfindahl: pd.DataFrame, lag: bool) -> None:
                 "${\t \sigma}^{USD}_{SP}$",
                 "${\t GasPrice}$",
                 "${\t \sigma}_{Gas}$",
+                # "${\t DeFiboom}$",
+                # "${\t DeFibust}$",
             ]
         ].copy()
 
@@ -257,8 +265,124 @@ def generate_regression_herfindahl(herfindahl: pd.DataFrame, lag: bool) -> None:
             missing="drop",
         ).fit()
 
+        if standardized:
+            # append the dependent variable to the left of  independent variables
+            full_panel = pd.concat(
+                [herfindahl[dependent_variable], independent_variables], axis=1
+            )
+
+            # drop the missing values
+            full_panel = full_panel.dropna()
+
+            # calculate the std of the independent variables
+            std_y = full_panel[dependent_variable].std()
+
+            # iterate through sm.add_constant(independent_variables)
+            for _, var in enumerate(sm.add_constant(independent_variables)):
+                # calculate the std of the independent variables
+                std_x = sm.add_constant(independent_variables)[var].std()
+
+                # calculate the standardized coefficient
+                standardized_coefficient = model.params[var] * std_x / std_y
+
+                # append the standardized coefficient to the dataframe
+                standardized_coefficient_df = standardized_coefficient_df.append(
+                    {
+                        "Dependent Variable": dependent_variable,
+                        "Independent Variable": var,
+                        "Standardized Coefficient": standardized_coefficient,
+                    },
+                    ignore_index=True,
+                )
+
+                # # update the coefficient of the independent variables
+                # model.params[var] = standardized_coefficient
+
         # store the results
         stargazer_list.append(model)
+
+    # loop through the dependent variables as eigenvector centrality
+    for dependent_variable in [
+        "${\t HHIVolume}$",
+        # "${\t HHIEigenCent}^{In}$",
+        # "${\t HHIEigenCent}^{Out}$",
+        "${\t HHIBetwCent}^C$",
+        "${\t HHIBetwCent}^V$",
+        "herfindahl_tvl",
+    ]:
+
+        # record the dependet variables
+        stargazer_col_list.append(dependent_variable)
+        independent_variables = herfindahl[
+            [
+                "${\t TotalVolume}$",
+                "${\t R}^{USD}_{SP}$",
+                "${\t \sigma}^{USD}_{SP}$",
+                "${\t GasPrice}$",
+                "${\t \sigma}_{Gas}$",
+                "${\t DeFiboom}$",
+                "${\t DeFibust}$",
+            ]
+        ].copy()
+
+        if lag:
+            # one lag of the independent variable
+            independent_variables = independent_variables.shift(1)
+
+            # rename the columns using NAMING_DIC_HERFINDAHL_LAG
+            independent_variables = independent_variables.rename(
+                columns=NAMING_DIC_HERFINDAHL_LAG
+            )
+
+        # run the regression
+        model = sm.OLS(
+            herfindahl[dependent_variable],
+            sm.add_constant(independent_variables),
+            missing="drop",
+        ).fit()
+
+        if standardized:
+            # append the dependent variable to the left of  independent variables
+            full_panel = pd.concat(
+                [herfindahl[dependent_variable], independent_variables], axis=1
+            )
+
+            # drop the missing values
+            full_panel = full_panel.dropna()
+
+            # calculate the std of the independent variables
+            std_y = full_panel[dependent_variable].std()
+
+            # iterate through sm.add_constant(independent_variables)
+            for _, var in enumerate(sm.add_constant(independent_variables)):
+                # calculate the std of the independent variables
+                std_x = sm.add_constant(independent_variables)[var].std()
+
+                # calculate the standardized coefficient
+                standardized_coefficient = model.params[var] * std_x / std_y
+
+                # append the standardized coefficient to the dataframe
+                standardized_coefficient_df = standardized_coefficient_df.append(
+                    {
+                        "Dependent Variable": dependent_variable,
+                        "Independent Variable": var,
+                        "Standardized Coefficient": standardized_coefficient,
+                    },
+                    ignore_index=True,
+                )
+
+                # # update the coefficient of the independent variables
+                # model.params[var] = standardized_coefficient
+
+        # store the results
+        stargazer_list.append(model)
+
+    # save the standardized coefficient to a csv file
+    if standardized:
+        standardized_coefficient_df.to_csv(
+            rf"{TABLE_PATH}/standardized_coefficient_herfindahl.csv",
+            index=False,
+        )
 
     # use stargazer to create the regression table
     stargazer = Stargazer(stargazer_list)

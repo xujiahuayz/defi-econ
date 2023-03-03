@@ -124,7 +124,6 @@ def query_swaps_trading_v2(start_timestamp: int, end_timestamp: int) -> pd.DataF
             config["dev"]["config"]["subgraph"]["HTTP_V2"], query_iter, params_gt
         )
         if list(result_iter.keys()) == ["data"]:
-
             # List of swaps for this batch
             swaps_iter = result_iter["data"]["swaps"]
 

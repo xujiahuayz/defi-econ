@@ -95,7 +95,7 @@ def tabulate_result() -> None:
 
     # Regression: herfindahl index
     print_info_log("Generating the regression of herfindahl index.", "process")
-    generate_regression_herfindahl(reg_herfin, lag=True)
+    generate_regression_herfindahl(reg_herfin, lag=True, standardized=True)
 
     # Regression: specification
     print_info_log("Generating the regression of specification.", "process")
