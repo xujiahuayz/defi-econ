@@ -22,6 +22,46 @@ END_DATE = config["dev"]["config"]["coingecko"]["END_DATE"]
 TABLE_PATH = config["dev"]["config"]["result"]["TABLE_PATH"]
 
 
+def _merge_herfindahl_liquidity(herfindahl: pd.DataFrame) -> pd.DataFrame:
+    """
+    Function to merge the herfindahl index.
+    """
+
+    # merge the herfindahl index for liquidity
+    # get all csv files in data/data_network/merged/liquidity_share
+    path = rf"{NETWORK_DATA_PATH}/merged/tvl_share"  # use your path
+    all_files = glob.glob(path + "/*.csv")
+
+    # extract date from file name
+    # combine data from all csv files into one dataframe, dropping row number of each csv file
+    list_df = []
+    for filename in all_files:
+        df_in_cent = pd.read_csv(filename, index_col=None, header=0)
+        date = filename.split("_")[-1].split(".")[0]
+        df_in_cent["total_tvl"] = df_in_cent["total_tvl"].astype(float)
+        # convert the "yyyymmdd" date to datetime format
+        date = pd.to_datetime(date, format="%Y%m%d")
+        list_df.append((date, (df_in_cent["total_tvl"] ** 2).sum()))
+
+    list_df = pd.DataFrame(list_df, columns=["Date", "total_tvl"])
+
+    # sort the dataframe by date
+    list_df = list_df.sort_values(by="Date", ascending=True)
+
+    # rename the column "total_tvl" to "herfindahl_inflow_centrality"
+    list_df = list_df.rename(columns={"total_tvl": "herfindahl_tvl"})
+
+    # merge the herfindahl index for inflow eigenvector centrality using outer join
+    herfindahl = pd.merge(
+        herfindahl,
+        list_df,
+        how="outer",
+        on=["Date"],
+    )
+
+    return herfindahl
+
+
 def _merge_herfindahl_volume() -> pd.DataFrame:
     """
     Function to merge the herfindahl index.
@@ -72,6 +112,13 @@ def _merge_herfindahl_inflow_centrality(herfindahl: pd.DataFrame) -> pd.DataFram
         df_in_cent["eigenvector_centrality"] = df_in_cent[
             "eigenvector_centrality"
         ].astype(float)
+
+        # normalized the eigenvector centrality
+        df_in_cent["eigenvector_centrality"] = (
+            df_in_cent["eigenvector_centrality"]
+            / df_in_cent["eigenvector_centrality"].sum()
+        )
+
         # convert the "yyyymmdd" date to datetime format
         date = pd.to_datetime(date, format="%Y%m%d")
         list_df.append((date, (df_in_cent["eigenvector_centrality"] ** 2).sum()))
@@ -116,6 +163,13 @@ def _merge_herfindahl_outflow_centrality(herfindahl: pd.DataFrame) -> pd.DataFra
         df_out_cent["eigenvector_centrality"] = df_out_cent[
             "eigenvector_centrality"
         ].astype(float)
+
+        # normalzed the eigenvector centrality
+        df_out_cent["eigenvector_centrality"] = (
+            df_out_cent["eigenvector_centrality"]
+            / df_out_cent["eigenvector_centrality"].sum()
+        )
+
         # convert the "yyyymmdd" date to datetime format
         date = pd.to_datetime(date, format="%Y%m%d")
         list_df.append((date, (df_out_cent["eigenvector_centrality"] ** 2).sum()))
@@ -400,6 +454,7 @@ def generate_series_herfin() -> pd.DataFrame:
     herfindahl = _merge_herfindahl_inflow_centrality(herfindahl)
     herfindahl = _merge_herfindahl_outflow_centrality(herfindahl)
     herfindahl = _merge_herfindahl_betweenness_centrality(herfindahl)
+    herfindahl = _merge_herfindahl_liquidity(herfindahl)
     herfindahl = _merge_total_market_trading_volume(herfindahl)
     herfindahl = _merge_sp(herfindahl)
     herfindahl = _merge_gas(herfindahl)
@@ -411,6 +466,7 @@ def generate_series_herfin() -> pd.DataFrame:
     # plt.plot(herfindahl["Date"], herfindahl["herfindahl_outflow_centrality"])
     plt.plot(herfindahl["Date"], herfindahl["herfindahl_betweenness_centrality_count"])
     plt.plot(herfindahl["Date"], herfindahl["herfindahl_betweenness_centrality_volume"])
+    plt.plot(herfindahl["Date"], herfindahl["herfindahl_tvl"])
     plt.xlabel("Date")
     plt.ylabel("Herfindahl Index")
     plt.title("Herfindahl Index")
@@ -421,6 +477,7 @@ def generate_series_herfin() -> pd.DataFrame:
             # "herfindahl_outflow_centrality",
             "herfindahl_betweenness_centrality_count",
             "herfindahl_betweenness_centrality_volume",
+            "herfindahl_tvl",
         ]
     )
     plt.show()

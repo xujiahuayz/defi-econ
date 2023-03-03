@@ -1,5 +1,29 @@
 Dependent Variable,Independent Variable,Standardized Coefficient
 ${	 HHIVolume}$,const,0.0
+${	 HHIVolume}$,${	-1 TotalVolume}$,-0.20672701922268907
+${	 HHIVolume}$,${	-1 R}^{USD}_{SP}$,-0.09389715628829814
+${	 HHIVolume}$,${	-1 \sigma}^{USD}_{SP}$,0.11540174195092083
+${	 HHIVolume}$,${	-1 GasPrice}$,-0.10900684029114968
+${	 HHIVolume}$,${	-1 \sigma}_{Gas}$,-0.28592285099432835
+${	 HHIBetwCent}^C$,const,-0.0
+${	 HHIBetwCent}^C$,${	-1 TotalVolume}$,0.23907547156972384
+${	 HHIBetwCent}^C$,${	-1 R}^{USD}_{SP}$,0.09097818168196095
+${	 HHIBetwCent}^C$,${	-1 \sigma}^{USD}_{SP}$,-0.4734891428283508
+${	 HHIBetwCent}^C$,${	-1 GasPrice}$,0.09784740218781533
+${	 HHIBetwCent}^C$,${	-1 \sigma}_{Gas}$,0.14165088510607754
+${	 HHIBetwCent}^V$,const,-0.0
+${	 HHIBetwCent}^V$,${	-1 TotalVolume}$,0.3061756778366138
+${	 HHIBetwCent}^V$,${	-1 R}^{USD}_{SP}$,0.06299580794697178
+${	 HHIBetwCent}^V$,${	-1 \sigma}^{USD}_{SP}$,-0.6195451191187248
+${	 HHIBetwCent}^V$,${	-1 GasPrice}$,-0.031035520778019594
+${	 HHIBetwCent}^V$,${	-1 \sigma}_{Gas}$,0.18630606234535246
+herfindahl_tvl,const,0.0
+herfindahl_tvl,${	-1 TotalVolume}$,-0.15898552672615482
+herfindahl_tvl,${	-1 R}^{USD}_{SP}$,-0.02264631059544143
+herfindahl_tvl,${	-1 \sigma}^{USD}_{SP}$,-0.4941601894541512
+herfindahl_tvl,${	-1 GasPrice}$,-0.12357076885851424
+herfindahl_tvl,${	-1 \sigma}_{Gas}$,0.0187763221807737
+${	 HHIVolume}$,const,0.0
 ${	 HHIVolume}$,${	-1 TotalVolume}$,-0.23957493329053306
 ${	 HHIVolume}$,${	-1 R}^{USD}_{SP}$,-0.011535023113831401
 ${	 HHIVolume}$,${	-1 \sigma}^{USD}_{SP}$,0.19566455258326615
@@ -23,3 +47,11 @@ ${	 HHIBetwCent}^V$,${	-1 GasPrice}$,0.036411650591074374
 ${	 HHIBetwCent}^V$,${	-1 \sigma}_{Gas}$,0.18343585005628713
 ${	 HHIBetwCent}^V$,${	 DeFiboom}$,0.3741623876239355
 ${	 HHIBetwCent}^V$,${	 DeFibust}$,-0.06242069208697035
+herfindahl_tvl,const,0.0
+herfindahl_tvl,${	-1 TotalVolume}$,-0.1461085240132688
+herfindahl_tvl,${	-1 R}^{USD}_{SP}$,-0.059160099066644704
+herfindahl_tvl,${	-1 \sigma}^{USD}_{SP}$,-0.523998101494813
+herfindahl_tvl,${	-1 GasPrice}$,-0.0916901848146653
+herfindahl_tvl,${	-1 \sigma}_{Gas}$,0.019932743630889146
+herfindahl_tvl,${	 DeFiboom}$,0.017987380245497044
+herfindahl_tvl,${	 DeFibust}$,-0.17131537521129625
