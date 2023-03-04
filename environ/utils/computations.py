@@ -31,42 +31,39 @@ def boom_bust_one_period(
     boom = np.where(time_price["price"] > boom_threshold)[0]
     bust = np.where(time_price["price"] < bust_threshold)[0]
 
-    if len(boom) > 0:
-        boom_end = boom[0]
-        if len(bust) > 0 and bust[0] < boom_end:
-            cycle_end = bust[0] - 1
-            while (
-                cycle_end + 1 < len(time_price["price"])
-                and time_price["price"][cycle_end + 1] < time_price["price"][cycle_end]
-            ):
-                cycle_end += 1
-            cycle = {"main_trend": "bust", "end": time_price["time"][cycle_end]}
-        else:
-            cycle_end = boom_end - 1
-            while (
-                cycle_end + 1 < len(time_price["price"])
-                and time_price["price"][cycle_end + 1] > time_price["price"][cycle_end]
-            ):
-                cycle_end += 1
-            cycle = {"main_trend": "boom", "end": time_price["time"][cycle_end]}
-    elif len(bust) > 0:
+    cycle = {
+        "main_trend": "none",
+        "start": time_price["time"].iloc[0],
+        "end": time_price["time"].iloc[-1],
+    }
+
+    if len(boom) == len(bust) == 0:
+        return cycle
+
+    if len(boom) == 0 or (len(boom) > 0 and len(bust) > 0 and bust[0] < boom[0]):
+        cycle["main_trend"] = "bust"
         cycle_end = bust[0] - 1
         while (
             cycle_end + 1 < len(time_price["price"])
             and time_price["price"][cycle_end + 1] < time_price["price"][cycle_end]
         ):
             cycle_end += 1
-        cycle = {"main_trend": "bust", "end": time_price["time"][cycle_end]}
     else:
-        cycle = {"main_trend": "none", "end": time_price["time"].iloc[-1]}
+        cycle["main_trend"] = "boom"
+        cycle_end = boom[0] - 1
+        while (
+            cycle_end + 1 < len(time_price["price"])
+            and time_price["price"][cycle_end + 1] > time_price["price"][cycle_end]
+        ):
+            cycle_end += 1
 
-    cycle["start"] = time_price["time"].iloc[0]
-    if cycle["main_trend"] == "boom":
-        trough_index = np.argmin(time_price["price"].iloc[: cycle_end + 1])
-        cycle["pre_trend_end"] = time_price["time"].iloc[trough_index]
-    elif cycle["main_trend"] == "bust":
-        peak_index = np.argmax(time_price["price"].iloc[: cycle_end + 1])
-        cycle["pre_trend_end"] = time_price["time"].iloc[peak_index]
+    cycle["end"] = time_price["time"][cycle_end]
+
+    price_array = time_price["price"].iloc[: cycle_end + 1]
+
+    cycle["pre_trend_end"] = time_price["time"][
+        price_array.idxmin() if cycle["main_trend"] == "boom" else price_array.idxmax()
+    ]
 
     return cycle
 
