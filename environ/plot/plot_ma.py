@@ -30,6 +30,8 @@ def preprocess_ma(
     df = df.rename(columns={value_colume: "value"})
     # select only the tokens in TOKEN_LIST
     df = df[df["token"].isin(TOKEN_LIST)]
+    # convert time from timestamp to datetime
+    df["Date"] = pd.to_datetime(df["time"], unit="s")
     df["time"] = df["Date"].apply(md.date2num)
     # sort the dataframe by date
     df = df.sort_values(by="time").reset_index(drop=True)
@@ -96,6 +98,33 @@ if __name__ == "__main__":
                 "2021-01-24",
                 "2021-01-25",
             ],
+            "time": [
+                1451606400,
+                1451692800,
+                1451779200,
+                1451865600,
+                1451952000,
+                1452038400,
+                1452124800,
+                1452211200,
+                1452297600,
+                1452384000,
+                1452470400,
+                1452556800,
+                1452643200,
+                1452729600,
+                1452816000,
+                1452902400,
+                1452988800,
+                1453075200,
+                1453161600,
+                1453248000,
+                1453334400,
+                1453420800,
+                1453507200,
+                1453593600,
+                1453680000,
+            ],
             "token": [
                 "WETH",
                 "WETH",
@@ -153,7 +182,7 @@ if __name__ == "__main__":
         }
     )
     # convert date to date
-    df["Date"] = pd.to_datetime(df["Date"])
+    # df["Date"] = pd.to_datetime(df["Date"])
 
     # preprocess the dataframe
     df = preprocess_ma(df)
