@@ -47,7 +47,7 @@ def tabulate_result() -> None:
 
     # Summary statistics
     print_info_log("Generating the summary for properties of dominance.", "process")
-    reg_panel = generate_sum(reg_panel, file_name="properties_of_dominance")
+    reg_panel = generate_sum(reg_panel, file_name="properties_of_dominance", lag=True)
     print_info_log("Generating the summary for herfindal series.", "process")
     reg_herfin = generate_sum_herfindahl(reg_herfin, file_name="herfindahl_index")
 

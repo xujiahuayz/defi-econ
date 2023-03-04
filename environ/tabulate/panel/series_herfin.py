@@ -460,27 +460,27 @@ def generate_series_herfin() -> pd.DataFrame:
     herfindahl = _merge_gas(herfindahl)
     herfindahl = _merge_boom_bust(herfindahl)
 
-    # plot the all kinds of herfindahl index
-    plt.plot(herfindahl["Date"], herfindahl["herfindahl_volume"])
-    # plt.plot(herfindahl["Date"], herfindahl["herfindahl_inflow_centrality"])
-    # plt.plot(herfindahl["Date"], herfindahl["herfindahl_outflow_centrality"])
-    plt.plot(herfindahl["Date"], herfindahl["herfindahl_betweenness_centrality_count"])
-    plt.plot(herfindahl["Date"], herfindahl["herfindahl_betweenness_centrality_volume"])
-    plt.plot(herfindahl["Date"], herfindahl["herfindahl_tvl"])
-    plt.xlabel("Date")
-    plt.ylabel("Herfindahl Index")
-    plt.title("Herfindahl Index")
-    plt.legend(
-        [
-            "herfindahl_volume",
-            # "herfindahl_inflow_centrality",
-            # "herfindahl_outflow_centrality",
-            "herfindahl_betweenness_centrality_count",
-            "herfindahl_betweenness_centrality_volume",
-            "herfindahl_tvl",
-        ]
-    )
-    plt.show()
+    # # plot the all kinds of herfindahl index
+    # plt.plot(herfindahl["Date"], herfindahl["herfindahl_volume"])
+    # # plt.plot(herfindahl["Date"], herfindahl["herfindahl_inflow_centrality"])
+    # # plt.plot(herfindahl["Date"], herfindahl["herfindahl_outflow_centrality"])
+    # plt.plot(herfindahl["Date"], herfindahl["herfindahl_betweenness_centrality_count"])
+    # plt.plot(herfindahl["Date"], herfindahl["herfindahl_betweenness_centrality_volume"])
+    # plt.plot(herfindahl["Date"], herfindahl["herfindahl_tvl"])
+    # plt.xlabel("Date")
+    # plt.ylabel("Herfindahl Index")
+    # plt.title("Herfindahl Index")
+    # plt.legend(
+    #     [
+    #         "herfindahl_volume",
+    #         # "herfindahl_inflow_centrality",
+    #         # "herfindahl_outflow_centrality",
+    #         "herfindahl_betweenness_centrality_count",
+    #         "herfindahl_betweenness_centrality_volume",
+    #         "herfindahl_tvl",
+    #     ]
+    # )
+    # plt.show()
 
     # save the dataframe to table
     herfindahl.to_csv(rf"{TABLE_PATH}/series_herfindahl.csv", index=False)

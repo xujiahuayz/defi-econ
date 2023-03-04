@@ -13,6 +13,9 @@ import glob
 import pandas as pd
 import numpy as np
 from environ.utils.config_parser import Config
+from environ.utils.computations import boom_bust
+from environ.process.spindex.sp import sp_df
+import matplotlib.dates as md
 
 # Initialize config
 config = Config()
@@ -822,6 +825,76 @@ def _merge_gas_volatility(reg_panel: pd.DataFrame) -> pd.DataFrame:
     return reg_panel
 
 
+def _merge_stableshare(reg_panel: pd.DataFrame) -> pd.DataFrame:
+    """
+    Function to merge the stableshare.
+    """
+
+    # load in the data/data_global/stablecoin/stablecoin_share.csv
+    stable = pd.read_csv(
+        rf"{GLOBAL_DATA_PATH}/stablecoin/stablecoin_share.csv", index_col=None, header=0
+    )
+
+    # convert date to datetime
+    stable["Date"] = pd.to_datetime(stable["Date"])
+
+    # merge the stablecoin share using outer join
+    reg_panel = pd.merge(
+        reg_panel,
+        stable,
+        how="outer",
+        on=["Date", "Token"],
+    )
+
+    return reg_panel
+
+
+def _merge_avg_eigenvec(reg_panel: pd.DataFrame) -> pd.DataFrame:
+    """
+    Function to calculate the average eigenvector centrality.
+    """
+
+    # calculate the average eigenvector centrality from Inflow_centrality Outflow_centrality
+    reg_panel["avg_eigenvector_centrality"] = (
+        reg_panel["Inflow_centrality"] + reg_panel["Outflow_centrality"]
+    ) / 2
+
+    return reg_panel
+
+
+def _merge_boom_bust(reg_panel: pd.DataFrame, sp_df=sp_df) -> pd.DataFrame:
+    """
+    Function to merge the boom and bust dummy.
+    """
+
+    # convert date to timestamp
+    sp_df["time"] = sp_df["Date"].apply(lambda x: x.timestamp())
+
+    # replace s&p colume with price
+    sp_df = sp_df.rename(columns={"S&P": "price"})
+
+    BOOM_BUST = boom_bust(sp_df)
+
+    reg_panel["boom"] = 0
+    reg_panel["bust"] = 0
+
+    for boom in BOOM_BUST["boom"]:
+        reg_panel.loc[
+            (reg_panel["Date"] >= pd.to_datetime(boom[0], unit="s"))
+            & (reg_panel["Date"] <= pd.to_datetime(boom[1], unit="s")),
+            "boom",
+        ] = 1
+
+    for bust in BOOM_BUST["bust"]:
+        reg_panel.loc[
+            (reg_panel["Date"] >= pd.to_datetime(bust[0], unit="s"))
+            & (reg_panel["Date"] <= pd.to_datetime(bust[1], unit="s")),
+            "bust",
+        ] = 1
+
+    return reg_panel
+
+
 def generate_panel() -> pd.DataFrame:
     """
     generate the panel dataset
@@ -843,6 +916,9 @@ def generate_panel() -> pd.DataFrame:
     reg_panel = _merge_isweth(reg_panel)
     # reg_panel = _merge_exceedance(reg_panel)
     reg_panel = _merge_gas_volatility(reg_panel)
+    reg_panel = _merge_stableshare(reg_panel)
+    reg_panel = _merge_avg_eigenvec(reg_panel)
+    reg_panel = _merge_boom_bust(reg_panel)
 
     return reg_panel.loc[
         (reg_panel["Date"] >= "2020-06-01") & (reg_panel["Date"] < "2023-02-01")
@@ -851,4 +927,5 @@ def generate_panel() -> pd.DataFrame:
 
 if __name__ == "__main__":
     # test the function
+    # _merge_boom_bust()
     pass
