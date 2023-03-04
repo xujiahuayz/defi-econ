@@ -24,34 +24,34 @@ herfindahl_tvl,${	-1 \sigma}^{USD}_{SP}$,-0.4941601894541512
 herfindahl_tvl,${	-1 GasPrice}$,-0.12357076885851424
 herfindahl_tvl,${	-1 \sigma}_{Gas}$,0.0187763221807737
 ${	 HHIVolume}$,const,0.0
-${	 HHIVolume}$,${	-1 TotalVolume}$,-0.23957493329053306
-${	 HHIVolume}$,${	-1 R}^{USD}_{SP}$,-0.011535023113831401
-${	 HHIVolume}$,${	-1 \sigma}^{USD}_{SP}$,0.19566455258326615
-${	 HHIVolume}$,${	-1 GasPrice}$,-0.1833615501255472
-${	 HHIVolume}$,${	-1 \sigma}_{Gas}$,-0.2885895448070536
-${	 HHIVolume}$,${	 DeFiboom}$,-0.32051517035882937
-${	 HHIVolume}$,${	 DeFibust}$,0.13978784163319063
+${	 HHIVolume}$,${	-1 TotalVolume}$,-0.1326493724941846
+${	 HHIVolume}$,${	-1 R}^{USD}_{SP}$,-0.0157906255031594
+${	 HHIVolume}$,${	-1 \sigma}^{USD}_{SP}$,-0.054210725824540805
+${	 HHIVolume}$,${	-1 GasPrice}$,-0.15229569399206647
+${	 HHIVolume}$,${	-1 \sigma}_{Gas}$,-0.284888498805799
+${	 HHIVolume}$,${	 DeFiboom}$,-0.07691162471793728
+${	 HHIVolume}$,${	 DeFibust}$,0.2765577626754292
 ${	 HHIBetwCent}^C$,const,-0.0
-${	 HHIBetwCent}^C$,${	-1 TotalVolume}$,0.26428098599140215
-${	 HHIBetwCent}^C$,${	-1 R}^{USD}_{SP}$,0.019969295217452606
-${	 HHIBetwCent}^C$,${	-1 \sigma}^{USD}_{SP}$,-0.537805626435138
-${	 HHIBetwCent}^C$,${	-1 GasPrice}$,0.15973716846667843
-${	 HHIBetwCent}^C$,${	-1 \sigma}_{Gas}$,0.14049990965713458
-${	 HHIBetwCent}^C$,${	 DeFiboom}$,0.24959872922542362
-${	 HHIBetwCent}^C$,${	 DeFibust}$,-0.14094650895946612
+${	 HHIBetwCent}^C$,${	-1 TotalVolume}$,0.14247318266333053
+${	 HHIBetwCent}^C$,${	-1 R}^{USD}_{SP}$,-0.006651833598211296
+${	 HHIBetwCent}^C$,${	-1 \sigma}^{USD}_{SP}$,-0.25739833488136915
+${	 HHIBetwCent}^C$,${	-1 GasPrice}$,0.14653684859991803
+${	 HHIBetwCent}^C$,${	-1 \sigma}_{Gas}$,0.13090297659306863
+${	 HHIBetwCent}^C$,${	 DeFiboom}$,0.15956596389992528
+${	 HHIBetwCent}^C$,${	 DeFibust}$,-0.28058981000481953
 ${	 HHIBetwCent}^V$,const,-0.0
-${	 HHIBetwCent}^V$,${	-1 TotalVolume}$,0.33374321087197256
-${	 HHIBetwCent}^V$,${	-1 R}^{USD}_{SP}$,-0.014448664356817674
-${	 HHIBetwCent}^V$,${	-1 \sigma}^{USD}_{SP}$,-0.6926784883578411
-${	 HHIBetwCent}^V$,${	-1 GasPrice}$,0.036411650591074374
-${	 HHIBetwCent}^V$,${	-1 \sigma}_{Gas}$,0.18343585005628713
-${	 HHIBetwCent}^V$,${	 DeFiboom}$,0.3741623876239355
-${	 HHIBetwCent}^V$,${	 DeFibust}$,-0.06242069208697035
+${	 HHIBetwCent}^V$,${	-1 TotalVolume}$,0.1975778956227001
+${	 HHIBetwCent}^V$,${	-1 R}^{USD}_{SP}$,-0.05071539438094335
+${	 HHIBetwCent}^V$,${	-1 \sigma}^{USD}_{SP}$,-0.37248460678761547
+${	 HHIBetwCent}^V$,${	-1 GasPrice}$,0.021195576957108428
+${	 HHIBetwCent}^V$,${	-1 \sigma}_{Gas}$,0.16962051441884496
+${	 HHIBetwCent}^V$,${	 DeFiboom}$,0.3672454711186211
+${	 HHIBetwCent}^V$,${	 DeFibust}$,-0.15351059506278703
 herfindahl_tvl,const,0.0
-herfindahl_tvl,${	-1 TotalVolume}$,-0.1461085240132688
-herfindahl_tvl,${	-1 R}^{USD}_{SP}$,-0.059160099066644704
-herfindahl_tvl,${	-1 \sigma}^{USD}_{SP}$,-0.523998101494813
-herfindahl_tvl,${	-1 GasPrice}$,-0.0916901848146653
-herfindahl_tvl,${	-1 \sigma}_{Gas}$,0.019932743630889146
-herfindahl_tvl,${	 DeFiboom}$,0.017987380245497044
-herfindahl_tvl,${	 DeFibust}$,-0.17131537521129625
+herfindahl_tvl,${	-1 TotalVolume}$,-0.20414453660212226
+herfindahl_tvl,${	-1 R}^{USD}_{SP}$,-0.06606724064910689
+herfindahl_tvl,${	-1 \sigma}^{USD}_{SP}$,-0.39546217724588034
+herfindahl_tvl,${	-1 GasPrice}$,-0.09940606800828113
+herfindahl_tvl,${	-1 \sigma}_{Gas}$,0.01633197194527399
+herfindahl_tvl,${	 DeFiboom}$,-0.03070638620448119
+herfindahl_tvl,${	 DeFibust}$,-0.2219256343689861

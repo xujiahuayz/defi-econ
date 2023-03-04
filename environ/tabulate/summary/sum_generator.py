@@ -59,6 +59,8 @@ NAMING_DIC_PROPERTIES_OF_DOMINANCE = {
     "Gas_fee_volatility": "${\t \sigma}_{Gas}$",
     "avg_eigenvector_centrality": "${\it AvgEigenCent}$",
     "stableshare": "${\it StableShare}$",
+    "boom": "${\t DeFiboom}$",
+    "bust": "${\t DeFibust}$",
     # Drop
     "corr_sentiment": "${\it CorrSent}$",
 }
@@ -248,127 +250,112 @@ def generate_sum(reg_panel: pd.DataFrame, file_name: str, lag: bool) -> pd.DataF
     summary_panel = reg_panel[col_list]
 
     for lag_num in [7, 14, 21, 28]:
-        # if lag is true
-        if lag:
-            summary_panel = reg_panel[col_list + ["Token", "Date"]].copy()
-            # create lagged columns except for the token and the date
-            for col_name in summary_panel.keys():
-                if col_name not in ["Token", "Date"]:
-                    summary_panel[f"{col_name}_lag"] = summary_panel.groupby("Token")[
-                        col_name
-                    ].shift(lag_num)
+        for status in ["boom", "bust"]:
+            # if lag is true
+            if lag:
+                summary_panel = reg_panel[
+                    col_list
+                    + [
+                        "Token",
+                        "Date",
+                        "${\t DeFiboom}$",
+                        "${\t DeFibust}$",
+                    ]
+                ].copy()
 
-            # drop token and date
-            summary_panel = summary_panel.drop(["Token", "Date"], axis=1)
+                # # create a copy of the panel
+                # summary_panel = summary_panel.loc[
+                #     summary_panel[NAMING_DIC_PROPERTIES_OF_DOMINANCE[status]] == 1, :
+                # ].copy()
 
-        # create the correlation matrix and set the decimal places to 2 and keep the digits
-        corr = summary_panel.corr().round(2)
+                # if the status is boom, set all bust data to nan
+                # if the status is bust, set all boom data to nan
+                if status == "boom":
+                    summary_panel.loc[
+                        summary_panel[NAMING_DIC_PROPERTIES_OF_DOMINANCE["bust"]] == 1,
+                        col_list,
+                    ] = np.nan
+                else:
+                    summary_panel.loc[
+                        summary_panel[NAMING_DIC_PROPERTIES_OF_DOMINANCE["boom"]] == 1,
+                        col_list,
+                    ] = np.nan
 
-        # create the covariance matrix and set the decimal places to 2 and keep the digits
-        cov = summary_panel.cov().round(2)
+                # create lagged columns except for the token and the date
+                for col_name in summary_panel.keys():
+                    if col_name not in [
+                        "Token",
+                        "Date",
+                        "${\t DeFiboom}$",
+                        "${\t DeFibust}$",
+                    ]:
+                        summary_panel[f"{col_name}_lag"] = summary_panel.groupby(
+                            "Token"
+                        )[col_name].shift(lag_num)
 
-        # # drop the lagged columns
-        # corr = corr.drop(
-        #     [f"{i}_lag" for i in col_list],
-        #     axis=1,
-        # )
+                # drop token and date
+                summary_panel = summary_panel.drop(
+                    ["Token", "Date", "${\t DeFiboom}$", "${\t DeFibust}$"], axis=1
+                )
 
-        # # drop the non-lagged columns
-        # corr = corr.drop(
-        #     col_list,
-        #     axis=0,
-        # )
+            # create the correlation matrix and set the decimal places to 2 and keep the digits
+            corr = summary_panel.corr().round(2)
 
-        # # change the column names to be more readable
-        # corr = corr.rename(columns=NAMING_DIC_PROPERTIES_OF_DOMINANCE)
+            # create the covariance matrix and set the decimal places to 2 and keep the digits
+            cov = summary_panel.cov().round(2)
 
-        # set the borrow_rate, borrow_rate to 1
-        # corr.loc["${\it BorrowAPY}^{USD}$", "${\it BorrowAPY}^{USD}$"] = 1
+            # # drop the lagged columns
+            # corr = corr.drop(
+            #     [f"{i}_lag" for i in col_list],
+            #     axis=1,
+            # )
 
-        # This dictionary defines the colormap
-        cdict3 = {
-            "red": (
-                (0.0, 0.0, 0.0),
-                (0.25, 0.0, 0.0),
-                (0.5, 0.8, 1.0),
-                (0.75, 1.0, 1.0),
-                (1.0, 0.4, 1.0),
-            ),
-            "green": (
-                (0.0, 0.0, 0.0),
-                (0.25, 0.0, 0.0),
-                (0.5, 0.9, 0.9),
-                (0.75, 0.0, 0.0),
-                (1.0, 0.0, 0.0),
-            ),
-            "blue": (
-                (0.0, 0.0, 0.4),
-                (0.25, 1.0, 1.0),
-                (0.5, 1.0, 0.8),
-                (0.75, 0.0, 0.0),
-                (1.0, 0.0, 0.0),
-            ),
-            "alpha": ((0.0, 1.0, 1.0), (0.5, 0.3, 0.3), (1.0, 1.0, 1.0)),
-        }
+            # # drop the non-lagged columns
+            # corr = corr.drop(
+            #     col_list,
+            #     axis=0,
+            # )
 
-        # Create the colormap using the dictionary with the range of -1 to 1
-        # make sure the range of the ledgend is -1 to 1
-        GnRd = colors.LinearSegmentedColormap("GnRd", cdict3)
+            # # change the column names to be more readable
+            # corr = corr.rename(columns=NAMING_DIC_PROPERTIES_OF_DOMINANCE)
 
-        if lag:
+            # set the borrow_rate, borrow_rate to 1
+            # corr.loc["${\it BorrowAPY}^{USD}$", "${\it BorrowAPY}^{USD}$"] = 1
+
+            # This dictionary defines the colormap
+            cdict3 = {
+                "red": (
+                    (0.0, 0.0, 0.0),
+                    (0.25, 0.0, 0.0),
+                    (0.5, 0.8, 1.0),
+                    (0.75, 1.0, 1.0),
+                    (1.0, 0.4, 1.0),
+                ),
+                "green": (
+                    (0.0, 0.0, 0.0),
+                    (0.25, 0.0, 0.0),
+                    (0.5, 0.9, 0.9),
+                    (0.75, 0.0, 0.0),
+                    (1.0, 0.0, 0.0),
+                ),
+                "blue": (
+                    (0.0, 0.0, 0.4),
+                    (0.25, 1.0, 1.0),
+                    (0.5, 1.0, 0.8),
+                    (0.75, 0.0, 0.0),
+                    (1.0, 0.0, 0.0),
+                ),
+                "alpha": ((0.0, 1.0, 1.0), (0.5, 0.3, 0.3), (1.0, 1.0, 1.0)),
+            }
+
+            # Create the colormap using the dictionary with the range of -1 to 1
+            # make sure the range of the ledgend is -1 to 1
+            GnRd = colors.LinearSegmentedColormap("GnRd", cdict3)
+
             sns.heatmap(
                 corr,
                 xticklabels=corr.columns,
                 yticklabels=corr.columns,
-                annot=True,
-                cmap=GnRd,
-                vmin=-1,
-                vmax=1,
-                annot_kws={"size": 4},
-            )
-
-            # font size smaller
-            plt.rcParams.update({"font.size": 4})
-
-        else:
-            # plot the heatmap
-            sns.heatmap(
-                corr,
-                xticklabels=corr.columns,
-                yticklabels=corr.columns,
-                annot=True,
-                cmap=GnRd,
-                vmin=-1,
-                vmax=1,
-                annot_kws={"size": 4},
-            )
-
-            # font size smaller
-            plt.rcParams.update({"font.size": 4})
-
-        # tight layout
-        plt.tight_layout()
-
-        if lag:
-            # save the figure
-            plt.savefig(
-                rf"{FIGURE_PATH}/correlation_matrix_{file_name}_{lag_num}_lag.pdf"
-            )
-            plt.clf()
-        else:
-            # save the figure
-            plt.savefig(rf"{FIGURE_PATH}/correlation_matrix_{file_name}.pdf")
-            plt.clf()
-
-        # save the correlation matrix as a csv file
-        corr.to_csv(rf"{TABLE_PATH}/correlation_matrix_{file_name}.csv")
-
-        if lag:
-            # plot the heatmap for the covariance matrix
-            sns.heatmap(
-                cov,
-                xticklabels=cov.columns,
-                yticklabels=cov.columns,
                 annot=True,
                 cmap=GnRd,
                 vmin=-1,
@@ -382,11 +369,44 @@ def generate_sum(reg_panel: pd.DataFrame, file_name: str, lag: bool) -> pd.DataF
             # tight layout
             plt.tight_layout()
 
-            # save the figure
-            plt.savefig(
-                rf"{FIGURE_PATH}/covariance_matrix_{file_name}_{lag_num}_lag.pdf"
-            )
-            plt.clf()
+            if lag:
+                # save the figure
+                plt.savefig(
+                    rf"{FIGURE_PATH}/correlation_matrix_{file_name}_{lag_num}_lag_{status}.pdf"
+                )
+                plt.clf()
+            else:
+                # save the figure
+                plt.savefig(rf"{FIGURE_PATH}/correlation_matrix_{file_name}.pdf")
+                plt.clf()
+
+            # save the correlation matrix as a csv file
+            corr.to_csv(rf"{TABLE_PATH}/correlation_matrix_{file_name}.csv")
+
+            if lag:
+                # plot the heatmap for the covariance matrix
+                sns.heatmap(
+                    cov,
+                    xticklabels=cov.columns,
+                    yticklabels=cov.columns,
+                    annot=True,
+                    cmap=GnRd,
+                    vmin=-1,
+                    vmax=1,
+                    annot_kws={"size": 4},
+                )
+
+                # font size smaller
+                plt.rcParams.update({"font.size": 4})
+
+                # tight layout
+                plt.tight_layout()
+
+                # save the figure
+                plt.savefig(
+                    rf"{FIGURE_PATH}/covariance_matrix_{file_name}_{lag_num}_lag_{status}.pdf"
+                )
+                plt.clf()
 
     # calculate the summary statistics of the panel dataset
     summary = summary_panel.describe()
