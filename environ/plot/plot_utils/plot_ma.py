@@ -25,6 +25,17 @@ COMPOUND_DATA_PATH = config["dev"]["config"]["data"]["COMPOUND_DATA_PATH"]
 COMPOUND_DATA_PATH = config["dev"]["config"]["data"]["COMPOUND_DATA_PATH"]
 FIGURE_PATH = config["dev"]["config"]["result"]["FIGURE_PATH"]
 
+# specify the color for each token
+COLOR_DICT = {
+    "WETH": "blue",
+    "WBTC": "orange",
+    "MATIC": "green",
+    "USDC": "red",
+    "USDT": "purple",
+    "DAI": "brown",
+    "FEI": "pink",
+}
+
 
 def betweenness_prep(graph_type: str, source: str) -> tuple:
     """
@@ -303,17 +314,6 @@ def plot_ma(graph_type: str, source: str) -> None:
             graph_type=graph_type, source=source
         )
 
-    # specify the color for each token
-    color_dict = {
-        "WETH": "blue",
-        "WBTC": "orange",
-        "MATIC": "green",
-        "USDC": "red",
-        "USDT": "purple",
-        "DAI": "brown",
-        "FEI": "pink",
-    }
-
     # plot the 30-day moving average of volume share of each token
     _, ax_ma = plt.subplots(figsize=(15, 10))
     for token in plot_df[token_col_name].unique():
@@ -324,7 +324,7 @@ def plot_ma(graph_type: str, source: str) -> None:
             date,
             plot_df[plot_df[token_col_name] == token][y_col_name],
             label=token,
-            color=color_dict[token],
+            color=COLOR_DICT[token],
         )
 
         # fix the y-axis to be between 0 and 0.3 if the graph is apy

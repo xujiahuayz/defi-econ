@@ -20,11 +20,11 @@ sp_df = pd.read_excel(
     index_col=None,
     skiprows=6,
     skipfooter=4,
-    usecols="A:B",
+    # usecols="A:B:C",
 )
 
-# convert Effective date to datetime
-sp_df["Date"] = pd.to_datetime(sp_df["Date"])
+# # convert Effective date to datetime
+# sp_df["Date"] = pd.to_datetime(sp_df["Date"])
 
 # sort the dataframe by date
 sp_df = sp_df.sort_values(by="Date", ascending=True)

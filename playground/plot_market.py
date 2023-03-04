@@ -2,28 +2,21 @@
 plot market with boom bust cycles
 """
 
-from environ.process.spindex.sp import sp_df
-from environ.utils.computations import boom_bust
-import matplotlib.pyplot as plt
+
+from environ.process.spindex.boom_bust import BOOM_BUST, sp_df
 import matplotlib.dates as md
+import matplotlib.pyplot as plt
 
-# convert date to timestamp
-sp_df["time"] = sp_df["Date"].apply(md.date2num)
+if __name__ == "__main__":
+    # plot price with boom bust cycles
+    plt.plot(sp_df["time"], sp_df["price"])
+    for i in BOOM_BUST["boom"]:
+        plt.axvspan(i[0], i[1], color="green", alpha=0.3)
+    for i in BOOM_BUST["bust"]:
+        plt.axvspan(i[0], i[1], color="red", alpha=0.3)
 
-# replace s&p colume with price
-sp_df = sp_df.rename(columns={"S&P": "price"})
+    # change x axis from datetime timestamp to date
+    plt.gca().xaxis.set_major_formatter(md.DateFormatter("%Y-%m-%d"))
+    plt.gcf().autofmt_xdate()
 
-BOOM_BUST = boom_bust(sp_df)
-
-# plot price with boom bust cycles
-plt.plot(sp_df["time"], sp_df["price"])
-for i in BOOM_BUST["boom"]:
-    plt.axvspan(i[0], i[1], color="green", alpha=0.3)
-for i in BOOM_BUST["bust"]:
-    plt.axvspan(i[0], i[1], color="red", alpha=0.3)
-
-# format the x axis
-plt.gca().xaxis.set_major_formatter(md.DateFormatter("%Y-%m-%d"))
-plt.gcf().autofmt_xdate()
-
-plt.show()
+    plt.show()
