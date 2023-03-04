@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 import pandas as pd
 
 logging.basicConfig(level=logging.INFO)
@@ -9,76 +10,65 @@ def boom_bust_one_period(
 ) -> dict:
     """
     Return the boom and bust periods of the given price.
+
+    Args:
+        time_price (pd.DataFrame): A DataFrame containing price and time columns.
+        boom_change (float): The percentage change required for a price boom.
+        bust_change (float): The percentage change required for a price bust.
+
+    Returns:
+        dict: A dictionary containing the main trend, start time, and end time of the period.
     """
-    # Sort the time_price dataframe by time
-    # assume already sorted
-    # time_price = time_price.sort_values(by="time").reset_index(drop=True)
+    if len(time_price) == 0:
+        raise ValueError("Input DataFrame is empty.")
 
-    # find the next price that is crosses the threshold
-    boom = [
-        i
-        for i, w in enumerate(time_price["price"])
-        if w > time_price["price"][0] * (1 + boom_change)
-    ]
-    bust = [
-        i
-        for i, w in enumerate(time_price["price"])
-        if w < time_price["price"][0] * (1 - bust_change)
-    ]
+    if "price" not in time_price.columns or "time" not in time_price.columns:
+        raise ValueError("Input DataFrame missing required columns.")
 
-    # logging.info(f"boom_at: {boom[0]}, bust_at: {bust[0]}")
+    boom_threshold = time_price["price"][0] * (1 + boom_change)
+    bust_threshold = time_price["price"][0] * (1 - bust_change)
 
-    if boom:
+    boom = np.where(time_price["price"] > boom_threshold)[0]
+    bust = np.where(time_price["price"] < bust_threshold)[0]
+
+    if len(boom) > 0:
         boom_end = boom[0]
-        if bust and bust[0] < boom_end:
-            # bust before boom
-            bust_end = bust[0] - 1
-            while time_price["price"][bust_end + 1] < time_price["price"][bust_end]:
-                bust_end += 1
-                if bust_end + 1 >= len(time_price["price"]):
-                    break
-            cycle = "bust", bust_end
+        if len(bust) > 0 and bust[0] < boom_end:
+            cycle_end = bust[0] - 1
+            while (
+                cycle_end + 1 < len(time_price["price"])
+                and time_price["price"][cycle_end + 1] < time_price["price"][cycle_end]
+            ):
+                cycle_end += 1
+            cycle = {"main_trend": "bust", "end": time_price["time"][cycle_end]}
         else:
-            # no bust, def just boom, find the next peak before price goes down
-            # calculate rolling difference of price after i
-            # find the first index that is positive
-            boom_end = boom_end - 1
-            while time_price["price"][boom_end + 1] > time_price["price"][boom_end]:
-                boom_end += 1
-                if boom_end + 1 >= len(time_price["price"]):
-                    break
-            cycle = "boom", boom_end
-    elif bust:
-        # no boom, just bust
-        bust_end = bust[0] - 1
-        while time_price["price"][bust_end + 1] < time_price["price"][bust_end]:
-            bust_end += 1
-            if bust_end + 1 >= len(time_price["price"]):
-                break
-        cycle = "bust", bust_end
+            cycle_end = boom_end - 1
+            while (
+                cycle_end + 1 < len(time_price["price"])
+                and time_price["price"][cycle_end + 1] > time_price["price"][cycle_end]
+            ):
+                cycle_end += 1
+            cycle = {"main_trend": "boom", "end": time_price["time"][cycle_end]}
+    elif len(bust) > 0:
+        cycle_end = bust[0] - 1
+        while (
+            cycle_end + 1 < len(time_price["price"])
+            and time_price["price"][cycle_end + 1] < time_price["price"][cycle_end]
+        ):
+            cycle_end += 1
+        cycle = {"main_trend": "bust", "end": time_price["time"][cycle_end]}
     else:
-        # no boom, no bust
-        cycle = "none", len(time_price["time"]) - 1
+        cycle = {"main_trend": "none", "end": time_price["time"].iloc[-1]}
 
-    cycle_dict = {"main_trend": cycle[0], "end": time_price["time"][cycle[1]]}
+    cycle["start"] = time_price["time"].iloc[0]
+    if cycle["main_trend"] == "boom":
+        trough_index = np.argmin(time_price["price"].iloc[: cycle_end + 1])
+        cycle["pre_trend_end"] = time_price["time"].iloc[trough_index]
+    elif cycle["main_trend"] == "bust":
+        peak_index = np.argmax(time_price["price"].iloc[: cycle_end + 1])
+        cycle["pre_trend_end"] = time_price["time"].iloc[peak_index]
 
-    # find the price peak within the cycle
-    price_peak = max(time_price["price"][: cycle[1] + 1])
-    price_trough = min(time_price["price"][: cycle[1] + 1])
-
-    if cycle[0] == "boom":
-        # find the first index that is equal to price trough
-        start = time_price["time"][time_price["price"] == price_trough].index[0]
-        # print(start)
-        if start > 0:
-            cycle_dict["pre_trend_end"] = time_price["time"][start]
-    elif cycle[0] == "bust":
-        # find the first index that is equal to price peak
-        start = time_price["time"][time_price["price"] == price_peak].index[0]
-        if start > 0:
-            cycle_dict["pre_trend_end"] = time_price["time"][start]
-
-    return cycle_dict
+    return cycle
 
 
 def boom_bust_periods(

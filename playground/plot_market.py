@@ -2,7 +2,7 @@
 plot market with boom bust cycles
 """
 
-from environ.process.data.sp import sp_df
+from environ.process.spindex.sp import sp_df
 from environ.utils.computations import boom_bust
 import matplotlib.pyplot as plt
 import matplotlib.dates as md
