@@ -40,7 +40,7 @@ def boom_bust_one_period(
     if len(boom) == len(bust) == 0:
         return cycle
 
-    if len(boom) == 0 or (len(boom) > 0 and len(bust) > 0 and bust[0] < boom[0]):
+    if len(boom) == 0 or (len(bust) > 0 and bust[0] < boom[0]):
         cycle["main_trend"] = "bust"
         cycle_end = bust[0] - 1
         while (
