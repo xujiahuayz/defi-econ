@@ -439,6 +439,7 @@ def generate_sum(reg_panel: pd.DataFrame, file_name: str, lag: bool) -> pd.DataF
         "${\it AvgEigenCent}$",
         "${\it BetwCent}^C$",
         "${\it BetwCent}^V$",
+        "${\it VShare}$",
         "${\it CorrSP}$",
         "${\it \sigma}^{USD}$",
         "${\it StableShare}$",
