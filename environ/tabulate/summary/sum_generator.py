@@ -49,8 +49,9 @@ NAMING_DIC_PROPERTIES_OF_DOMINANCE = {
     "corr_sp": "${\it CorrSP}$",
     "corr_eth": "${\it CorrETH}$",
     "log_return": "${R}^{\it USD}$",
-    "mcap": "${\it MCap}^{USD}$",
+    "mcap": "${\it \ln MCap}^{USD}$",
     "Nonstable": "${\i Nonstable}$",
+    "Stable": "${\i Stable}$",
     "IsWETH": "${\i IsWETH}$",
     "Gas_fee": "${\t GasPrice}$",
     "dollar_exchange_rate": "${\it ExchangeRate}^{USD}$",
@@ -61,6 +62,7 @@ NAMING_DIC_PROPERTIES_OF_DOMINANCE = {
     "stableshare": "${\it StableShare}$",
     "boom": "${\t DeFiboom}$",
     "bust": "${\t DeFibust}$",
+    "stablecoin_deviation": "${\it StableDepeg}$",
     # Drop
     "corr_sentiment": "${\it CorrSent}$",
 }
@@ -71,6 +73,7 @@ NAMING_DIC_HERFINDAHL = {
     "herfindahl_outflow_centrality": "${\t HHIEigenCent}^{Out}$",
     "herfindahl_betweenness_centrality_count": "${\t HHIBetwCent}^C$",
     "herfindahl_betweenness_centrality_volume": "${\t HHIBetwCent}^V$",
+    "herfindahl_tvl": "${\t HHITVL}$",
     "total_volumes": "${\t TotalVolume}$",
     "S&P": "${\t R}^{USD}_{SP}$",
     "S&P_volatility": "${\t \sigma}^{USD}_{SP}$",
@@ -80,57 +83,75 @@ NAMING_DIC_HERFINDAHL = {
     "bust": "${\t DeFibust}$",
 }
 
-# Initialize constants
-NAMING_DIC_PROPERTIES_OF_DOMINANCE_LAG = {
-    # Dominance
-    "${\it VShare}$": "${\it-1 VShare}$",
-    "${\it VShare}^{\it In}$": "${\it-1 VShare}^{\it-1 In}$",
-    "${\it VShare}^{\it Out}$": "${\it-1 VShare}^{\it-1 Out}$",
-    # Eigenvector
-    "${\it EigenCent}^{In}$": "${\it-1 EigenCent}^{In}$",
-    "${\it EigenCent}^{Out}$": "${\it-1 EigenCent}^{Out}$",
-    # Betweenness
-    "${\it BetwCent}^C$": "${\it-1 BetwCent}^C$",
-    "${\it BetwCent}^V$": "${\it-1 BetwCent}^V$",
-    # Store
-    "${\it BorrowShare}$": "${\it-1 BorrowShare}$",
-    "${\it SupplyShare}$": "${\it-1 SupplyShare}$",
-    "${\it BorrowAPY}^{USD}$": "${\it-1 BorrowAPY}^{USD}$",
-    "${\it SupplyAPY}^{USD}$": "${\it-1 SupplyAPY}^{USD}$",
-    "${\it Beta}$": "${\it-1 Beta}$",
-    "${\it \sigma}^{USD}$": "${\it-1 \sigma}^{USD}$",
-    "${\it \mu}^{USD}$": "${\it-1 \mu}^{USD}$",
-    # Other
-    "${\it CorrGas}$": "${\it-1 CorrGas}$",
-    "${\it CorrSP}$": "${\it-1 CorrSP}$",
-    "${\it CorrETH}$": "${\it-1 CorrETH}$",
-    "${R}^{\it USD}$": "${R}^{\it-1 USD}$",
-    "${\it MCap}^{USD}$": "${\it-1 MCap}^{USD}$",
-    "${\i Nonstable}$": "${\i Nonstable}$",
-    "${\i IsWETH}$": "${\i IsWETH}$",
-    "${\t GasPrice}$": "${\t-1 GasPrice}$",
-    "${\it ExchangeRate}^{USD}$": "${\it-1 ExchangeRate}^{USD}$",
-    "${\it LiquidityShare}$": "${\it-1 LiquidityShare}$",
-    "${\it exceedance}^{USD}$": "${\it-1 exceedance}^{USD}$",
-    "${\t \sigma}_{Gas}$": "${\t-1 \sigma}_{Gas}$",
-    "avg_eigenvector_centrality": "${\it-1 AvgEigenCent}$",
-    "stableshare": "${\it-1 StableShare}$",
-    # Drop
-    "${\it CorrSent}$": "${\it-1 CorrSent}$",
-}
+# # Initialize constants
+# NAMING_DIC_PROPERTIES_OF_DOMINANCE_LAG = {
+#     # Dominance
+#     "${\it VShare}$": "${\it-1 VShare}$",
+#     "${\it VShare}^{\it In}$": "${\it-1 VShare}^{\it-1 In}$",
+#     "${\it VShare}^{\it Out}$": "${\it-1 VShare}^{\it-1 Out}$",
+#     # Eigenvector
+#     "${\it EigenCent}^{In}$": "${\it-1 EigenCent}^{In}$",
+#     "${\it EigenCent}^{Out}$": "${\it-1 EigenCent}^{Out}$",
+#     # Betweenness
+#     "${\it BetwCent}^C$": "${\it-1 BetwCent}^C$",
+#     "${\it BetwCent}^V$": "${\it-1 BetwCent}^V$",
+#     # Store
+#     "${\it BorrowShare}$": "${\it-1 BorrowShare}$",
+#     "${\it SupplyShare}$": "${\it-1 SupplyShare}$",
+#     "${\it BorrowAPY}^{USD}$": "${\it-1 BorrowAPY}^{USD}$",
+#     "${\it SupplyAPY}^{USD}$": "${\it-1 SupplyAPY}^{USD}$",
+#     "${\it Beta}$": "${\it-1 Beta}$",
+#     "${\it \sigma}^{USD}$": "${\it-1 \sigma}^{USD}$",
+#     "${\it \mu}^{USD}$": "${\it-1 \mu}^{USD}$",
+#     # Other
+#     "${\it CorrGas}$": "${\it-1 CorrGas}$",
+#     "${\it CorrSP}$": "${\it-1 CorrSP}$",
+#     "${\it CorrETH}$": "${\it-1 CorrETH}$",
+#     "${R}^{\it USD}$": "${R}^{\it-1 USD}$",
+#     "${\it MCap}^{USD}$": "${\it-1 MCap}^{USD}$",
+#     "${\i Nonstable}$": "${\i Nonstable}$",
+#     "${\i IsWETH}$": "${\i IsWETH}$",
+#     "${\t GasPrice}$": "${\t-1 GasPrice}$",
+#     "${\it ExchangeRate}^{USD}$": "${\it-1 ExchangeRate}^{USD}$",
+#     "${\it LiquidityShare}$": "${\it-1 LiquidityShare}$",
+#     "${\it exceedance}^{USD}$": "${\it-1 exceedance}^{USD}$",
+#     "${\t \sigma}_{Gas}$": "${\t-1 \sigma}_{Gas}$",
+#     "avg_eigenvector_centrality": "${\it-1 AvgEigenCent}$",
+#     "stableshare": "${\it-1 StableShare}$",
+#     # Drop
+#     "${\it CorrSent}$": "${\it-1 CorrSent}$",
+# }
 
-NAMING_DIC_HERFINDAHL_LAG = {
-    "${\t HHIVolume}$": "${\t-1 HHIVolume}$",
-    "${\t HHIEigenCent}^{In}$": "${\t-1 HHIEigenCent}^{In}$",
-    "${\t HHIEigenCent}^{Out}$": "${\t-1 HHIEigenCent}^{Out}$",
-    "${\t HHIBetwCent}^C$": "${\t-1 HHIBetwCent}^C$",
-    "${\t HHIBetwCent}^V$": "${\t-1 HHIBetwCent}^V$",
-    "${\t TotalVolume}$": "${\t-1 TotalVolume}$",
-    "${\t R}^{USD}_{SP}$": "${\t-1 R}^{USD}_{SP}$",
-    "${\t \sigma}^{USD}_{SP}$": "${\t-1 \sigma}^{USD}_{SP}$",
-    "${\t GasPrice}$": "${\t-1 GasPrice}$",
-    "${\t \sigma}_{Gas}$": "${\t-1 \sigma}_{Gas}$",
-}
+# NAMING_DIC_HERFINDAHL_LAG = {
+#     "${\t HHIVolume}$": "${\t-1 HHIVolume}$",
+#     "${\t HHIEigenCent}^{In}$": "${\t-1 HHIEigenCent}^{In}$",
+#     "${\t HHIEigenCent}^{Out}$": "${\t-1 HHIEigenCent}^{Out}$",
+#     "${\t HHIBetwCent}^C$": "${\t-1 HHIBetwCent}^C$",
+#     "${\t HHIBetwCent}^V$": "${\t-1 HHIBetwCent}^V$",
+#     "${\t TotalVolume}$": "${\t-1 TotalVolume}$",
+#     "${\t R}^{USD}_{SP}$": "${\t-1 R}^{USD}_{SP}$",
+#     "${\t \sigma}^{USD}_{SP}$": "${\t-1 \sigma}^{USD}_{SP}$",
+#     "${\t GasPrice}$": "${\t-1 GasPrice}$",
+#     "${\t \sigma}_{Gas}$": "${\t-1 \sigma}_{Gas}$",
+# }
+
+
+def _missing_value_filler(reg_panel: pd.DataFrame) -> None:
+    """
+    Function to filter the missing value
+    """
+
+    # fill the missing value with 0 for the column "stableshare"
+    reg_panel["stableshare"] = reg_panel["stableshare"].fillna(0)
+
+    # fill the missing value with 0 of the column "Supply_share"
+    reg_panel["Supply_share"] = reg_panel["Supply_share"].fillna(0)
+
+    # fill the missing value with 0 of the column "${\i Stable}$"
+    reg_panel["Stable"] = reg_panel["Stable"].fillna(0)
+
+    # fill the missing value with 0 of the column "${\it StableDepeg}$"
+    reg_panel["stablecoin_deviation"] = reg_panel["stablecoin_deviation"].fillna(0)
 
 
 def generate_sum_herfindahl(
@@ -183,7 +204,7 @@ def generate_sum_herfindahl(
                 reg_panel[f"{col_name}_lag"] = reg_panel[col_name].shift(1)
 
     # create the correlation matrix and set the decimal places to 2 and keep the digits
-    corr = reg_panel.corr().round(2)
+    corr = reg_panel.corr().round(4)
 
     # plot the correlation matrix
     plt.figure(figsize=(20, 20))
@@ -226,6 +247,9 @@ def generate_sum(reg_panel: pd.DataFrame, file_name: str, lag: bool) -> pd.DataF
     Generate the summary statistics.
     """
 
+    # fill the missing value
+    _missing_value_filler(reg_panel)
+
     # sort the values by Token and Date
     reg_panel = reg_panel.sort_values(by=["Token", "Date"])
 
@@ -244,6 +268,7 @@ def generate_sum(reg_panel: pd.DataFrame, file_name: str, lag: bool) -> pd.DataF
         "${\it BetwCent}^V$",
         "${\it StableShare}$",
         "${\it \sigma}^{USD}$",
+        "${\it StableDepeg}$",
     ]
 
     # only keep value share, eigen centrality and betweenness centrality and liquidity share
@@ -299,10 +324,10 @@ def generate_sum(reg_panel: pd.DataFrame, file_name: str, lag: bool) -> pd.DataF
                 )
 
             # create the correlation matrix and set the decimal places to 2 and keep the digits
-            corr = summary_panel.corr().round(2)
+            corr = summary_panel.corr().round(4)
 
             # create the covariance matrix and set the decimal places to 2 and keep the digits
-            cov = summary_panel.cov().round(2)
+            cov = summary_panel.cov().round(4)
 
             # # drop the lagged columns
             # corr = corr.drop(
@@ -407,6 +432,26 @@ def generate_sum(reg_panel: pd.DataFrame, file_name: str, lag: bool) -> pd.DataF
                     rf"{FIGURE_PATH}/covariance_matrix_{file_name}_{lag_num}_lag_{status}.pdf"
                 )
                 plt.clf()
+
+    # Generage the summary statistics of the panel dataset
+    # list of columns
+    col_list = [
+        "${\it AvgEigenCent}$",
+        "${\it BetwCent}^C$",
+        "${\it BetwCent}^V$",
+        "${\it CorrSP}$",
+        "${\it \sigma}^{USD}$",
+        "${\it StableShare}$",
+        "${\i Stable}$",
+        "${\it StableDepeg}$",
+        "${\it SupplyShare}$",
+        "${\it CorrGas}$",
+        "${\it CorrETH}$",
+        "${\it \ln MCap}^{USD}$",
+    ]
+
+    # only keep value share, eigen centrality and betweenness centrality and liquidity share
+    summary_panel = reg_panel[col_list].dropna()
 
     # calculate the summary statistics of the panel dataset
     summary = summary_panel.describe()

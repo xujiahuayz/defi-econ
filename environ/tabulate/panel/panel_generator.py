@@ -644,9 +644,9 @@ def _merge_nonstable(reg_panel: pd.DataFrame) -> pd.DataFrame:
     token_lib_v2["Nonstable"] = 1 - token_lib_v2["Stable"]
     token_lib_v3["Nonstable"] = 1 - token_lib_v3["Stable"]
 
-    # drop the Stable column
-    token_lib_v2 = token_lib_v2.drop(columns=["Stable"])
-    token_lib_v3 = token_lib_v3.drop(columns=["Stable"])
+    # # drop the Stable column
+    # token_lib_v2 = token_lib_v2.drop(columns=["Stable"])
+    # token_lib_v3 = token_lib_v3.drop(columns=["Stable"])
 
     # merge the token library for v2 and v3
     token_lib = pd.concat([token_lib_v2, token_lib_v3], ignore_index=True)
@@ -920,9 +920,7 @@ def generate_panel() -> pd.DataFrame:
     reg_panel = _merge_avg_eigenvec(reg_panel)
     reg_panel = _merge_boom_bust(reg_panel)
 
-    return reg_panel.loc[
-        (reg_panel["Date"] >= "2020-06-01") & (reg_panel["Date"] < "2023-02-01")
-    ]
+    return reg_panel
 
 
 if __name__ == "__main__":

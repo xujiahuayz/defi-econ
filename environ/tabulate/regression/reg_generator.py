@@ -11,6 +11,7 @@ Desc    : Generate the regression.
 
 import warnings
 import pandas as pd
+import numpy as np
 import statsmodels.api as sm
 from matplotlib import pyplot as plt
 from stargazer.stargazer import Stargazer
@@ -85,128 +86,159 @@ def generate_regression_specification(reg_panel: pd.DataFrame, lag: bool) -> Non
     # sort the panel by "Token", "Date"
     reg_panel = reg_panel.sort_values(by=["Token", "Date"], ascending=True)
 
-    # create a list to store the results
-    stargazer_list = []
-    stargazer_col_list = []
+    # loop through the status
+    for status in ["boom", "bust", "full"]:
 
-    # loop through the dependent variables as eigenvector centrality
-    for dependent_variable in [
-        "${\it EigenCent}^{In}$",
-        "${\it EigenCent}^{Out}$",
-        "${\it BetwCent}^C$",
-        "${\it BetwCent}^V$",
-        "${\it LiquidityShare}$",
-    ]:
-        for stability in [
-            "${\it CorrSP}$",
-            "${\it \sigma}^{USD}$",
-            # "${\it exceedance}^{USD}$",
+        # define the subsample
+        reg_subsample = reg_panel.copy()
+
+        # if the status is boom, set all bust data to nan
+        # if the status is bust, set all boom data to nan
+        if status == "boom":
+            reg_subsample.loc[reg_subsample["${\t DeFibust}$"] == 1, :] = np.nan
+        elif status == "bust":
+            reg_subsample.loc[reg_subsample["${\t DeFiboom}$"] == 1, :] = np.nan
+        else:
+            pass
+
+        # create a list to store the results
+        stargazer_list = []
+        stargazer_col_list = []
+
+        # loop through the dependent variables as eigenvector centrality
+        for dependent_variable in [
+            "${\it AvgEigenCent}$",
+            "${\it BetwCent}^C$",
+            "${\it BetwCent}^V$",
         ]:
-            for financial_service in [
-                "${\it BorrowShare}$",
-                "${\it SupplyShare}$",
-                "${\it BorrowAPY}^{USD}$",
-                "${\it SupplyAPY}^{USD}$",
+            for stability in [
+                "${\it StableShare}$",
+                "${\i Stable}$",
+                "${\it StableDepeg}$",
             ]:
-                for heding in [
-                    "${\it CorrGas}$",
-                    "${\it CorrETH}$",
-                    "${\t \sigma}_{Gas}$",
+                for financial_service in [
+                    "${\it SupplyShare}$",
                 ]:
-                    # record the dependet variables
-                    stargazer_col_list.append(dependent_variable)
-                    independent_variables = [
-                        stability,
-                        financial_service,
-                        heding,
-                    ]
-
-                    # isolate the data for the regression and drop the missing values
-                    processed_panel = (
-                        reg_panel[
-                            [
-                                "Date",
-                                "Token",
-                                dependent_variable,
-                                stability,
-                                financial_service,
-                                heding,
-                            ]
+                    for heding in [
+                        "${\it CorrGas}$",
+                    ]:
+                        # record the dependet variables
+                        stargazer_col_list.append(dependent_variable)
+                        independent_variables = [
+                            "${\it \sigma}^{USD}$",
+                            "${\it CorrSP}$",
+                            stability,
+                            financial_service,
+                            heding,
+                            "${\it CorrETH}$",
+                            "${\it \ln MCap}^{USD}$",
                         ]
-                        .dropna()
-                        .copy()
-                    )
 
-                    # create the dummy variables
-                    dummy_vars = pd.get_dummies(
-                        processed_panel["Token"], drop_first=True
-                    )
+                        if stability == "${\it StableDepeg}$":
+                            independent_variables = independent_variables + [
+                                "${\i Stable}$"
+                            ]
 
-                    # add the dummy variables to the data
-                    processed_panel = pd.concat([processed_panel, dummy_vars], axis=1)
+                        reg_list = [
+                            "Date",
+                            "Token",
+                            dependent_variable,
+                            "${\it \sigma}^{USD}$",
+                            "${\it CorrSP}$",
+                            stability,
+                            financial_service,
+                            heding,
+                            "${\it CorrETH}$",
+                            "${\it \ln MCap}^{USD}$",
+                        ]
 
-                    # set the independent variables equal to the
-                    # otal panel minus the dependent variable
-                    independent_variables = [
-                        var
-                        for var in processed_panel.columns
-                        if var != dependent_variable
-                    ]
+                        if stability == "${\it StableDepeg}$":
+                            reg_list = reg_list + ["${\i Stable}$"]
 
-                    # independent variables
-                    independent_variables = processed_panel[
-                        independent_variables
-                    ].copy()
+                        # isolate the data for the regression and drop the missing values
+                        processed_panel = reg_subsample[reg_list].dropna().copy()
 
-                    # lag the independent variables
-                    if lag:
-                        # one lag of in the group of "Token" and "Date"
-                        independent_variables = independent_variables.groupby(
-                            ["Token"]
-                        ).shift(1)
-                        # rename the columns
-                        independent_variables = independent_variables.rename(
-                            columns=NAMING_DIC_HERFINDAHL_LAG
-                        )
-                        # drop the column of "Date"
-                        independent_variables = independent_variables.drop(
-                            columns=["Date"]
-                        )
-                    else:
-                        # drop the column of "Date" and "Token"
-                        independent_variables = independent_variables.drop(
-                            ["Date", "Token"], axis=1
+                        if stability == "${\it StableDepeg}$":
+                            independent_variables = independent_variables + [
+                                "${\i Stable}$"
+                            ]
+
+                        # create the dummy variables
+                        dummy_vars = pd.get_dummies(
+                            processed_panel["Token"], drop_first=True
                         )
 
-                    # run the regression using
-                    model = sm.OLS(
-                        processed_panel[dependent_variable],
-                        independent_variables,
-                        missing="drop",
-                    ).fit()
+                        # add the dummy variables to the data
+                        processed_panel = pd.concat(
+                            [processed_panel, dummy_vars], axis=1
+                        )
 
-                    # store the results
-                    stargazer_list.append(model)
+                        # set the independent variables equal to the
+                        # otal panel minus the dependent variable
+                        independent_variables = [
+                            var
+                            for var in processed_panel.columns
+                            if var != dependent_variable
+                        ]
 
-    # use stargazer to create the regression table
-    stargazer = Stargazer(stargazer_list)
+                        # independent variables
+                        independent_variables = processed_panel[
+                            independent_variables
+                        ].copy()
 
-    # set the title of the table
-    stargazer.title("Regression of Specification")
+                        # lag the independent variables
+                        if lag:
+                            # one lag of in the group of "Token" and "Date"
+                            independent_variables = independent_variables.groupby(
+                                ["Token"]
+                            ).shift(1)
+                            # rename the columns
+                            independent_variables = independent_variables.rename(
+                                columns=NAMING_DIC_HERFINDAHL_LAG
+                            )
+                            # drop the column of "Date"
+                            independent_variables = independent_variables.drop(
+                                columns=["Date"]
+                            )
+                        else:
+                            # drop the column of "Date" and "Token"
+                            independent_variables = independent_variables.drop(
+                                ["Date", "Token"], axis=1
+                            )
 
-    # customize the column name
-    stargazer.custom_columns(
-        stargazer_col_list,
-        [1 for _ in stargazer_col_list],
-    )
+                        # run the regression using
+                        model = sm.OLS(
+                            processed_panel[dependent_variable],
+                            independent_variables,
+                            missing="drop",
+                        ).fit()
 
-    # save the table to a latex file
-    with open(rf"{TABLE_PATH}/regression_specification.tex", "w") as to_file:
-        to_file.write(stargazer.render_latex())
+                        # store the results
+                        stargazer_list.append(model)
 
-    # save the table to a html file
-    with open(rf"{TABLE_PATH}/regression_specification.html", "w") as to_file:
-        to_file.write(stargazer.render_html())
+        # use stargazer to create the regression table
+        stargazer = Stargazer(stargazer_list)
+
+        # set the title of the table
+        stargazer.title("Regression of Specification")
+
+        # customize the column name
+        stargazer.custom_columns(
+            stargazer_col_list,
+            [1 for _ in stargazer_col_list],
+        )
+
+        # save the table to a latex file
+        with open(
+            rf"{TABLE_PATH}/regression_specification_{status}.tex", "w"
+        ) as to_file:
+            to_file.write(stargazer.render_latex())
+
+        # save the table to a html file
+        with open(
+            rf"{TABLE_PATH}/regression_specification_{status}.html", "w"
+        ) as to_file:
+            to_file.write(stargazer.render_html())
 
 
 def generate_regression_herfindahl(
@@ -218,6 +250,8 @@ def generate_regression_herfindahl(
     # sort the series by "Date"
     herfindahl = herfindahl.sort_values(by=["Date"], ascending=True)
 
+    reg_herfindahl = herfindahl.copy()
+
     # create a list to store the results
     stargazer_list = []
     stargazer_col_list = []
@@ -228,24 +262,19 @@ def generate_regression_herfindahl(
     # loop through the dependent variables as eigenvector centrality
     for dependent_variable in [
         "${\t HHIVolume}$",
-        # "${\t HHIEigenCent}^{In}$",
-        # "${\t HHIEigenCent}^{Out}$",
         "${\t HHIBetwCent}^C$",
         "${\t HHIBetwCent}^V$",
-        "herfindahl_tvl",
+        "${\t HHITVL}$",
     ]:
 
         # record the dependet variables
         stargazer_col_list.append(dependent_variable)
-        independent_variables = herfindahl[
+        independent_variables = reg_herfindahl[
             [
                 "${\t TotalVolume}$",
-                "${\t R}^{USD}_{SP}$",
                 "${\t \sigma}^{USD}_{SP}$",
                 "${\t GasPrice}$",
                 "${\t \sigma}_{Gas}$",
-                # "${\t DeFiboom}$",
-                # "${\t DeFibust}$",
             ]
         ].copy()
 
@@ -260,7 +289,7 @@ def generate_regression_herfindahl(
 
         # run the regression
         model = sm.OLS(
-            herfindahl[dependent_variable],
+            reg_herfindahl[dependent_variable],
             sm.add_constant(independent_variables),
             missing="drop",
         ).fit()
@@ -268,7 +297,7 @@ def generate_regression_herfindahl(
         if standardized:
             # append the dependent variable to the left of  independent variables
             full_panel = pd.concat(
-                [herfindahl[dependent_variable], independent_variables], axis=1
+                [reg_herfindahl[dependent_variable], independent_variables], axis=1
             )
 
             # drop the missing values
@@ -301,94 +330,92 @@ def generate_regression_herfindahl(
         # store the results
         stargazer_list.append(model)
 
-    # loop through the dependent variables as eigenvector centrality
-    for dependent_variable in [
-        "${\t HHIVolume}$",
-        # "${\t HHIEigenCent}^{In}$",
-        # "${\t HHIEigenCent}^{Out}$",
-        "${\t HHIBetwCent}^C$",
-        "${\t HHIBetwCent}^V$",
-        "herfindahl_tvl",
-    ]:
+    # # loop through the dependent variables as eigenvector centrality
+    # for dependent_variable in [
+    #     "${\t HHIVolume}$",
+    #     "${\t HHIBetwCent}^C$",
+    #     "${\t HHIBetwCent}^V$",
+    #     "${\t HHITVL}$",
+    # ]:
 
-        # record the dependet variables
-        stargazer_col_list.append(dependent_variable)
-        independent_variables = herfindahl[
-            [
-                "${\t TotalVolume}$",
-                "${\t R}^{USD}_{SP}$",
-                "${\t \sigma}^{USD}_{SP}$",
-                "${\t GasPrice}$",
-                "${\t \sigma}_{Gas}$",
-                "${\t DeFiboom}$",
-                "${\t DeFibust}$",
-            ]
-        ].copy()
+    #     # record the dependet variables
+    #     stargazer_col_list.append(dependent_variable)
+    #     independent_variables = reg_herfindahl[
+    #         [
+    #             "${\t TotalVolume}$",
+    #             "${\t R}^{USD}_{SP}$",
+    #             "${\t \sigma}^{USD}_{SP}$",
+    #             "${\t GasPrice}$",
+    #             "${\t \sigma}_{Gas}$",
+    #             # "${\t DeFiboom}$",
+    #             # "${\t DeFibust}$",
+    #         ]
+    #     ].copy()
 
-        if lag:
-            # one lag of the independent variable
-            independent_variables = independent_variables.shift(1)
+    #     if lag:
+    #         # one lag of the independent variable
+    #         independent_variables = independent_variables.shift(1)
 
-            # rename the columns using NAMING_DIC_HERFINDAHL_LAG
-            independent_variables = independent_variables.rename(
-                columns=NAMING_DIC_HERFINDAHL_LAG
-            )
+    #         # rename the columns using NAMING_DIC_HERFINDAHL_LAG
+    #         independent_variables = independent_variables.rename(
+    #             columns=NAMING_DIC_HERFINDAHL_LAG
+    #         )
 
-        # run the regression
-        model = sm.OLS(
-            herfindahl[dependent_variable],
-            sm.add_constant(independent_variables),
-            missing="drop",
-        ).fit()
+    #     # run the regression
+    #     model = sm.OLS(
+    #         reg_herfindahl[dependent_variable],
+    #         sm.add_constant(independent_variables),
+    #         missing="drop",
+    #     ).fit()
 
-        if standardized:
-            # append the dependent variable to the left of  independent variables
-            full_panel = pd.concat(
-                [herfindahl[dependent_variable], independent_variables], axis=1
-            )
+    #     if standardized:
+    #         # append the dependent variable to the left of  independent variables
+    #         full_panel = pd.concat(
+    #             [reg_herfindahl[dependent_variable], independent_variables], axis=1
+    #         )
 
-            # drop the missing values
-            full_panel = full_panel.dropna()
+    #         # drop the missing values
+    #         full_panel = full_panel.dropna()
 
-            # calculate the std of the independent variables
-            std_y = full_panel[dependent_variable].std()
+    #         # calculate the std of the independent variables
+    #         std_y = full_panel[dependent_variable].std()
 
-            # iterate through sm.add_constant(independent_variables)
-            for _, var in enumerate(sm.add_constant(independent_variables)):
-                # calculate the std of the independent variables
-                std_x = sm.add_constant(independent_variables)[var].std()
+    #         # iterate through sm.add_constant(independent_variables)
+    #         for _, var in enumerate(sm.add_constant(independent_variables)):
+    #             # calculate the std of the independent variables
+    #             std_x = sm.add_constant(independent_variables)[var].std()
 
-                # calculate the standardized coefficient
-                standardized_coefficient = model.params[var] * std_x / std_y
+    #             # calculate the standardized coefficient
+    #             standardized_coefficient = model.params[var] * std_x / std_y
 
-                # append the standardized coefficient to the dataframe
-                standardized_coefficient_df = standardized_coefficient_df.append(
-                    {
-                        "Dependent Variable": dependent_variable,
-                        "Independent Variable": var,
-                        "Standardized Coefficient": standardized_coefficient,
-                    },
-                    ignore_index=True,
-                )
+    #             # append the standardized coefficient to the dataframe
+    #             standardized_coefficient_df = standardized_coefficient_df.append(
+    #                 {
+    #                     "Dependent Variable": dependent_variable,
+    #                     "Independent Variable": var,
+    #                     "Standardized Coefficient": standardized_coefficient,
+    #                 },
+    #                 ignore_index=True,
+    #             )
 
-                # # update the coefficient of the independent variables
-                # model.params[var] = standardized_coefficient
+    #             # # update the coefficient of the independent variables
+    #             # model.params[var] = standardized_coefficient
 
-        # store the results
-        stargazer_list.append(model)
+    #     # store the results
+    #     stargazer_list.append(model)
 
-    # save the standardized coefficient to a csv file
-    if standardized:
-        standardized_coefficient_df.to_csv(
-            rf"{TABLE_PATH}/standardized_coefficient_herfindahl.csv",
-            index=False,
-        )
+    # # save the standardized coefficient to a csv file
+    # if standardized:
+    #     standardized_coefficient_df.to_csv(
+    #         rf"{TABLE_PATH}/standardized_coefficient_herfindahl.csv",
+    #         index=False,
+    #     )
 
     # use stargazer to create the regression table
     stargazer = Stargazer(stargazer_list)
 
     # set the title of the table
-    stargazer.title("Regression of Herfindahl")
+    stargazer.title(f"Regression of Herfindahl")
 
     # customize the column name
     stargazer.custom_columns(
@@ -402,6 +429,127 @@ def generate_regression_herfindahl(
 
     # save the table to a html file
     with open(rf"{TABLE_PATH}/regression_herfindahl.html", "w") as to_file:
+        to_file.write(stargazer.render_html())
+
+
+def generate_regression_herfindahl_boom_bust(
+    herfindahl: pd.DataFrame, lag: bool, standardized: bool
+) -> None:
+    """
+    Generate the regression of herfindahl
+    """
+    # sort the series by "Date"
+    herfindahl = herfindahl.sort_values(by=["Date"], ascending=True)
+
+    reg_herfindahl = herfindahl.copy()
+
+    # create a list to store the results
+    stargazer_list = []
+    stargazer_col_list = []
+
+    # dataframe to store the standardized coefficients
+    standardized_coefficient_df = pd.DataFrame()
+
+    # list of the independent variables
+    list_of_independent_variables = [
+        "${\t TotalVolume}$",
+        "${\t \sigma}^{USD}_{SP}$",
+        "${\t GasPrice}$",
+        "${\t \sigma}_{Gas}$",
+    ]
+
+    # calculate the interaction term between "DeFiBoom"
+    # and variable in list_of_independent_variables
+    for var in list_of_independent_variables:
+        reg_herfindahl[f"{var} * DeFiBoom"] = (
+            reg_herfindahl[var] * reg_herfindahl["${\t DeFiboom}$"]
+        )
+
+    # loop through the dependent variables as eigenvector centrality
+    for dependent_variable in [
+        "${\t HHIVolume}$",
+        "${\t HHIBetwCent}^C$",
+        "${\t HHIBetwCent}^V$",
+        "${\t HHITVL}$",
+    ]:
+
+        # record the dependet variables
+        stargazer_col_list.append(dependent_variable)
+        independent_variables = reg_herfindahl[
+            [f"{var} * DeFiBoom" for var in list_of_independent_variables]
+            + ["${\t DeFiboom}$"]
+        ].copy()
+
+        if lag:
+            # one lag of the independent variable
+            independent_variables = independent_variables.shift(1)
+
+            # rename the columns using NAMING_DIC_HERFINDAHL_LAG
+            independent_variables = independent_variables.rename(
+                columns=NAMING_DIC_HERFINDAHL_LAG
+            )
+
+        # run the regression
+        model = sm.OLS(
+            reg_herfindahl[dependent_variable],
+            sm.add_constant(independent_variables),
+            missing="drop",
+        ).fit()
+
+        if standardized:
+            # append the dependent variable to the left of  independent variables
+            full_panel = pd.concat(
+                [reg_herfindahl[dependent_variable], independent_variables], axis=1
+            )
+
+            # drop the missing values
+            full_panel = full_panel.dropna()
+
+            # calculate the std of the independent variables
+            std_y = full_panel[dependent_variable].std()
+
+            # iterate through sm.add_constant(independent_variables)
+            for _, var in enumerate(sm.add_constant(independent_variables)):
+                # calculate the std of the independent variables
+                std_x = sm.add_constant(independent_variables)[var].std()
+
+                # calculate the standardized coefficient
+                standardized_coefficient = model.params[var] * std_x / std_y
+
+                # append the standardized coefficient to the dataframe
+                standardized_coefficient_df = standardized_coefficient_df.append(
+                    {
+                        "Dependent Variable": dependent_variable,
+                        "Independent Variable": var,
+                        "Standardized Coefficient": standardized_coefficient,
+                    },
+                    ignore_index=True,
+                )
+
+                # # update the coefficient of the independent variables
+                # model.params[var] = standardized_coefficient
+
+        # store the results
+        stargazer_list.append(model)
+
+    # use stargazer to create the regression table
+    stargazer = Stargazer(stargazer_list)
+
+    # set the title of the table
+    stargazer.title(f"Regression of Herfindahl")
+
+    # customize the column name
+    stargazer.custom_columns(
+        stargazer_col_list,
+        [1 for _ in stargazer_col_list],
+    )
+
+    # save the table to a latex file
+    with open(rf"{TABLE_PATH}/regression_herfindahl_boom_bust.tex", "w") as to_file:
+        to_file.write(stargazer.render_latex())
+
+    # save the table to a html file
+    with open(rf"{TABLE_PATH}/regression_herfindahl_boom_bust.html", "w") as to_file:
         to_file.write(stargazer.render_html())
 
 
@@ -423,11 +571,10 @@ def generate_unit_of_account(reg_panel: pd.DataFrame) -> None:
         stargazer_col_list.append(dependent_variable)
         # set the mcap, cov_gas, cov_eth, dollar_exchange_rate as independent variables
         independent_variables = [
-            # "${\it MCap}^{USD}$",
             "${\it CorrGas}$",
             "${\it CorrETH}$",
             "${\it ExchangeRate}^{USD}$",
-            "${\it MCap}^{USD}$",
+            "${\it \ln MCap}^{USD}$",
         ]
 
         # run the regression

@@ -17,6 +17,7 @@ from environ.tabulate.regression.reg_generator import (
     generate_reg_property_of_dominance,
     generate_unit_of_account,
     generate_regression_herfindahl,
+    generate_regression_herfindahl_boom_bust,
     generate_regression_specification,
     realized_holding_period,
 )
@@ -96,6 +97,12 @@ def tabulate_result() -> None:
     # Regression: herfindahl index
     print_info_log("Generating the regression of herfindahl index.", "process")
     generate_regression_herfindahl(reg_herfin, lag=True, standardized=True)
+
+    # Regression: herfindahl index (boom-bust)
+    print_info_log(
+        "Generating the regression of herfindahl index (boom-bust).", "process"
+    )
+    generate_regression_herfindahl_boom_bust(reg_herfin, lag=True, standardized=True)
 
     # Regression: specification
     print_info_log("Generating the regression of specification.", "process")

@@ -56,7 +56,7 @@ def _data_cleaning(token_data: pd.DataFrame) -> pd.DataFrame:
     """
 
     # correct the anomaly
-    token_data['time'] = token_data['time'].dt.round(freq='D')
+    token_data["time"] = token_data["time"].dt.round(freq="D")
 
     # sort the dataframe by the time
     token_data = token_data.sort_values(by=["Id", "time"], ascending=True)
@@ -121,7 +121,6 @@ def _data_cleaning(token_data: pd.DataFrame) -> pd.DataFrame:
 
     return token_data
 
-def 
 
 if __name__ == "__main__":
     print(_aggreage_token_data())
