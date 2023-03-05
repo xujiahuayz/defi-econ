@@ -34,6 +34,24 @@ def _market_cap(reg_panel: pd.DataFrame) -> pd.DataFrame:
     # sort the time series
     mcap = mcap.sort_values(by="Date", ascending=True)
 
+    # drop the WETH column
+    mcap = mcap.drop(columns=["WETH"])
+
+    # load in the ethereum.csv from data/data_global/coingecko/token_data
+    ethereum = pd.read_csv(rf"{GLOBAL_DATA_PATH}/coingecko/token_data/ethereum.csv")
+
+    # only keep the time and market_caps columns
+    ethereum = ethereum[["time", "market_caps"]]
+
+    # rename the columns
+    ethereum.columns = ["Date", "WETH"]
+
+    # convert date in "YYYY-MM-DD" to datetime
+    ethereum["Date"] = pd.to_datetime(ethereum["Date"], format="%Y-%m-%d")
+
+    # merge the ethereum dataframe with the mcap dataframe
+    mcap = pd.merge(mcap, ethereum, on="Date", how="left")
+
     # set the index to be the Date column
     mcap = mcap.set_index("Date")
 
@@ -97,10 +115,10 @@ def _dollar_exchange_rate(reg_panel: pd.DataFrame) -> pd.DataFrame:
     # rename the column "0" to "dollar"
     dollar = dollar.rename(columns={0: "dollar_exchange_rate"})
 
-    # take the log of dollar
-    dollar["dollar_exchange_rate"] = dollar["dollar_exchange_rate"].apply(
-        lambda x: np.log(x)
-    )
+    # # take the log of dollar
+    # dollar["dollar_exchange_rate"] = dollar["dollar_exchange_rate"].apply(
+    #     lambda x: np.log(x)
+    # )
 
     # remove inf and -inf
     dollar = dollar.replace([np.inf, -np.inf], np.nan)
@@ -110,6 +128,18 @@ def _dollar_exchange_rate(reg_panel: pd.DataFrame) -> pd.DataFrame:
 
     # merge the dollar into reg_panel
     reg_panel = pd.merge(reg_panel, dollar, how="outer", on=["Date", "Token"])
+
+    return reg_panel
+
+
+def _merge_stable_deviation(reg_panel: pd.DataFrame) -> pd.DataFrame:
+    """
+    Function to merge the stablecoin deviation.
+    """
+
+    reg_panel["stablecoin_deviation"] = (
+        reg_panel["Stable"] * (reg_panel["dollar_exchange_rate"] - 1) ** 2
+    )
 
     return reg_panel
 
@@ -124,4 +154,9 @@ def unit_of_acct(reg_panel: pd.DataFrame) -> pd.DataFrame:
     # merge the dollar exchange rate
     reg_panel = _dollar_exchange_rate(reg_panel)
 
-    return reg_panel
+    # merge the stablecoin deviation
+    reg_panel = _merge_stable_deviation(reg_panel)
+
+    return reg_panel.loc[
+        (reg_panel["Date"] >= "2020-06-01") & (reg_panel["Date"] < "2023-02-01")
+    ]

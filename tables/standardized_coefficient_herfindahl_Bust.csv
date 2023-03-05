@@ -1,0 +1,49 @@
+Dependent Variable,Independent Variable,Standardized Coefficient
+${	 HHIVolume}$,const,0.0
+${	 HHIVolume}$,${	-1 TotalVolume}$,-0.2140894475390149
+${	 HHIVolume}$,${	-1 R}^{USD}_{SP}$,0.02873376082548784
+${	 HHIVolume}$,${	-1 \sigma}^{USD}_{SP}$,-0.5758528968003149
+${	 HHIVolume}$,${	-1 GasPrice}$,-0.13950151805247876
+${	 HHIVolume}$,${	-1 \sigma}_{Gas}$,0.1710997482761204
+${	 HHIBetwCent}^C$,const,-0.0
+${	 HHIBetwCent}^C$,${	-1 TotalVolume}$,0.2558320083844855
+${	 HHIBetwCent}^C$,${	-1 R}^{USD}_{SP}$,0.11557470716044103
+${	 HHIBetwCent}^C$,${	-1 \sigma}^{USD}_{SP}$,0.5898835201671376
+${	 HHIBetwCent}^C$,${	-1 GasPrice}$,0.3260231152397125
+${	 HHIBetwCent}^C$,${	-1 \sigma}_{Gas}$,-0.20563724768648636
+${	 HHIBetwCent}^V$,const,-0.0
+${	 HHIBetwCent}^V$,${	-1 TotalVolume}$,0.3185620856766916
+${	 HHIBetwCent}^V$,${	-1 R}^{USD}_{SP}$,0.049238592860092356
+${	 HHIBetwCent}^V$,${	-1 \sigma}^{USD}_{SP}$,0.4154285700200574
+${	 HHIBetwCent}^V$,${	-1 GasPrice}$,0.3242702124051264
+${	 HHIBetwCent}^V$,${	-1 \sigma}_{Gas}$,0.06489839824663157
+herfindahl_tvl,const,0.0
+herfindahl_tvl,${	-1 TotalVolume}$,-0.1188420174465818
+herfindahl_tvl,${	-1 R}^{USD}_{SP}$,-0.13593430173814613
+herfindahl_tvl,${	-1 \sigma}^{USD}_{SP}$,-0.2894118519086812
+herfindahl_tvl,${	-1 GasPrice}$,-0.2683807790240548
+herfindahl_tvl,${	-1 \sigma}_{Gas}$,-0.0948840885548569
+${	 HHIVolume}$,const,0.0
+${	 HHIVolume}$,${	-1 TotalVolume}$,-0.2140894475390149
+${	 HHIVolume}$,${	-1 R}^{USD}_{SP}$,0.02873376082548784
+${	 HHIVolume}$,${	-1 \sigma}^{USD}_{SP}$,-0.5758528968003149
+${	 HHIVolume}$,${	-1 GasPrice}$,-0.13950151805247876
+${	 HHIVolume}$,${	-1 \sigma}_{Gas}$,0.1710997482761204
+${	 HHIBetwCent}^C$,const,-0.0
+${	 HHIBetwCent}^C$,${	-1 TotalVolume}$,0.2558320083844855
+${	 HHIBetwCent}^C$,${	-1 R}^{USD}_{SP}$,0.11557470716044103
+${	 HHIBetwCent}^C$,${	-1 \sigma}^{USD}_{SP}$,0.5898835201671376
+${	 HHIBetwCent}^C$,${	-1 GasPrice}$,0.3260231152397125
+${	 HHIBetwCent}^C$,${	-1 \sigma}_{Gas}$,-0.20563724768648636
+${	 HHIBetwCent}^V$,const,-0.0
+${	 HHIBetwCent}^V$,${	-1 TotalVolume}$,0.3185620856766916
+${	 HHIBetwCent}^V$,${	-1 R}^{USD}_{SP}$,0.049238592860092356
+${	 HHIBetwCent}^V$,${	-1 \sigma}^{USD}_{SP}$,0.4154285700200574
+${	 HHIBetwCent}^V$,${	-1 GasPrice}$,0.3242702124051264
+${	 HHIBetwCent}^V$,${	-1 \sigma}_{Gas}$,0.06489839824663157
+herfindahl_tvl,const,0.0
+herfindahl_tvl,${	-1 TotalVolume}$,-0.1188420174465818
+herfindahl_tvl,${	-1 R}^{USD}_{SP}$,-0.13593430173814613
+herfindahl_tvl,${	-1 \sigma}^{USD}_{SP}$,-0.2894118519086812
+herfindahl_tvl,${	-1 GasPrice}$,-0.2683807790240548
+herfindahl_tvl,${	-1 \sigma}_{Gas}$,-0.0948840885548569
