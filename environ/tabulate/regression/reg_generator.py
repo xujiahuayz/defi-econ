@@ -148,7 +148,6 @@ def generate_regression_specification(reg_panel: pd.DataFrame, lag: bool) -> Non
                             financial_service,
                             heding,
                             "${\it CorrETH}$",
-                            "${\t \sigma}_{Gas}$",
                             "${\it \ln MCap}^{USD}$",
                         ]
 
