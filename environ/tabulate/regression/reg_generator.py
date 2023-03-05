@@ -112,7 +112,6 @@ def generate_regression_specification(reg_panel: pd.DataFrame, lag: bool) -> Non
             "${\it BetwCent}^V$",
         ]:
             for stability in [
-                "${\it \sigma}^{USD}$",
                 "${\it StableShare}$",
                 "${\i Stable}$",
                 "${\it StableDepeg}$",
@@ -126,6 +125,7 @@ def generate_regression_specification(reg_panel: pd.DataFrame, lag: bool) -> Non
                         # record the dependet variables
                         stargazer_col_list.append(dependent_variable)
                         independent_variables = [
+                            "${\it \sigma}^{USD}$",
                             "${\it CorrSP}$",
                             stability,
                             financial_service,
@@ -143,6 +143,7 @@ def generate_regression_specification(reg_panel: pd.DataFrame, lag: bool) -> Non
                             "Date",
                             "Token",
                             dependent_variable,
+                            "${\it \sigma}^{USD}$",
                             "${\it CorrSP}$",
                             stability,
                             financial_service,
