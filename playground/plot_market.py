@@ -23,6 +23,6 @@ if __name__ == "__main__":
     plt.gca().xaxis.set_major_formatter(md.DateFormatter("%Y-%m-%d"))
     plt.gcf().autofmt_xdate()
 
-    plt.show()
     # save the plot to file in the figure folder in pdf format
     plt.savefig(path.join(FIGURE_PATH, "sp500.pdf"), format="pdf")
+    plt.show()
