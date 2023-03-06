@@ -21,6 +21,7 @@ TOKEN_LIB_V2_TOKEN = config["dev"]["config"]["token_library"]["v2"]["token"]
 TOKEN_LIB_V2_STABLE = config["dev"]["config"]["token_library"]["v2"]["stable"]
 TOKEN_LIB_V3_TOKEN = config["dev"]["config"]["token_library"]["v3"]["token"]
 TOKEN_LIB_V3_STABLE = config["dev"]["config"]["token_library"]["v3"]["stable"]
+FIGURE_PATH = config["dev"]["config"]["result"]["FIGURE_PATH"]
 
 
 def prepare_stable_share() -> None:
@@ -123,6 +124,9 @@ def prepare_stable_share() -> None:
 
     # tight layout
     plt.tight_layout()
+
+    # save the figure to FIGURE_PATH
+    plt.savefig(rf"{FIGURE_PATH}/stablecoin_share.pdf")
 
     plt.show()
 
@@ -257,6 +261,9 @@ def prepare_stable_depeg() -> None:
     # tight layout
     plt.tight_layout()
 
+    # save the figure to FIGURE_PATH
+    plt.savefig(rf"{FIGURE_PATH}/stablecoin_price.pdf")
+
     plt.show()
 
 
@@ -346,6 +353,9 @@ def prepare_marketcap_share() -> None:
     # tight layout
     plt.tight_layout()
 
+    # save the figure to FIGURE_PATH
+    plt.savefig(rf"{FIGURE_PATH}/marketcap_share.pdf")
+
     plt.show()
 
 
@@ -421,11 +431,14 @@ def prepare_volatility() -> None:
     # tight layout
     plt.tight_layout()
 
+    # save the figure to FIGURE_PATH
+    plt.savefig(rf"{FIGURE_PATH}/volatility.pdf")
+
     plt.show()
 
 
 if __name__ == "__main__":
-    prepare_stable_share()
-    # prepare_stable_depeg()
+    # prepare_stable_share()
+    prepare_stable_depeg()
     # prepare_marketcap_share()
     # prepare_volatility()
