@@ -132,6 +132,28 @@ def _dollar_exchange_rate(reg_panel: pd.DataFrame) -> pd.DataFrame:
     return reg_panel
 
 
+def pegging_degree(price: float) -> float:
+    """
+    Function to calculate the pegging degree.
+    """
+    if price < 0:
+        raise ValueError("Price cannot be negative.")
+    x = 1 / max(0.01, price) if price < 1 else price
+    return 2 / x - 1
+
+
+def _merge_pegging(reg_panel: pd.DataFrame) -> pd.DataFrame:
+    """
+    Function to merge the pegging degree.
+    """
+
+    reg_panel["pegging_degree"] = (
+        reg_panel["Stable"] * reg_panel["dollar_exchange_rate"]
+    ).apply(pegging_degree)
+
+    return reg_panel
+
+
 def _merge_stable_deviation(reg_panel: pd.DataFrame) -> pd.DataFrame:
     """
     Function to merge the stablecoin deviation.
