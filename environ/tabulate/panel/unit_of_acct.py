@@ -147,8 +147,8 @@ def _merge_pegging(reg_panel: pd.DataFrame) -> pd.DataFrame:
     Function to merge the pegging degree.
     """
 
-    reg_panel["pegging_degree"] = (
-        reg_panel["Stable"] * reg_panel["dollar_exchange_rate"]
+    reg_panel["pegging_degree"] = reg_panel["Stable"] * (
+        reg_panel["dollar_exchange_rate"]
     ).apply(pegging_degree)
 
     return reg_panel
