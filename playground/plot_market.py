@@ -3,9 +3,13 @@ plot market with boom bust cycles
 """
 
 
-from environ.process.spindex.boom_bust import BOOM_BUST, sp_df
+from os import path
+
 import matplotlib.dates as md
 import matplotlib.pyplot as plt
+
+from environ.constants import FIGURE_PATH
+from environ.process.spindex.boom_bust import BOOM_BUST, sp_df
 
 if __name__ == "__main__":
     # plot price with boom bust cycles
@@ -19,4 +23,6 @@ if __name__ == "__main__":
     plt.gca().xaxis.set_major_formatter(md.DateFormatter("%Y-%m-%d"))
     plt.gcf().autofmt_xdate()
 
+    # save the plot to file in the figure folder in pdf format
+    plt.savefig(path.join(FIGURE_PATH, "sp500.pdf"), format="pdf")
     plt.show()
