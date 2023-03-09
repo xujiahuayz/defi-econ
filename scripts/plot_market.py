@@ -24,5 +24,5 @@ if __name__ == "__main__":
     plt.gcf().autofmt_xdate()
 
     # save the plot to file in the figure folder in pdf format
-    plt.savefig(path.join(FIGURE_PATH, "sp500.pdf"), format="pdf")
+    plt.savefig(path.join(FIGURE_PATH, "sp500.pdf"))
     plt.show()
