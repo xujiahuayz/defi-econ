@@ -178,7 +178,10 @@ def unit_of_acct(reg_panel: pd.DataFrame) -> pd.DataFrame:
     reg_panel = _dollar_exchange_rate(reg_panel)
 
     # merge the stablecoin deviation
-    reg_panel = _merge_stable_deviation(reg_panel)
+    # reg_panel = _merge_stable_deviation(reg_panel)
+
+    # merge the pegging degree
+    reg_panel = _merge_pegging(reg_panel)
 
     return reg_panel.loc[
         (reg_panel["Date"] >= "2020-06-01") & (reg_panel["Date"] < "2023-02-01")
