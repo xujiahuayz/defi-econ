@@ -140,7 +140,7 @@ def pegging_degree(price: float) -> float:
     if price < 0:
         raise ValueError("Price cannot be negative.")
     x = 1 / max(0.0001, price) if price < 1 else price
-    return 2 / x**3 - 1
+    return 2 / x**5 - 1
 
 
 def _merge_pegging(reg_panel: pd.DataFrame) -> pd.DataFrame:
