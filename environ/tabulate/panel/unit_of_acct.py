@@ -2,8 +2,9 @@
 Function to construct the unit-of-account proxy.
 """
 
-import pandas as pd
 import numpy as np
+import pandas as pd
+
 from environ.utils.config_parser import Config
 
 # Initialize config
@@ -138,8 +139,8 @@ def pegging_degree(price: float) -> float:
     """
     if price < 0:
         raise ValueError("Price cannot be negative.")
-    x = 1 / max(0.01, price) if price < 1 else price
-    return 2 / x - 1
+    x = 1 / max(0.0001, price) if price < 1 else price
+    return 2 / x**3 - 1
 
 
 def _merge_pegging(reg_panel: pd.DataFrame) -> pd.DataFrame:
@@ -182,3 +183,19 @@ def unit_of_acct(reg_panel: pd.DataFrame) -> pd.DataFrame:
     return reg_panel.loc[
         (reg_panel["Date"] >= "2020-06-01") & (reg_panel["Date"] < "2023-02-01")
     ]
+
+
+if __name__ == "__main__":
+    # plot pegging degree when price is 0.1 to 10
+    from matplotlib import pyplot as plt
+
+    x = np.linspace(0.1, 10, 100)
+    y = [pegging_degree(i) for i in x]
+    plt.plot(x, y)
+    # plot a vertical line at 1
+    plt.axvline(x=1, color="r")
+    # add horizontal line at 0
+    plt.axhline(y=0, color="k")
+    # label the axes
+    plt.xlabel("Price")
+    plt.ylabel("Pegging Degree")
