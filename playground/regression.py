@@ -3,9 +3,16 @@ from itertools import product
 from os import path
 
 import pandas as pd
-from environ.constants import TABLE_PATH
+from environ.constants import NAMING_DICT, TABLE_PATH, NAMING_DICT_LAG
 from linearmodels.panel import PanelOLS
 from environ.utils.lags import lag_variable, name_lag_variable
+
+REGRESSION_NAMING_DICT = {
+    "r2": "$R^2$",
+    "nobs": "N",
+    "fe": "fixed effect",
+    "regressand": "Regressand",
+}
 
 
 def regress(
@@ -33,6 +40,38 @@ def regress(
     return model
 
 
+def render_regression_column(
+    reg_panel: pd.DataFrame, dv: str, iv: list[str], entity_effect: bool = True
+) -> pd.Series:
+    regression_result = regress(
+        data=reg_panel, dependent_v=dv, independent_v=iv, entity_effect=entity_effect
+    )
+    # merge three pd.Series: regression_result.params, regression_result.std_errors, regression_result.pvalues into one dataframe
+    result_column = pd.Series({"regressand": dv})
+    for i, v in regression_result.params.items():
+        # format v to exactly 3 decimal places
+        v = "{:.3f}".format(v)
+        # add * according to p-value
+        if regression_result.pvalues[i] < 0.01:
+            star = "**"
+        elif regression_result.pvalues[i] < 0.05:
+            star = "*"
+        else:
+            star = ""
+        # add standard error
+        line1 = f"${v}$^{star}"
+        line2 = f"({regression_result.std_errors[i]:.3f})"
+
+        v = "\makecell{" + line1 + " \\\\" + line2 + "}"
+        result_column[i] = v
+
+    result_column["fe"] = "yes" if entity_effect else "no"
+    # number of observations with thousands separator
+    result_column["nobs"] = "{:,}".format(regression_result.nobs)
+    result_column["r2"] = "{:.3f}".format(regression_result.rsquared)
+    return result_column
+
+
 if __name__ == "__main__":
 
     # Get the regression panel dataset from pickled file
@@ -58,32 +97,53 @@ if __name__ == "__main__":
     iv_chunk_main = [list(map(name_lag_variable, iv)) for iv in iv_chunk_main]
     iv_chunk_stable = [list(map(name_lag_variable, iv)) for iv in iv_chunk_stable]
     iv_chunk_eth = [list(map(name_lag_variable, iv)) for iv in iv_chunk_eth]
+    LAG_DV_NAME = "$\it Dominance$_{t-1}$"
+
+    # flatten all possible iv
+    all_ivs = iv_chunk_main + iv_chunk_stable + iv_chunk_eth
 
     result_table = pd.DataFrame()
+    counter = 0
     for dv in dependent_variables:
-        dv_lag = [[], [name_lag_variable(dv)]]
+        lag_dv_name = name_lag_variable(dv)
+        dv_lag = [[], [lag_dv_name]]
         for iv_combi in product(dv_lag, iv_chunk_main, iv_chunk_stable, iv_chunk_eth):
             iv = [x for y in iv_combi for x in y]
-            regression_result = regress(
-                data=reg_panel, dependent_v=dv, independent_v=iv
+            result_column = render_regression_column(
+                reg_panel, dv, iv, entity_effect=True
             )
-            # merge three pd.Series: regression_result.params, regression_result.std_errors, regression_result.pvalues into one dataframe
-            result_column = pd.Series()
-            for i, v in regression_result.params.items():
-                # format v to exactly 3 decimal places
-                v = "{:.3f}".format(v)
-                # add * according to p-value
-                if regression_result.pvalues[i] < 0.01:
-                    star = "**"
-                elif regression_result.pvalues[i] < 0.05:
-                    star = "*"
-                else:
-                    star = ""
-                # add standard error
-                v = f"${v}$^{star} \n ({regression_result.std_errors[i]:.3f})"
-                result_column[i] = v
+            # rename result_column index
+            result_column = result_column.rename(
+                index={
+                    lag_dv_name: LAG_DV_NAME,
+                }
+            )
+            result_column["regressand"] = NAMING_DICT_LAG[lag_dv_name]
 
-            result_column["$R^2$"] = "{:.3f}".format(regression_result.rsquared)
-            result_column.to_frame(name=dv)
-            # merge result_column into result_table
-            result_table = pd.concat([result_table, result_column], axis=1)
+            counter += 1
+            result_column_df = result_column.to_frame(name=f"({counter})")
+
+            # merge result_column into result_table, keep  name as column name
+            result_table = pd.concat([result_table, result_column_df], axis=1)
+
+    # reorder rows in result_table
+    result_table = result_table.reindex(
+        [
+            "regressand",
+            LAG_DV_NAME,
+        ]
+        + [x for y in all_ivs for x in y]
+        + [
+            "fe",
+            "nobs",
+            "r2",
+        ]
+    )
+
+    # rename result_table index with REGRESSION_NAMING_DICT and NAMING_DICT_LAG and NAMING_DICT combined
+    result_table = result_table.rename(index=REGRESSION_NAMING_DICT).rename(
+        index={**NAMING_DICT_LAG, **NAMING_DICT}
+    )
+
+    # transform result_table to latex table
+    result_table.to_latex(path.join(TABLE_PATH, "regression_table.tex"), escape=False)
