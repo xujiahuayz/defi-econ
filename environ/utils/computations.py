@@ -1,4 +1,5 @@
 import logging
+from typing import Union
 
 import numpy as np
 import pandas as pd
@@ -114,7 +115,8 @@ def boom_bust_periods(
     return boom_bust_list
 
 
-def is_boom(boom_bust_list: list, time: int) -> bool:
+# allow time to be both integer and pandas._libs.tslibs.timestamps.Timestamp
+def is_boom(boom_bust_list: list, time: Union[int, pd.Timestamp]) -> bool:
     """
     determine if the given time is in a boom period
     """

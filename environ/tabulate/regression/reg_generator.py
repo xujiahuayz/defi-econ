@@ -622,9 +622,6 @@ def generate_reg_property_of_dominance(
     ) as to_file:
         to_file.write(stargazer.render_html())
 
-    # # save the panel dataset as a csv file
-    # reg_panel.to_csv(rf"{TABLE_PATH}/regression_panel.csv")
-
 
 def realized_holding_period(reg_panel: pd.DataFrame, lag: bool) -> None:
     """

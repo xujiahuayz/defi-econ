@@ -8,6 +8,182 @@ BOOM_BUST = {
 
 FIGURE_PATH = path.join(PROJECT_ROOT, "figures")
 TABLE_PATH = path.join(PROJECT_ROOT, "tables")
+GLOBAL_DATA_PATH = path.join(PROJECT_ROOT, "data", "data_global")
+
+
+NAMING_DICT = {
+    "TVL_share": "${\it LiquidityShare}$",
+    "Inflow_centrality": "${\it EigenCent}^{In}$",
+    "Outflow_centrality": "${\it EigenCent}^{Out}$",
+    "Volume_share": "${\it VShare}$",
+    "volume_in_share": "${\it VShare}^{\it In}$",
+    "volume_out_share": "${\it VShare}^{\it Out}$",
+    "Borrow_share": "${\it BorrowShare}$",
+    "Supply_share": "${\it SupplyShare}$",
+    "betweenness_centrality_count": "${\it BetwCent}^C$",
+    "betweenness_centrality_volume": "${\it BetwCent}^V$",
+    "cov_gas": "${\it CovGas}$",
+    "cov_sp": "${\it CovSP}$",
+    "cov_eth": "${\it CovETH}$",
+    "log_return": "${R}^{\it USD}$",
+    "std": "${\it \sigma}^{USD}$",
+    "borrow_rate": "${\it BorrowAPY}^{USD}$",
+    "supply_rates": "${\it SupplyAPY}^{USD}$",
+    "beta": "${\it Beta}$",
+    "average_return": "${\it \mu}^{USD}$",
+    "corr_gas": "${\it CorrGas}$",
+    "corr_sp": "${\it CorrSP}$",
+    "corr_eth": "${\it CorrETH}$",
+    "Nonstable": "${\it Nonstable}$",
+    "Stable": "${\it IsStable}$",
+    "IsWETH": "${\it IsWETH}$",
+    "Gas_fee": "${\it GasPrice}$",
+    "dollar_exchange_rate": "${\it ExchangeRate}^{USD}$",
+    "exceedance": "${\it exceedance}^{USD}$",
+    "Gas_fee_volatility": "${\it \sigma}_{Gas}$",
+    "avg_eigenvector_centrality": "${\it AvgEigenCent}$",
+    "stableshare": "${\it StableShare}$",
+    "stablecoin_deviation": "${\it StableDepeg}$",
+    "pegging_degree": "${\it PeggingDegree}$",
+    "depegging_degree": "${\it DepeggingDegree}$",
+    "pegging_degree_uppeg": "${\it PeggingDegree}^{Uppeg}$",
+    "pegging_degree_downpeg": "${\it PeggingDegree}^{Downpeg}$",
+    "depegging_degree_uppeg": "${\it DepeggingDegree}^{Uppeg}$",
+    "depegging_degree_downpeg": "${\it DepeggingDegree}^{Downpeg}$",
+    "mcap_share": "${\it MCapShare}$",
+    "corr_sentiment": "${\it CorrSent}$",
+    "herfindahl_volume": "${\it HHIVolume}$",
+    "herfindahl_inflow_centrality": "${\it HHIEigenCent}^{In}$",
+    "herfindahl_outflow_centrality": "${\it HHIEigenCent}^{Out}$",
+    "herfindahl_betweenness_centrality_count": "${\it HHIBetwCent}^C$",
+    "herfindahl_betweenness_centrality_volume": "${\it HHIBetwCent}^V$",
+    "herfindahl_tvl": "${\it HHITVL}$",
+    "total_volumes": "${\it TotalVolume}$",
+    "S&P": "${\it R}^{USD}_{SP}$",
+    "S&P_volatility": "${\it \sigma}^{USD}_{SP}$",
+}
+
+
+NAMING_DICT_OLD = {
+    "TVL_share": "${\it LiquidityShare}$",
+    "Inflow_centrality": "${\it EigenCent}^{In}$",
+    "Outflow_centrality": "${\it EigenCent}^{Out}$",
+    "Volume_share": "${\it VShare}$",
+    "volume_in_share": "${\it VShare}^{\it In}$",
+    "volume_out_share": "${\it VShare}^{\it Out}$",
+    "Borrow_share": "${\it BorrowShare}$",
+    "Supply_share": "${\it SupplyShare}$",
+    "betweenness_centrality_count": "${\it BetwCent}^C$",
+    "betweenness_centrality_volume": "${\it BetwCent}^V$",
+    "cov_gas": "${\it CovGas}$",
+    "cov_sp": "${\it CovSP}$",
+    "cov_eth": "${\it CovETH}$",
+    "log_return": "${R}^{\it USD}$",
+    "std": "${\it \sigma}^{USD}$",
+    "borrow_rate": "${\it BorrowAPY}^{USD}$",
+    "supply_rates": "${\it SupplyAPY}^{USD}$",
+    # "is_boom": "${\it Boom}$",
+    # "cor_sp": "${\it CorSP}$",
+    # "cor_eth": "${\it CorETH}$",
+    # "cor_gas": "${\it CorGas}$",
+    # "price": "${\it Price}$",
+    # "market_cap": "${\it MarketCap}$",
+}
+
+
+NAMING_DIC_PROPERTIES_OF_DOMINANCE = {
+    # Dominance
+    "Volume_share": "${\it VShare}$",
+    "volume_in_share": "${\it VShare}^{\it In}$",
+    "volume_out_share": "${\it VShare}^{\it Out}$",
+    # Eigenvector
+    "Inflow_centrality": "${\it EigenCent}^{In}$",
+    "Outflow_centrality": "${\it EigenCent}^{Out}$",
+    # Betweenness
+    "betweenness_centrality_count": "${\it BetwCent}^C$",
+    "betweenness_centrality_volume": "${\it BetwCent}^V$",
+    # Store
+    "Borrow_share": "${\it BorrowShare}$",
+    "Supply_share": "${\it SupplyShare}$",
+    "borrow_rate": "${\it BorrowAPY}^{USD}$",
+    "supply_rates": "${\it SupplyAPY}^{USD}$",
+    "beta": "${\it Beta}$",
+    "std": "${\it \sigma}^{USD}$",
+    "average_return": "${\it \mu}^{USD}$",
+    # Other
+    "corr_gas": "${\it CorrGas}$",
+    "corr_sp": "${\it CorrSP}$",
+    "corr_eth": "${\it CorrETH}$",
+    "log_return": "${R}^{\it USD}$",
+    # "mcap": "${\it \ln MCap}^{USD}$",
+    "Nonstable": "${\i Nonstable}$",
+    "Stable": "${\i Stable}$",
+    "IsWETH": "${\i IsWETH}$",
+    "Gas_fee": "${\it GasPrice}$",
+    "dollar_exchange_rate": "${\it ExchangeRate}^{USD}$",
+    "TVL_share": "${\it LiquidityShare}$",
+    "exceedance": "${\it exceedance}^{USD}$",
+    "Gas_fee_volatility": "${\it \sigma}_{Gas}$",
+    "avg_eigenvector_centrality": "${\it AvgEigenCent}$",
+    "stableshare": "${\it StableShare}$",
+    "boom": "${\it DeFiboom}$",
+    "bust": "${\it DeFibust}$",
+    "stablecoin_deviation": "${\it StableDepeg}$",
+    "pegging_degree": "${\it PeggingDegree}$",
+    "depegging_degree": "${\it DepeggingDegree}$",
+    "pegging_degree_uppeg": "${\it PeggingDegree}^{Uppeg}$",
+    "pegging_degree_downpeg": "${\it PeggingDegree}^{Downpeg}$",
+    "depegging_degree_uppeg": "${\it DepeggingDegree}^{Uppeg}$",
+    "depegging_degree_downpeg": "${\it DepeggingDegree}^{Downpeg}$",
+    "mcap_share": "${\it MCapShare}$",
+    # Drop
+    "corr_sentiment": "${\it CorrSent}$",
+}
+
+NAMING_DIC_HERFINDAHL = {
+    "herfindahl_volume": "${\it HHIVolume}$",
+    "herfindahl_inflow_centrality": "${\it HHIEigenCent}^{In}$",
+    "herfindahl_outflow_centrality": "${\it HHIEigenCent}^{Out}$",
+    "herfindahl_betweenness_centrality_count": "${\it HHIBetwCent}^C$",
+    "herfindahl_betweenness_centrality_volume": "${\it HHIBetwCent}^V$",
+    "herfindahl_tvl": "${\it HHITVL}$",
+    "total_volumes": "${\it TotalVolume}$",
+    "S&P": "${\it R}^{USD}_{SP}$",
+    "S&P_volatility": "${\it \sigma}^{USD}_{SP}$",
+    "Gas_fee": "${\it GasPrice}$",
+    "Gas_fee_volatility": "${\it \sigma}_{Gas}$",
+    "boom": "${\it DeFiboom}$",
+    "bust": "${\it DeFibust}$",
+}
+
+# merge all naming dics above
+# TODO: clean up - only need one naming dict
+NAMING_DICT_OLD = {
+    **NAMING_DICT_OLD,
+    **NAMING_DIC_PROPERTIES_OF_DOMINANCE,
+    **NAMING_DIC_HERFINDAHL,
+}
+
+
+# NAMING_DICT = {
+#     "TVL_share": "${\it LiquidityShare}$",
+#     "Inflow_centrality": "${\it EigenCent}^{In}$",
+#     "Outflow_centrality": "${\it EigenCent}^{Out}$",
+#     "Volume_share": "${\it VShare}$",
+#     "volume_in_share": "${\it VShare}^{\it In}$",
+#     "volume_out_share": "${\it VShare}^{\it Out}$",
+#     "Borrow_share": "${\it BorrowShare}$",
+#     "Supply_share": "${\it SupplyShare}$",
+#     "betweenness_centrality_count": "${\it BetwCent}^C$",
+#     "betweenness_centrality_volume": "${\it BetwCent}^V$",
+#     "cov_gas": "${\it CovGas}$",
+#     "cov_sp": "${\it CovSP}$",
+#     "cov_eth": "${\it CovETH}$",
+#     "log_return": "${R}^{\it USD}$",
+#     "std": "${\it \sigma}^{USD}$",
+#     "borrow_rate": "${\it BorrowAPY}^{USD}$",
+#     "supply_rates": "${\it SupplyAPY}^{USD}$",
+# }
 
 # Initialize constants
 NAMING_DIC_PROPERTIES_OF_DOMINANCE_LAG = {
@@ -37,11 +213,11 @@ NAMING_DIC_PROPERTIES_OF_DOMINANCE_LAG = {
     "${\it MCap}^{USD}$": "${\it-1 MCap}^{USD}$",
     "${\i Nonstable}$": "${\i Nonstable}$",
     "${\i IsWETH}$": "${\i IsWETH}$",
-    "${\t GasPrice}$": "${\t-1 GasPrice}$",
+    "${\it GasPrice}$": "${\it-1 GasPrice}$",
     "${\it ExchangeRate}^{USD}$": "${\it-1 ExchangeRate}^{USD}$",
     "${\it LiquidityShare}$": "${\it-1 LiquidityShare}$",
     "${\it exceedance}^{USD}$": "${\it-1 exceedance}^{USD}$",
-    "${\t \sigma}_{Gas}$": "${\t-1 \sigma}_{Gas}$",
+    "${\it \sigma}_{Gas}$": "${\it-1 \sigma}_{Gas}$",
     # Drop
     "${\it CorrSent}$": "${\it-1 CorrSent}$",
 }
@@ -73,14 +249,14 @@ NAMING_DIC_SPECIFICATION_LAG = {
 }
 
 NAMING_DIC_HERFINDAHL_LAG = {
-    "${\t HHIVolume}$": "${\t-1 HHIVolume}$",
-    "${\t HHIEigenCent}^{In}$": "${\t-1 HHIEigenCent}^{In}$",
-    "${\t HHIEigenCent}^{Out}$": "${\t-1 HHIEigenCent}^{Out}$",
-    "${\t HHIBetwCent}^C$": "${\t-1 HHIBetwCent}^C$",
-    "${\t HHIBetwCent}^V$": "${\t-1 HHIBetwCent}^V$",
-    "${\t TotalVolume}$": "${\t-1 TotalVolume}$",
-    "${\t R}^{USD}_{SP}$": "${\t-1 R}^{USD}_{SP}$",
-    "${\t \sigma}^{USD}_{SP}$": "${\t-1 \sigma}^{USD}_{SP}$",
-    "${\t GasPrice}$": "${\t-1 GasPrice}$",
-    "${\t \sigma}_{Gas}$": "${\t-1 \sigma}_{Gas}$",
+    "${\it HHIVolume}$": "${\it-1 HHIVolume}$",
+    "${\it HHIEigenCent}^{In}$": "${\it-1 HHIEigenCent}^{In}$",
+    "${\it HHIEigenCent}^{Out}$": "${\it-1 HHIEigenCent}^{Out}$",
+    "${\it HHIBetwCent}^C$": "${\it-1 HHIBetwCent}^C$",
+    "${\it HHIBetwCent}^V$": "${\it-1 HHIBetwCent}^V$",
+    "${\it TotalVolume}$": "${\it-1 TotalVolume}$",
+    "${\it R}^{USD}_{SP}$": "${\it-1 R}^{USD}_{SP}$",
+    "${\it \sigma}^{USD}_{SP}$": "${\it-1 \sigma}^{USD}_{SP}$",
+    "${\it GasPrice}$": "${\it-1 GasPrice}$",
+    "${\it \sigma}_{Gas}$": "${\it-1 \sigma}_{Gas}$",
 }
