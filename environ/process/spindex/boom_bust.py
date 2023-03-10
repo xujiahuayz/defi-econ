@@ -3,7 +3,7 @@ plot market with boom bust cycles
 """
 
 from environ.process.spindex.sp import sp_df
-from environ.utils.computations import boom_bust_periods
+from environ.utils.boom_calculator import boom_bust_periods
 
 
 sp_df["time"] = sp_df["Date"]

@@ -14,7 +14,7 @@ import pandas as pd
 import numpy as np
 from environ.process.spindex.boom_bust import BOOM_BUST
 from environ.utils.config_parser import Config
-from environ.utils.computations import is_boom
+from environ.utils.boom_calculator import is_boom
 import matplotlib.dates as md
 
 # Initialize config
