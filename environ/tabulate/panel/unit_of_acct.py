@@ -152,6 +152,12 @@ def _merge_pegging(reg_panel: pd.DataFrame) -> pd.DataFrame:
         reg_panel["dollar_exchange_rate"]
     ).apply(pegging_degree)
 
+    reg_panel["pegging_degree_uppeg"] = reg_panel["pegging_degree"] * (
+        reg_panel["dollar_exchange_rate"] > 1
+    )
+    reg_panel["pegging_degree_downpeg"] = reg_panel["pegging_degree"] * (
+        reg_panel["dollar_exchange_rate"] < 1
+    )
     return reg_panel
 
 
