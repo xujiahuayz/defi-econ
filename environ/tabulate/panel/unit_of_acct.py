@@ -143,6 +143,15 @@ def pegging_degree(price: float) -> float:
     return 2 / x**5 - 1
 
 
+def depegging_degree(price: float) -> float:
+    """
+    Function to calculate the depegging degree.
+    """
+    if price < 0:
+        raise ValueError("Price cannot be negative.")
+    return np.log(1 / max(0.0001, price) if price < 1 else price)
+
+
 def _merge_pegging(reg_panel: pd.DataFrame) -> pd.DataFrame:
     """
     Function to merge the pegging degree.
@@ -152,10 +161,21 @@ def _merge_pegging(reg_panel: pd.DataFrame) -> pd.DataFrame:
         reg_panel["dollar_exchange_rate"]
     ).apply(pegging_degree)
 
+    reg_panel["depegging_degree"] = reg_panel["Stable"] * (
+        reg_panel["dollar_exchange_rate"]
+    ).apply(depegging_degree)
+
     reg_panel["pegging_degree_uppeg"] = reg_panel["pegging_degree"] * (
         reg_panel["dollar_exchange_rate"] > 1
     )
     reg_panel["pegging_degree_downpeg"] = reg_panel["pegging_degree"] * (
+        reg_panel["dollar_exchange_rate"] < 1
+    )
+
+    reg_panel["depegging_degree_uppeg"] = reg_panel["depegging_degree"] * (
+        reg_panel["dollar_exchange_rate"] > 1
+    )
+    reg_panel["depegging_degree_downpeg"] = reg_panel["depegging_degree"] * (
         reg_panel["dollar_exchange_rate"] < 1
     )
     return reg_panel
@@ -196,15 +216,23 @@ def unit_of_acct(reg_panel: pd.DataFrame) -> pd.DataFrame:
 
 if __name__ == "__main__":
     # plot pegging degree when price is 0.1 to 10
+    from typing import Callable
     from matplotlib import pyplot as plt
 
     x = np.linspace(0.1, 10, 100)
-    y = [pegging_degree(i) for i in x]
-    plt.plot(x, y)
-    # plot a vertical line at 1
-    plt.axvline(x=1, color="r")
-    # add horizontal line at 0
-    plt.axhline(y=0, color="k")
-    # label the axes
-    plt.xlabel("Price")
-    plt.ylabel("Pegging Degree")
+
+    def plot_peg(func: Callable, label: str):
+        y = [func(i) for i in x]
+        plt.plot(x, y)
+        # plot a vertical line at 1
+        plt.axvline(x=1, color="r")
+        # add horizontal line at 0
+        plt.axhline(y=0, color="k")
+        # label the axes
+        plt.xlabel("Price")
+        plt.ylabel(label)
+        plt.show()
+        plt.close()
+
+    plot_peg(pegging_degree, "Pegging Degree")
+    plot_peg(depegging_degree, "Depegging Degree")
