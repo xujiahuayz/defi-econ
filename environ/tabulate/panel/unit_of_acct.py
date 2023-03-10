@@ -4,7 +4,7 @@ Function to construct the unit-of-account proxy.
 
 import numpy as np
 import pandas as pd
-
+import matplotlib.pyplot as plt
 from environ.utils.config_parser import Config
 
 # Initialize config
@@ -50,6 +50,11 @@ def _market_cap(reg_panel: pd.DataFrame) -> pd.DataFrame:
     # convert date in "YYYY-MM-DD" to datetime
     ethereum["Date"] = pd.to_datetime(ethereum["Date"], format="%Y-%m-%d")
 
+    # only keep the rows with Date >= 2019-01-01 <= 2023-02-01
+    ethereum = ethereum[
+        (ethereum["Date"] >= "2019-01-01") & (ethereum["Date"] <= "2023-02-01")
+    ]
+
     # merge the ethereum dataframe with the mcap dataframe
     mcap = pd.merge(mcap, ethereum, on="Date", how="left")
 
@@ -65,8 +70,8 @@ def _market_cap(reg_panel: pd.DataFrame) -> pd.DataFrame:
     # rename the column "0" to "mcap"
     mcap = mcap.rename(columns={0: "mcap"})
 
-    # take the log of mcap
-    mcap["mcap"] = mcap["mcap"].apply(lambda x: np.log(x))
+    # # take the log of mcap
+    # mcap["log_mcap"] = mcap["mcap"].apply(lambda x: np.log(x))
 
     # remove inf and -inf
     mcap = mcap.replace([np.inf, -np.inf], np.nan)
@@ -76,6 +81,32 @@ def _market_cap(reg_panel: pd.DataFrame) -> pd.DataFrame:
 
     # merge the mcap into reg_panel
     reg_panel = pd.merge(reg_panel, mcap, how="outer", on=["Date", "Token"])
+
+    return reg_panel
+
+
+def _merge_mcap_share(reg_panel: pd.DataFrame) -> pd.DataFrame:
+    """
+    Function to merge the market capitalization share.
+    """
+
+    # group the reg_panel by date
+    group = reg_panel.groupby("Date")
+
+    # calculate the sum of mcap
+    sum_mcap = group["mcap"].sum().reset_index()
+
+    # rename the column "mcap" to "sum_mcap"
+    sum_mcap = sum_mcap.rename(columns={"mcap": "sum_mcap"})
+
+    # merge the sum_mcap into reg_panel
+    reg_panel = pd.merge(reg_panel, sum_mcap, how="left", on="Date")
+
+    # calculate the market capitalization share
+    reg_panel["mcap_share"] = reg_panel["mcap"] / reg_panel["sum_mcap"]
+
+    # drop the column "sum_mcap"
+    reg_panel = reg_panel.drop(columns=["sum_mcap"])
 
     return reg_panel
 
@@ -143,6 +174,15 @@ def pegging_degree(price: float) -> float:
     return 2 / x**5 - 1
 
 
+def depegging_degree(price: float) -> float:
+    """
+    Function to calculate the depegging degree.
+    """
+    if price < 0:
+        raise ValueError("Price cannot be negative.")
+    return np.log(1 / max(0.0001, price) if price < 1 else price)
+
+
 def _merge_pegging(reg_panel: pd.DataFrame) -> pd.DataFrame:
     """
     Function to merge the pegging degree.
@@ -152,6 +192,23 @@ def _merge_pegging(reg_panel: pd.DataFrame) -> pd.DataFrame:
         reg_panel["dollar_exchange_rate"]
     ).apply(pegging_degree)
 
+    reg_panel["depegging_degree"] = reg_panel["Stable"] * (
+        reg_panel["dollar_exchange_rate"]
+    ).apply(depegging_degree)
+
+    reg_panel["pegging_degree_uppeg"] = reg_panel["pegging_degree"] * (
+        reg_panel["dollar_exchange_rate"] > 1
+    )
+    reg_panel["pegging_degree_downpeg"] = reg_panel["pegging_degree"] * (
+        reg_panel["dollar_exchange_rate"] < 1
+    )
+
+    reg_panel["depegging_degree_uppeg"] = reg_panel["depegging_degree"] * (
+        reg_panel["dollar_exchange_rate"] > 1
+    )
+    reg_panel["depegging_degree_downpeg"] = reg_panel["depegging_degree"] * (
+        reg_panel["dollar_exchange_rate"] < 1
+    )
     return reg_panel
 
 
@@ -174,6 +231,9 @@ def unit_of_acct(reg_panel: pd.DataFrame) -> pd.DataFrame:
     # merge the market capitalization
     reg_panel = _market_cap(reg_panel)
 
+    # merge the market capitalization share
+    reg_panel = _merge_mcap_share(reg_panel)
+
     # merge the dollar exchange rate
     reg_panel = _dollar_exchange_rate(reg_panel)
 
@@ -190,15 +250,23 @@ def unit_of_acct(reg_panel: pd.DataFrame) -> pd.DataFrame:
 
 if __name__ == "__main__":
     # plot pegging degree when price is 0.1 to 10
+    from typing import Callable
     from matplotlib import pyplot as plt
 
     x = np.linspace(0.1, 10, 100)
-    y = [pegging_degree(i) for i in x]
-    plt.plot(x, y)
-    # plot a vertical line at 1
-    plt.axvline(x=1, color="r")
-    # add horizontal line at 0
-    plt.axhline(y=0, color="k")
-    # label the axes
-    plt.xlabel("Price")
-    plt.ylabel("Pegging Degree")
+
+    def plot_peg(func: Callable, label: str):
+        y = [func(i) for i in x]
+        plt.plot(x, y)
+        # plot a vertical line at 1
+        plt.axvline(x=1, color="r")
+        # add horizontal line at 0
+        plt.axhline(y=0, color="k")
+        # label the axes
+        plt.xlabel("Price")
+        plt.ylabel(label)
+        plt.show()
+        plt.close()
+
+    plot_peg(pegging_degree, "Pegging Degree")
+    plot_peg(depegging_degree, "Depegging Degree")

@@ -49,7 +49,7 @@ NAMING_DIC_PROPERTIES_OF_DOMINANCE = {
     "corr_sp": "${\it CorrSP}$",
     "corr_eth": "${\it CorrETH}$",
     "log_return": "${R}^{\it USD}$",
-    "mcap": "${\it \ln MCap}^{USD}$",
+    # "mcap": "${\it \ln MCap}^{USD}$",
     "Nonstable": "${\i Nonstable}$",
     "Stable": "${\i Stable}$",
     "IsWETH": "${\i IsWETH}$",
@@ -63,6 +63,13 @@ NAMING_DIC_PROPERTIES_OF_DOMINANCE = {
     "boom": "${\t DeFiboom}$",
     "bust": "${\t DeFibust}$",
     "stablecoin_deviation": "${\it StableDepeg}$",
+    "pegging_degree": "${\it PeggingDegree}$",
+    "depegging_degree": "${\it DepeggingDegree}$",
+    "pegging_degree_uppeg": "${\it PeggingDegree}^{Uppeg}$",
+    "pegging_degree_downpeg": "${\it PeggingDegree}^{Downpeg}$",
+    "depegging_degree_uppeg": "${\it DepeggingDegree}^{Uppeg}$",
+    "depegging_degree_downpeg": "${\it DepeggingDegree}^{Downpeg}$",
+    "mcap_share": "${\it MCapShare}$",
     # Drop
     "corr_sentiment": "${\it CorrSent}$",
 }
@@ -151,7 +158,10 @@ def _missing_value_filler(reg_panel: pd.DataFrame) -> None:
     reg_panel["Stable"] = reg_panel["Stable"].fillna(0)
 
     # fill the missing value with 0 of the column "${\it StableDepeg}$"
-    reg_panel["stablecoin_deviation"] = reg_panel["stablecoin_deviation"].fillna(0)
+    reg_panel["pegging_degree"] = reg_panel["pegging_degree"].fillna(0)
+
+    # fill the missing value with 0 of the column "mcap_share "
+    reg_panel["mcap_share"] = reg_panel["mcap_share"].fillna(0)
 
 
 def generate_sum_herfindahl(
@@ -268,7 +278,7 @@ def generate_sum(reg_panel: pd.DataFrame, file_name: str, lag: bool) -> pd.DataF
         "${\it BetwCent}^V$",
         "${\it StableShare}$",
         "${\it \sigma}^{USD}$",
-        "${\it StableDepeg}$",
+        "${\it PeggingDegree}$",
     ]
 
     # only keep value share, eigen centrality and betweenness centrality and liquidity share
@@ -444,11 +454,11 @@ def generate_sum(reg_panel: pd.DataFrame, file_name: str, lag: bool) -> pd.DataF
         "${\it \sigma}^{USD}$",
         "${\it StableShare}$",
         "${\i Stable}$",
-        "${\it StableDepeg}$",
+        "${\it PeggingDegree}$",
         "${\it SupplyShare}$",
         "${\it CorrGas}$",
         "${\it CorrETH}$",
-        "${\it \ln MCap}^{USD}$",
+        "${\it MCapShare}$",
     ]
 
     # only keep value share, eigen centrality and betweenness centrality and liquidity share

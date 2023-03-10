@@ -106,7 +106,7 @@ def tabulate_result() -> None:
 
     # Regression: specification
     print_info_log("Generating the regression of specification.", "process")
-    generate_regression_specification(reg_panel, lag=False)
+    generate_regression_specification(reg_panel, lag=True)
 
     # Regression: realized holding period
     print_info_log("Generating the regression of realized holding period.", "process")
