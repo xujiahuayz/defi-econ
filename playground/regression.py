@@ -3,12 +3,13 @@ from itertools import product
 from os import path
 
 import pandas as pd
-from environ.constants import NAMING_DICT, TABLE_PATH, NAMING_DICT_LAG
+from environ.constants import NAMING_DICT, TABLE_PATH, NAMING_DICT_LAG, ALL_NAMING_DICT
 from linearmodels.panel import PanelOLS
 from environ.utils.lags import lag_variable, name_lag_variable
 
 REGRESSION_NAMING_DICT = {
     "r2": "$R^2$",
+    "r2_within": "$R^2_{within}$",
     "nobs": "N",
     "fe": "fixed effect",
     "regressand": "Regressand",
@@ -58,8 +59,9 @@ def render_regression_column(
             star = "*"
         else:
             star = ""
+        star = "{" + star + "}"
         # add standard error
-        line1 = f"${v}$^{star}"
+        line1 = f"${v}^{star}$"
         line2 = f"({regression_result.std_errors[i]:.3f})"
 
         v = "\makecell{" + line1 + " \\\\" + line2 + "}"
@@ -69,6 +71,8 @@ def render_regression_column(
     # number of observations with thousands separator
     result_column["nobs"] = "{:,}".format(regression_result.nobs)
     result_column["r2"] = "{:.3f}".format(regression_result.rsquared)
+    # add within r2
+    result_column["r2_within"] = "{:.3f}".format(regression_result.rsquared_within)
     return result_column
 
 
@@ -90,14 +94,13 @@ if __name__ == "__main__":
     ]
 
     iv_chunk_main = [["std", "corr_gas", "mcap_share", "Supply_share"]]
-    iv_chunk_stable = [["Stable", "stableshare"]]
     iv_chunk_eth = [["corr_eth"], ["corr_sp"]]
 
     # lag all iv above
     iv_chunk_main = [list(map(name_lag_variable, iv)) for iv in iv_chunk_main]
-    iv_chunk_stable = [list(map(name_lag_variable, iv)) for iv in iv_chunk_stable]
     iv_chunk_eth = [list(map(name_lag_variable, iv)) for iv in iv_chunk_eth]
-    LAG_DV_NAME = "$\it Dominance$_{t-1}$"
+    iv_chunk_stable = [["Stable", name_lag_variable("stableshare")]]
+    LAG_DV_NAME = "$\it Dominance_{t-1}$"
 
     # flatten all possible iv
     all_ivs = iv_chunk_main + iv_chunk_stable + iv_chunk_eth
@@ -110,7 +113,11 @@ if __name__ == "__main__":
         for iv_combi in product(dv_lag, iv_chunk_main, iv_chunk_stable, iv_chunk_eth):
             iv = [x for y in iv_combi for x in y]
             result_column = render_regression_column(
-                reg_panel, dv, iv, entity_effect=True
+                reg_panel,
+                dv,
+                iv,
+                entity_effect=True
+                # False if "Stable" in iv else True
             )
             # rename result_column index
             result_column = result_column.rename(
@@ -118,7 +125,7 @@ if __name__ == "__main__":
                     lag_dv_name: LAG_DV_NAME,
                 }
             )
-            result_column["regressand"] = NAMING_DICT_LAG[lag_dv_name]
+            result_column["regressand"] = ALL_NAMING_DICT[dv]
 
             counter += 1
             result_column_df = result_column.to_frame(name=f"({counter})")
@@ -126,8 +133,11 @@ if __name__ == "__main__":
             # merge result_column into result_table, keep  name as column name
             result_table = pd.concat([result_table, result_column_df], axis=1)
 
+    # replace all na with empty string
+    result_table_raw = result_table.fillna("")
+
     # reorder rows in result_table
-    result_table = result_table.reindex(
+    result_table_fine = result_table_raw.reindex(
         [
             "regressand",
             LAG_DV_NAME,
@@ -137,13 +147,16 @@ if __name__ == "__main__":
             "fe",
             "nobs",
             "r2",
+            "r2_within",
         ]
     )
 
     # rename result_table index with REGRESSION_NAMING_DICT and NAMING_DICT_LAG and NAMING_DICT combined
-    result_table = result_table.rename(index=REGRESSION_NAMING_DICT).rename(
-        index={**NAMING_DICT_LAG, **NAMING_DICT}
+    result_table_fine = result_table_fine.rename(index=REGRESSION_NAMING_DICT).rename(
+        index=ALL_NAMING_DICT
     )
 
     # transform result_table to latex table
-    result_table.to_latex(path.join(TABLE_PATH, "regression_table.tex"), escape=False)
+    result_table_fine.to_latex(
+        path.join(TABLE_PATH, "regression_table.tex"), escape=False
+    )

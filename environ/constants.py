@@ -66,6 +66,9 @@ NAMING_DICT = {
 
 NAMING_DICT_LAG = lag_naming_dict(NAMING_DICT)
 
+ALL_NAMING_DICT = {
+    k: "$" + v + "$" for k, v in {**NAMING_DICT_LAG, **NAMING_DICT}.items()
+}
 
 NAMING_DICT_OLD = {
     "TVL_share": "${\it LiquidityShare}$",
