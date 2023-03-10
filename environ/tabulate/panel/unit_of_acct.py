@@ -4,7 +4,7 @@ Function to construct the unit-of-account proxy.
 
 import numpy as np
 import pandas as pd
-
+import matplotlib.pyplot as plt
 from environ.utils.config_parser import Config
 
 # Initialize config
@@ -50,6 +50,11 @@ def _market_cap(reg_panel: pd.DataFrame) -> pd.DataFrame:
     # convert date in "YYYY-MM-DD" to datetime
     ethereum["Date"] = pd.to_datetime(ethereum["Date"], format="%Y-%m-%d")
 
+    # only keep the rows with Date >= 2019-01-01 <= 2023-02-01
+    ethereum = ethereum[
+        (ethereum["Date"] >= "2019-01-01") & (ethereum["Date"] <= "2023-02-01")
+    ]
+
     # merge the ethereum dataframe with the mcap dataframe
     mcap = pd.merge(mcap, ethereum, on="Date", how="left")
 
@@ -65,8 +70,8 @@ def _market_cap(reg_panel: pd.DataFrame) -> pd.DataFrame:
     # rename the column "0" to "mcap"
     mcap = mcap.rename(columns={0: "mcap"})
 
-    # take the log of mcap
-    mcap["mcap"] = mcap["mcap"].apply(lambda x: np.log(x))
+    # # take the log of mcap
+    # mcap["log_mcap"] = mcap["mcap"].apply(lambda x: np.log(x))
 
     # remove inf and -inf
     mcap = mcap.replace([np.inf, -np.inf], np.nan)
@@ -76,6 +81,32 @@ def _market_cap(reg_panel: pd.DataFrame) -> pd.DataFrame:
 
     # merge the mcap into reg_panel
     reg_panel = pd.merge(reg_panel, mcap, how="outer", on=["Date", "Token"])
+
+    return reg_panel
+
+
+def _merge_mcap_share(reg_panel: pd.DataFrame) -> pd.DataFrame:
+    """
+    Function to merge the market capitalization share.
+    """
+
+    # group the reg_panel by date
+    group = reg_panel.groupby("Date")
+
+    # calculate the sum of mcap
+    sum_mcap = group["mcap"].sum().reset_index()
+
+    # rename the column "mcap" to "sum_mcap"
+    sum_mcap = sum_mcap.rename(columns={"mcap": "sum_mcap"})
+
+    # merge the sum_mcap into reg_panel
+    reg_panel = pd.merge(reg_panel, sum_mcap, how="left", on="Date")
+
+    # calculate the market capitalization share
+    reg_panel["mcap_share"] = reg_panel["mcap"] / reg_panel["sum_mcap"]
+
+    # drop the column "sum_mcap"
+    reg_panel = reg_panel.drop(columns=["sum_mcap"])
 
     return reg_panel
 
@@ -199,6 +230,9 @@ def unit_of_acct(reg_panel: pd.DataFrame) -> pd.DataFrame:
     """
     # merge the market capitalization
     reg_panel = _market_cap(reg_panel)
+
+    # merge the market capitalization share
+    reg_panel = _merge_mcap_share(reg_panel)
 
     # merge the dollar exchange rate
     reg_panel = _dollar_exchange_rate(reg_panel)

@@ -64,6 +64,32 @@ NAMING_DIC_PROPERTIES_OF_DOMINANCE_LAG = {
     "${\it CorrSent}$": "${\it-1 CorrSent}$",
 }
 
+NAMING_DIC_SPECIFICATION_LAG = {
+    "${\it AvgEigenCent}$": "${\it-7 AvgEigenCent}$",
+    "${\it EigenCent}^{In}$": "${\it-7 EigenCent}^{In}$",
+    "${\it EigenCent}^{Out}$": "${\it-7 EigenCent}^{Out}$",
+    "${\it BetwCent}^C$": "${\it-7 BetwCent}^C$",
+    "${\it BetwCent}^V$": "${\it-7 BetwCent}^V$",
+    "${\it VShare}$": "${\it-7 VShare}$",
+    "${\it VShare}^{\it In}$": "${\it-7 VShare}^{\it-7 In}$",
+    "${\it VShare}^{\it Out}$": "${\it-7 VShare}^{\it-7 Out}$",
+    "${\i Stable}$": "${\i Stable}$",
+    "${\it PeggingDegree}$": "${\it-7 PeggingDegree}$",
+    "${\it DepeggingDegree}$": "${\it-7 DepeggingDegree}$",
+    "${\it PeggingDegree}^{Uppeg}$": "${\it-7 PeggingDegree}^{Uppeg}$",
+    "${\it PeggingDegree}^{Downpeg}$": "${\it-7 PeggingDegree}^{Downpeg}$",
+    "${\it DepeggingDegree}^{Uppeg}$": "${\it-7 DepeggingDegree}^{Uppeg}$",
+    "${\it DepeggingDegree}^{Downpeg}$": "${\it-7 DepeggingDegree}^{Downpeg}$",
+    "${\it CorrGas}$": "${\it-7 CorrGas}$",
+    "${\it CorrETH}$": "${\it-7 CorrETH}$",
+    "${\it CorrSP}$": "${\it-7 CorrSP}$",
+    "${\it \sigma}^{USD}$": "${\it-7 \sigma}^{USD}$",
+    "${\it StableShare}$": "${\it-7 StableShare}$",
+    "${\it SupplyShare}$": "${\it-7 SupplyShare}$",
+    "${\it \ln MCap}^{USD}$": "${\it-7 \ln MCap}^{USD}$",
+    "${\it MCapShare}$": "${\it-7 MCapShare}$",
+}
+
 NAMING_DIC_HERFINDAHL_LAG = {
     "${\t HHIVolume}$": "${\t-1 HHIVolume}$",
     "${\t HHIEigenCent}^{In}$": "${\t-1 HHIEigenCent}^{In}$",
@@ -108,17 +134,24 @@ def generate_regression_specification(reg_panel: pd.DataFrame, lag: bool) -> Non
         # loop through the dependent variables as eigenvector centrality
         for dependent_variable in [
             "${\it AvgEigenCent}$",
+            "${\it EigenCent}^{In}$",
+            "${\it EigenCent}^{Out}$",
             "${\it BetwCent}^C$",
             "${\it BetwCent}^V$",
             "${\it VShare}$",
+            "${\it VShare}^{\it In}$",
+            "${\it VShare}^{\it Out}$",
         ]:
             for stability in [
-                "${\it StableShare}$",
                 "${\i Stable}$",
-                "${\it StableDepeg}$",
+                "${\it DepeggingDegree}$",
+                "${\it DepeggingDegree}^{Uppeg}$",
+                "${\it PeggingDegree}^{Uppeg}$",
+                "${\it StableShare}$",
             ]:
                 for financial_service in [
-                    "${\it SupplyShare}$",
+                    "${\it CorrETH}$",
+                    "${\it CorrSP}$",
                 ]:
                     for heding in [
                         "${\it CorrGas}$",
@@ -127,42 +160,32 @@ def generate_regression_specification(reg_panel: pd.DataFrame, lag: bool) -> Non
                         stargazer_col_list.append(dependent_variable)
                         independent_variables = [
                             "${\it \sigma}^{USD}$",
-                            "${\it CorrSP}$",
                             stability,
                             financial_service,
                             heding,
-                            "${\it CorrETH}$",
-                            "${\it \ln MCap}^{USD}$",
+                            "${\it SupplyShare}$",
+                            "${\it MCapShare}$",
                         ]
-
-                        if stability == "${\it StableDepeg}$":
-                            independent_variables = independent_variables + [
-                                "${\i Stable}$"
-                            ]
 
                         reg_list = [
                             "Date",
                             "Token",
                             dependent_variable,
                             "${\it \sigma}^{USD}$",
-                            "${\it CorrSP}$",
                             stability,
                             financial_service,
                             heding,
-                            "${\it CorrETH}$",
-                            "${\it \ln MCap}^{USD}$",
+                            "${\it MCapShare}$",
                         ]
 
-                        if stability == "${\it StableDepeg}$":
-                            reg_list = reg_list + ["${\i Stable}$"]
+                        if (stability == "${\it DepeggingDegree}$") | (
+                            stability == "${\it DepeggingDegree}^{Uppeg}$"
+                        ):
+                            reg_list.append("${\i Stable}$")
+                            independent_variables.append("${\i Stable}$")
 
                         # isolate the data for the regression and drop the missing values
                         processed_panel = reg_subsample[reg_list].dropna().copy()
-
-                        if stability == "${\it StableDepeg}$":
-                            independent_variables = independent_variables + [
-                                "${\i Stable}$"
-                            ]
 
                         # create the dummy variables
                         dummy_vars = pd.get_dummies(
@@ -192,10 +215,10 @@ def generate_regression_specification(reg_panel: pd.DataFrame, lag: bool) -> Non
                             # one lag of in the group of "Token" and "Date"
                             independent_variables = independent_variables.groupby(
                                 ["Token"]
-                            ).shift(1)
+                            ).shift(7)
                             # rename the columns
                             independent_variables = independent_variables.rename(
-                                columns=NAMING_DIC_HERFINDAHL_LAG
+                                columns=NAMING_DIC_SPECIFICATION_LAG
                             )
                             # drop the column of "Date"
                             independent_variables = independent_variables.drop(
@@ -240,6 +263,114 @@ def generate_regression_specification(reg_panel: pd.DataFrame, lag: bool) -> Non
             rf"{TABLE_PATH}/regression_specification_{status}.html", "w"
         ) as to_file:
             to_file.write(stargazer.render_html())
+
+        # # loop through the dependent variables as eigenvector centrality
+        # for dependent_variable in [
+        #     "${\it AvgEigenCent}$",
+        #     "${\it BetwCent}^C$",
+        #     "${\it BetwCent}^V$",
+        #     "${\it VShare}$",
+        # ]:
+        #     # record the dependet variables
+        #     stargazer_col_list.append(dependent_variable)
+        #     independent_variables = [
+        #         "${\it CorrETH}$",
+        #         "${\it CorrSP}$",
+        #         "${\it \sigma}^{USD}$",
+        #         "${\it StableShare}$",
+        #         "${\i Stable}$",
+        #         "${\it StableDepeg}$",
+        #         "${\it CorrGas}$",
+        #         "${\it \ln MCap}^{USD}$",
+        #         "${\it SupplyShare}$",
+        #     ]
+
+        #     reg_list = [
+        #         "Date",
+        #         "Token",
+        #         dependent_variable,
+        #         "${\it CorrETH}$",
+        #         "${\it CorrSP}$",
+        #         "${\it \sigma}^{USD}$",
+        #         "${\it StableShare}$",
+        #         "${\i Stable}$",
+        #         "${\it StableDepeg}$" "${\it CorrGas}$",
+        #         "${\it \ln MCap}^{USD}$",
+        #         "${\it SupplyShare}$",
+        #     ]
+
+        #     # isolate the data for the regression and drop the missing values
+        #     processed_panel = reg_subsample[reg_list].dropna().copy()
+
+        #     # create the dummy variables
+        #     dummy_vars = pd.get_dummies(processed_panel["Token"], drop_first=True)
+
+        #     # add the dummy variables to the data
+        #     processed_panel = pd.concat([processed_panel, dummy_vars], axis=1)
+
+        #     # set the independent variables equal to the
+        #     # otal panel minus the dependent variable
+        #     independent_variables = [
+        #         var for var in processed_panel.columns if var != dependent_variable
+        #     ]
+
+        #     # independent variables
+        #     independent_variables = processed_panel[independent_variables].copy()
+
+        #     # lag the independent variables
+        #     if lag:
+        #         # one lag of in the group of "Token" and "Date"
+        #         independent_variables = independent_variables.groupby(["Token"]).shift(
+        #             1
+        #         )
+        #         # rename the columns
+        #         independent_variables = independent_variables.rename(
+        #             columns=NAMING_DIC_HERFINDAHL_LAG
+        #         )
+        #         # drop the column of "Date"
+        #         independent_variables = independent_variables.drop(columns=["Date"])
+        #     else:
+        #         # drop the column of "Date" and "Token"
+        #         independent_variables = independent_variables.drop(
+        #             ["Date", "Token"], axis=1
+        #         )
+
+        #     # run the regression using
+        #     model = sm.OLS(
+        #         processed_panel[dependent_variable],
+        #         independent_variables,
+        #         missing="drop",
+        #     ).fit()
+
+        #     # store the results
+        #     stargazer_list.append(model)
+
+        # # use stargazer to create the regression table
+        # stargazer = Stargazer(stargazer_list)
+
+        # # set the title of the table
+        # stargazer.title("Regression of Specification")
+
+        # # customize the column name
+        # stargazer.custom_columns(
+        #     stargazer_col_list,
+        #     [1 for _ in stargazer_col_list],
+        # )
+
+        # # save the table to a latex file
+        # with open(
+        #     rf"{TABLE_PATH}/regression_specification_{status}.tex", "w"
+        # ) as to_file:
+        #     to_file.write(stargazer.render_latex())
+
+        # # save the table to a html file
+        # with open(
+        #     rf"{TABLE_PATH}/regression_specification_{status}.html", "w"
+        # ) as to_file:
+        #     to_file.write(stargazer.render_html())
+
+        # save the panel dataset as a csv file
+        reg_panel.to_csv(rf"{TABLE_PATH}/regression_panel.csv")
 
 
 def generate_regression_herfindahl(
@@ -575,7 +706,7 @@ def generate_unit_of_account(reg_panel: pd.DataFrame) -> None:
             "${\it CorrGas}$",
             "${\it CorrETH}$",
             "${\it ExchangeRate}^{USD}$",
-            "${\it \ln MCap}^{USD}$",
+            "${\it MCapShare}$",
         ]
 
         # run the regression
@@ -755,8 +886,8 @@ def generate_reg_property_of_dominance(
     ) as to_file:
         to_file.write(stargazer.render_html())
 
-    # save the panel dataset as a csv file
-    reg_panel.to_csv(rf"{TABLE_PATH}/regression_panel.csv")
+    # # save the panel dataset as a csv file
+    # reg_panel.to_csv(rf"{TABLE_PATH}/regression_panel.csv")
 
 
 def realized_holding_period(reg_panel: pd.DataFrame, lag: bool) -> None:
