@@ -9,7 +9,7 @@ import matplotlib.dates as md
 import matplotlib.pyplot as plt
 
 from environ.constants import FIGURE_PATH
-from environ.process.spindex.boom_bust import BOOM_BUST, sp_df
+from environ.process.market.boom_bust import BOOM_BUST, sp_df
 
 if __name__ == "__main__":
     # plot price with boom bust cycles

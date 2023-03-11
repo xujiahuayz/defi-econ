@@ -12,6 +12,31 @@ TABLE_PATH = path.join(PROJECT_ROOT, "tables")
 GLOBAL_DATA_PATH = path.join(PROJECT_ROOT, "data", "data_global")
 
 
+STABLE_DICT = {
+    "BUSD": {"underlying": "USD", "color": "blue", "line_type": "solid"},
+    "DAI": {"underlying": "USD", "color": "red", "line_type": "dashdot"},
+    "DSD": {"underlying": "USD", "color": "green", "line_type": "dashed"},
+    "ESD": {"underlying": "USD", "color": "orange", "line_type": "dotted"},
+    "EURS": {"underlying": "EUR", "color": "purple", "line_type": "solid"},
+    "EURT": {"underlying": "EUR", "color": "brown", "line_type": "dashdot"},
+    "FEI": {"underlying": "USD", "color": "pink", "line_type": "dashed"},
+    "FRAX": {"underlying": "USD", "color": "gray", "line_type": "dotted"},
+    "LUSD": {"underlying": "USD", "color": "olive", "line_type": "solid"},
+    "MIM": {"underlying": "USD", "color": "cyan", "line_type": "dashdot"},
+    "PAX": {"underlying": "USD", "color": "magenta", "line_type": "dashed"},
+    "TUSD": {"underlying": "USD", "color": "black", "line_type": "dotted"},
+    "USDC": {"underlying": "USD", "color": "blue", "line_type": "solid"},
+    "USDT": {"underlying": "USD", "color": "red", "line_type": "dashdot"},
+    "UST": {"underlying": "USD", "color": "green", "line_type": "dashed"},
+    "XSGD": {"underlying": "SGD", "color": "orange", "line_type": "dotted"},
+    "agEUR": {"underlying": "EUR", "color": "purple", "line_type": "solid"},
+    "oneUNI": {"underlying": "USD", "color": "brown", "line_type": "dashdot"},
+    "sUSD": {"underlying": "USD", "color": "pink", "line_type": "dashed"},
+}
+
+# get all unique underling from stable_dict
+FIAT_LIST = list(set([v["underlying"] for v in STABLE_DICT.values()]))
+
 NAMING_DICT = {
     "TVL_share": "{\it LiquidityShare}",
     "Inflow_centrality": "{\it EigenCent}^{In}",

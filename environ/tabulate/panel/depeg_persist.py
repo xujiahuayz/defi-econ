@@ -1,12 +1,12 @@
 import pandas as pd
 
 
-def depeg_persistancy(price_series: pd.Series, rolling_window: int = 2) -> pd.Series:
+def depeg_persistancy(price_series: pd.Series, rolling_window: int = 14) -> pd.Series:
     """
     Function to count how many times a Token's price in the past 14 days falls below 0.95 or above 1.05.
     """
     return price_series.rolling(rolling_window).apply(
-        lambda x: sum(x < 0.95) + sum(x > 1.05)
+        lambda x: (sum(x < 0.95) + sum(x > 1.05)) >= rolling_window / 2
     )
 
 

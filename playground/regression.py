@@ -18,8 +18,8 @@ REGRESSION_NAMING_DICT = {
 
 def regress(
     data: pd.DataFrame,
-    dependent_v: str = "Volume_share",
-    independent_v: list[str] = ["is_boom", "mcap_share"],
+    dv: str = "Volume_share",
+    iv: list[str] = ["is_boom", "mcap_share"],
     entity_effect: bool = True,
 ):
     """
@@ -31,13 +31,16 @@ def regress(
         dv (list[str], optional): The name of the dependent variables. Defaults to ["is_boom", "mcap_share"].
     """
     # Define the dependent variable
-    y = data[dependent_v]
+    y = data[dv]
 
     # Define the independent variables
-    X = data[independent_v]
+    X = data[iv]
 
     # Run the fixed-effect regression
-    model = PanelOLS(y, X, entity_effects=entity_effect, drop_absorbed=True).fit()
+    # catch error and print y and X
+    model = PanelOLS(
+        y, X, entity_effects=entity_effect, drop_absorbed=True, check_rank=False
+    ).fit()
     return model
 
 
@@ -45,7 +48,7 @@ def render_regression_column(
     reg_panel: pd.DataFrame, dv: str, iv: list[str], entity_effect: bool = True
 ) -> pd.Series:
     regression_result = regress(
-        data=reg_panel, dependent_v=dv, independent_v=iv, entity_effect=entity_effect
+        data=reg_panel, dv=dv, iv=iv, entity_effect=entity_effect
     )
     # merge three pd.Series: regression_result.params, regression_result.std_errors, regression_result.pvalues into one dataframe
     result_column = pd.Series({"regressand": dv})

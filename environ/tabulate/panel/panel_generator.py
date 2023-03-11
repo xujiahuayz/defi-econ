@@ -12,7 +12,7 @@ Desc    : Generate the panel for regression.
 import glob
 import pandas as pd
 import numpy as np
-from environ.process.spindex.boom_bust import BOOM_BUST
+from environ.process.market.boom_bust import BOOM_BUST
 from environ.utils.config_parser import Config
 from environ.utils.boom_calculator import is_boom
 import matplotlib.dates as md

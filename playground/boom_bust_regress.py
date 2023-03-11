@@ -24,7 +24,9 @@ iv_chunk_eth = [["corr_eth"], ["corr_sp"]]
 iv_chunk_main = [list(map(name_lag_variable, iv)) for iv in iv_chunk_main]
 iv_chunk_eth = [list(map(name_lag_variable, iv)) for iv in iv_chunk_eth]
 iv_chunk_stable = [
-    ["Stable", name_lag_variable("depeg_pers")],
+    ["Stable", name_lag_variable("depegging_degree")],
+    [name_lag_variable("pegging_degree")],
+    [name_lag_variable("depeg_pers")],
     [name_lag_variable("stableshare")],
 ]
 LAG_DV_NAME = "$\it Dominance_{t-1}$"
@@ -39,7 +41,8 @@ def boom_bust_regress(reg_panel: pd.DataFrame, file_name: str) -> pd.DataFrame:
     counter = 0
     for dv in dependent_variables:
         lag_dv_name = name_lag_variable(dv)
-        dv_lag = [[], [lag_dv_name]]
+        # determines whether to include lagged dependent variable
+        dv_lag = [[lag_dv_name]]
         for iv_combi in product(dv_lag, iv_chunk_main, iv_chunk_stable, iv_chunk_eth):
             iv = [x for y in iv_combi for x in y]
             result_column = render_regression_column(
@@ -59,11 +62,8 @@ def boom_bust_regress(reg_panel: pd.DataFrame, file_name: str) -> pd.DataFrame:
             # merge result_column into result_table, keep  name as column name
             result_table = pd.concat([result_table, result_column_df], axis=1)
 
-    # replace all na with empty string
-    result_table_raw = result_table.fillna("")
-
     # reorder rows in result_table
-    result_table_fine = result_table_raw.reindex(
+    result_table_fine = result_table.reindex(
         [
             "regressand",
             LAG_DV_NAME,
@@ -74,7 +74,7 @@ def boom_bust_regress(reg_panel: pd.DataFrame, file_name: str) -> pd.DataFrame:
             "nobs",
             "r2",
         ]
-    )
+    ).fillna("")
 
     # rename result_table index with REGRESSION_NAMING_DICT and NAMING_DICT_LAG and NAMING_DICT combined
     result_table_fine = result_table_fine.rename(index=REGRESSION_NAMING_DICT).rename(
@@ -98,6 +98,10 @@ if __name__ == "__main__":
         if variable not in ["Date", "Token"]:
             reg_panel = lag_variable(reg_panel, variable, "Date", "Token")
 
-    result_full = boom_bust_regress(reg_panel, "full")
-    result_bust = boom_bust_regress(reg_panel[reg_panel["is_boom"] != True], "bust")
-    result_boom = boom_bust_regress(reg_panel[reg_panel["is_boom"] == True], "boom")
+    result_full = boom_bust_regress(reg_panel=reg_panel, file_name="full")
+    result_bust = boom_bust_regress(
+        reg_panel=reg_panel[reg_panel["is_boom"] != True], file_name="bust"
+    )
+    result_boom = boom_bust_regress(
+        reg_panel=reg_panel[reg_panel["is_boom"] == True], file_name="boom"
+    )
