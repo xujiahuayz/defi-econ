@@ -47,12 +47,13 @@ def timer(func: Callable) -> Callable:
         end = time.time()
         # round time to 6 decimals
         print(f"{func.__name__} took {round(end - start, 6)} seconds")
+        return result
 
     return wrapper
 
 
 @timer
-def run_sm(df: pd.DataFrame) -> None:
+def run_sm(df: pd.DataFrame):
     """ """
     # run fixed effect regression with sm with entity dummies
     # create entity dummies
@@ -68,10 +69,11 @@ def run_sm(df: pd.DataFrame) -> None:
     param_dict = [{v: f"{model.params[v]:.4f}"} for v in iv]
     # # print regression name, prameters of iv, and r2 to exactly 4 decimals like [{v: f'{model.params[v]:.4f}'} for v in iv]
     print(f"sm.OLS: {param_dict}, r^2: {model.rsquared:.4f}")
+    return model
 
 
 @timer
-def run_panelOLS(df: pd.DataFrame) -> None:
+def run_panelOLS(df: pd.DataFrame):
     """ """
     # run fixed effect regression with linearmodels with panelOLS
     # set entity and period as index
@@ -81,11 +83,12 @@ def run_panelOLS(df: pd.DataFrame) -> None:
     param_dict = [{v: f"{model.params[v]:.4f}"} for v in iv]
     # print regression name, prameters of iv, and r2 to exactly 4 decimals
     print(f"PanelOLS: {param_dict}, r^2: {model.rsquared:.4f}")
+    return model
 
 
 if __name__ == "__main__":
     # run fixed effect regression with sm with entity dummies
-    run_sm(df)
+    model1 = run_sm(df)
 
     # run fixed effect regression with linearmodels with panelOLS
-    run_panelOLS(df)
+    model2 = run_panelOLS(df)
