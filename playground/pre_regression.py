@@ -3,11 +3,12 @@ run regression on the panel data
 """
 
 import re
-import pandas as pd
-from environ.constants import TABLE_PATH, NAMING_DICT_OLD
 from os import path
 
+import pandas as pd
 
+from environ.constants import NAMING_DICT_OLD, TABLE_PATH
+from environ.tabulate.panel.depeg_persist import _merge_depeg_persistancy
 from environ.tabulate.panel.panel_generator import _merge_boom_bust
 
 # read csv file as pd.DataFrame where Date column is parsed as datetime
@@ -25,6 +26,7 @@ reg_panel = reg_panel.rename(columns=NAMING_DICT_reverted)
 
 # merge boom bust cycles
 reg_panel = _merge_boom_bust(reg_panel)
+reg_panel = _merge_depeg_persistancy(reg_panel)
 
 
 reg_panel = reg_panel.set_index(["Token", "Date"])

@@ -62,6 +62,7 @@ NAMING_DICT = {
     "total_volumes": "{\it TotalVolume}",
     "S&P": "{\it R}^{USD}_{SP}",
     "S&P_volatility": "{\it \sigma}^{USD}_{SP}",
+    "depeg_pers": "{\it DepegPersist}",
 }
 
 NAMING_DICT_LAG = lag_naming_dict(NAMING_DICT)

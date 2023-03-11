@@ -5,7 +5,6 @@ from os import path
 import pandas as pd
 from playground.regression import (
     REGRESSION_NAMING_DICT,
-    regress,
     render_regression_column,
 )
 from environ.constants import TABLE_PATH, ALL_NAMING_DICT
@@ -25,10 +24,8 @@ iv_chunk_eth = [["corr_eth"], ["corr_sp"]]
 iv_chunk_main = [list(map(name_lag_variable, iv)) for iv in iv_chunk_main]
 iv_chunk_eth = [list(map(name_lag_variable, iv)) for iv in iv_chunk_eth]
 iv_chunk_stable = [
-    [
-        # "Stable",
-        name_lag_variable("stableshare")
-    ]
+    ["Stable", name_lag_variable("depeg_pers")],
+    [name_lag_variable("stableshare")],
 ]
 LAG_DV_NAME = "$\it Dominance_{t-1}$"
 
@@ -101,6 +98,6 @@ if __name__ == "__main__":
         if variable not in ["Date", "Token"]:
             reg_panel = lag_variable(reg_panel, variable, "Date", "Token")
 
-    boom_bust_regress(reg_panel, "full")
-    boom_bust_regress(reg_panel[reg_panel["is_boom"] != True], "bust")
-    boom_bust_regress(reg_panel[reg_panel["is_boom"] == True], "boom")
+    result_full = boom_bust_regress(reg_panel, "full")
+    result_bust = boom_bust_regress(reg_panel[reg_panel["is_boom"] != True], "bust")
+    result_boom = boom_bust_regress(reg_panel[reg_panel["is_boom"] == True], "boom")

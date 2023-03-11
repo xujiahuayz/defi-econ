@@ -11,7 +11,7 @@ REGRESSION_NAMING_DICT = {
     "r2": "$R^2$",
     "r2_within": "$R^2_{within}$",
     "nobs": "N",
-    "fe": "fixed effect",
+    "fe": "\midrule fixed effect",
     "regressand": "Regressand",
 }
 
