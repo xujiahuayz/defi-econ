@@ -1,10 +1,10 @@
 # get the regression panel dataset from pickled file
-from itertools import product
 from os import path
 
 import pandas as pd
-from environ.constants import NAMING_DICT, TABLE_PATH, NAMING_DICT_LAG, ALL_NAMING_DICT
 from linearmodels.panel import PanelOLS
+
+from environ.constants import ALL_NAMING_DICT, TABLE_PATH
 from environ.utils.lags import lag_variable, name_lag_variable
 
 REGRESSION_NAMING_DICT = {
@@ -56,9 +56,12 @@ def render_regression_column(
         # format v to exactly 3 decimal places
         v = "{:.3f}".format(v)
         # add * according to p-value
-        if regression_result.pvalues[i] < 0.01:
+        pvalue = regression_result.pvalues[i]
+        if pvalue < 0.01:
+            star = "***"
+        elif pvalue < 0.05:
             star = "**"
-        elif regression_result.pvalues[i] < 0.05:
+        elif pvalue < 0.1:
             star = "*"
         else:
             star = ""
@@ -79,6 +82,72 @@ def render_regression_column(
     return result_column
 
 
+def render_regress_table(
+    reg_panel: pd.DataFrame,
+    file_name: str,
+    reg_combi: list[tuple[str, list[str]]],
+    lag_dv: str = "$\it Dominance_{t-1}$",
+) -> pd.DataFrame:
+
+    result_table = pd.DataFrame()
+    counter = 0
+    # initiate all_ivs set
+    all_ivs = set()
+    for reg_spec in reg_combi:
+        dv = reg_spec[0]
+        iv = reg_spec[1]
+        lag_dv_name = name_lag_variable(dv)
+        result_column = render_regression_column(
+            reg_panel, dv, iv, entity_effect=False if "Stable" in iv else True
+        )
+        # rename result_column index
+        result_column = result_column.rename(
+            index={
+                lag_dv_name: lag_dv,
+            }
+        )
+        result_column["regressand"] = ALL_NAMING_DICT[dv]
+
+        counter += 1
+        result_column_df = result_column.to_frame(name=f"({counter})")
+
+        # merge result_column into result_table, keep  name as column name
+        result_table = pd.concat([result_table, result_column_df], axis=1)
+        # add iv elements to all_ivs
+        all_ivs.update(iv)
+
+    # reorder rows in result_table, include only rows in index already
+
+    rows = [
+        x
+        for x in (
+            [
+                "regressand",
+                lag_dv,
+            ]
+            + [x for x in all_ivs]
+            + [
+                "fe",
+                "nobs",
+                "r2",
+            ]
+        )
+        if x in result_table.index
+    ]
+    result_table_fine = result_table.reindex(rows).fillna("")
+
+    # rename result_table index with REGRESSION_NAMING_DICT and NAMING_DICT_LAG and NAMING_DICT combined
+    result_table_fine = result_table_fine.rename(index=REGRESSION_NAMING_DICT).rename(
+        index=ALL_NAMING_DICT
+    )
+
+    # transform result_table to latex table
+    result_table_fine.to_latex(
+        path.join(TABLE_PATH, f"regression_table_{file_name}.tex"), escape=False
+    )
+    return result_table_fine
+
+
 if __name__ == "__main__":
 
     # Get the regression panel dataset from pickled file
@@ -89,77 +158,8 @@ if __name__ == "__main__":
         if variable not in ["Date", "Token"]:
             reg_panel = lag_variable(reg_panel, variable, "Date", "Token")
 
-    dependent_variables = [
-        "avg_eigenvector_centrality",
-        "betweenness_centrality_volume",
-        "betweenness_centrality_count",
-        "Volume_share",
-    ]
-
-    iv_chunk_main = [["std", "corr_gas", "mcap_share", "Supply_share"]]
-    iv_chunk_eth = [["corr_eth"], ["corr_sp"]]
-
-    # lag all iv above
-    iv_chunk_main = [list(map(name_lag_variable, iv)) for iv in iv_chunk_main]
-    iv_chunk_eth = [list(map(name_lag_variable, iv)) for iv in iv_chunk_eth]
-    iv_chunk_stable = [["Stable", name_lag_variable("stableshare")]]
-    LAG_DV_NAME = "$\it Dominance_{t-1}$"
-
-    # flatten all possible iv
-    all_ivs = iv_chunk_main + iv_chunk_stable + iv_chunk_eth
-
-    result_table = pd.DataFrame()
-    counter = 0
-    for dv in dependent_variables:
-        lag_dv_name = name_lag_variable(dv)
-        dv_lag = [[], [lag_dv_name]]
-        for iv_combi in product(dv_lag, iv_chunk_main, iv_chunk_stable, iv_chunk_eth):
-            iv = [x for y in iv_combi for x in y]
-            result_column = render_regression_column(
-                reg_panel,
-                dv,
-                iv,
-                entity_effect=True
-                # False if "Stable" in iv else True
-            )
-            # rename result_column index
-            result_column = result_column.rename(
-                index={
-                    lag_dv_name: LAG_DV_NAME,
-                }
-            )
-            result_column["regressand"] = ALL_NAMING_DICT[dv]
-
-            counter += 1
-            result_column_df = result_column.to_frame(name=f"({counter})")
-
-            # merge result_column into result_table, keep  name as column name
-            result_table = pd.concat([result_table, result_column_df], axis=1)
-
-    # replace all na with empty string
-    result_table_raw = result_table.fillna("")
-
-    # reorder rows in result_table
-    result_table_fine = result_table_raw.reindex(
-        [
-            "regressand",
-            LAG_DV_NAME,
-        ]
-        + [x for y in all_ivs for x in y]
-        + [
-            "fe",
-            "nobs",
-            "r2",
-            "r2_within",
-        ]
-    )
-
-    # rename result_table index with REGRESSION_NAMING_DICT and NAMING_DICT_LAG and NAMING_DICT combined
-    result_table_fine = result_table_fine.rename(index=REGRESSION_NAMING_DICT).rename(
-        index=ALL_NAMING_DICT
-    )
-
-    # transform result_table to latex table
-    result_table_fine.to_latex(
-        path.join(TABLE_PATH, "regression_table.tex"), escape=False
+    result_full = render_regress_table(
+        reg_panel=reg_panel,
+        file_name="full",
+        reg_combi=[("Volume_share", ["corr_eth", "std"])],
     )

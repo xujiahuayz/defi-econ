@@ -10,10 +10,11 @@ import pandas as pd
 from environ.constants import TABLE_PATH, STABLE_DICT
 
 # read pickled reg_panel
+series_name = "exchange_to_underlying"
 reg_panel = pd.read_pickle(path.join(TABLE_PATH, "reg_panel.pkl"))
 # get only token, date and dollar price for only stablecoins
 reg_panel.reset_index(inplace=True)
-stablecoin_price = reg_panel[["Token", "Date", "dollar_exchange_rate"]].loc[
+stablecoin_price = reg_panel[["Token", "Date", series_name]].loc[
     reg_panel["Stable"] == 1
 ]
 
@@ -30,9 +31,7 @@ for token in stablecoin_price["Token"].unique():
     # plot the price
     plt.plot(
         stablecoin_price.loc[stablecoin_price["Token"] == token]["Date"],
-        stablecoin_price.loc[stablecoin_price["Token"] == token][
-            "dollar_exchange_rate"
-        ],
+        stablecoin_price.loc[stablecoin_price["Token"] == token][series_name],
         color=color,
         linestyle=line_type,
         label=token,
@@ -45,5 +44,7 @@ plt.ylim(0, 2.5)
 plt.axhline(y=1, color="black", linestyle="--", alpha=0.5)
 # have legend outside the plot
 plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left")
-
+# add x and y labels
+plt.xlabel("Date")
+plt.ylabel("Exchange rate to underlying")
 plt.show()
