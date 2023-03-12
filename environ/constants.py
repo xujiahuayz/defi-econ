@@ -11,6 +11,7 @@ FIGURE_PATH = path.join(PROJECT_ROOT, "figures")
 TABLE_PATH = path.join(PROJECT_ROOT, "tables")
 GLOBAL_DATA_PATH = path.join(PROJECT_ROOT, "data", "data_global")
 
+# TODO: complete, note that WBTC is dummy -- need checking
 COMPOUND_DICT = {
     "WBTC": {
         "pool_address": "0x4d2f5cfba55ae412221182d8475bc85799a5644b",
