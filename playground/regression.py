@@ -1,5 +1,5 @@
 # get the regression panel dataset from pickled file
-from os import path
+from pathlib import Path
 
 import pandas as pd
 from linearmodels.panel import PanelOLS
@@ -31,15 +31,19 @@ def regress(
         dv (list[str], optional): The name of the dependent variables. Defaults to ["is_boom", "mcap_share"].
     """
     # Define the dependent variable
-    y = data[dv]
+    dependent_var = data[dv]
 
     # Define the independent variables
-    X = data[iv]
+    independent_var = data[iv]
 
     # Run the fixed-effect regression
     # catch error and print y and X
     model = PanelOLS(
-        y, X, entity_effects=entity_effect, drop_absorbed=True, check_rank=False
+        dependent_var,
+        independent_var,
+        entity_effects=entity_effect,
+        drop_absorbed=True,
+        check_rank=False,
     ).fit()
     return model
 
@@ -57,15 +61,7 @@ def render_regression_column(
         v = "{:.3f}".format(v)
         # add * according to p-value
         pvalue = regression_result.pvalues[i]
-        if pvalue < 0.01:
-            star = "***"
-        elif pvalue < 0.05:
-            star = "**"
-        elif pvalue < 0.1:
-            star = "*"
-        else:
-            star = ""
-        star = "{" + star + "}"
+        star = f"{{{'***' if pvalue < 0.01 else '**' if pvalue < 0.05 else '*' if pvalue < 0.1 else ''}}}"
         # add standard error
         line1 = f"${v}^{star}$"
         line2 = f"({regression_result.std_errors[i]:.3f})"
@@ -75,10 +71,10 @@ def render_regression_column(
 
     result_column["fe"] = "yes" if entity_effect else "no"
     # number of observations with thousands separator
-    result_column["nobs"] = "{:,}".format(regression_result.nobs)
-    result_column["r2"] = "{:.3f}".format(regression_result.rsquared)
+    result_column["nobs"] = f"{regression_result.nobs:,}"
+    result_column["r2"] = f"{regression_result.rsquared:.3f}"
     # add within r2
-    result_column["r2_within"] = "{:.3f}".format(regression_result.rsquared_within)
+    result_column["r2_within"] = f"{regression_result.rsquared_within:.3f}"
     return result_column
 
 
@@ -112,7 +108,7 @@ def render_regress_table(
         result_column_df = result_column.to_frame(name=f"({counter})")
 
         # merge result_column into result_table, keep  name as column name
-        result_table = pd.concat([result_table, result_column_df], axis=1)
+        result_table = result_table.join(result_column_df, how="outer")
         # add iv elements to all_ivs
         all_ivs.update(iv)
 
@@ -143,7 +139,7 @@ def render_regress_table(
 
     # transform result_table to latex table
     result_table_fine.to_latex(
-        path.join(TABLE_PATH, f"regression_table_{file_name}.tex"), escape=False
+        Path(TABLE_PATH) / f"regression_table_{file_name}.tex", escape=False
     )
     return result_table_fine
 
@@ -151,7 +147,7 @@ def render_regress_table(
 if __name__ == "__main__":
 
     # Get the regression panel dataset from pickled file
-    reg_panel = pd.read_pickle(path.join(TABLE_PATH, "reg_panel.pkl"))
+    reg_panel = pd.read_pickle(Path(TABLE_PATH) / "reg_panel.pkl")
 
     # Lag all variable except the Date and Token
     for variable in reg_panel.columns:
@@ -161,5 +157,5 @@ if __name__ == "__main__":
     result_full = render_regress_table(
         reg_panel=reg_panel,
         file_name="full",
-        reg_combi=[("Volume_share", ["corr_eth", "std"])],
+        reg_combi=[("Volume_share", ["corr_eth", "std"]), ("Volume_share", ["std"])],
     )
