@@ -1,12 +1,14 @@
 # get the regression panel dataset from pickled file
-from itertools import product
 from pathlib import Path
 
 import pandas as pd
 
 from environ.constants import TABLE_PATH
-from environ.utils.lags import lag_variable, name_lag_variable
-from playground.regression import render_regress_table
+from environ.utils.lags import lag_variable
+from environ.tabulate.render_regression import (
+    construct_regress_vars,
+    render_regress_table,
+)
 
 dependent_variables = [
     "avg_eigenvector_centrality",
@@ -18,28 +20,21 @@ dependent_variables = [
 iv_chunk_list_unlagged = [
     [["std", "corr_gas", "mcap_share", "Supply_share"]],
     [
-        ["Stable", "depegging_degree"],
-        ["pegging_degree"],
-        ["depeg_pers"],
+        # ["Stable", "depegging_degree"],
+        # ["pegging_degree"],
+        # ["depeg_pers"],
         ["stableshare"],
     ],
     [["corr_eth"], ["corr_sp"]],
 ]
 
-# lag all iv above
-iv_chunk_list = [
-    [
-        [name_lag_variable(v) if v not in ["Stable"] else v for v in iv]
-        for iv in iv_chunk
-    ]
-    for iv_chunk in iv_chunk_list_unlagged
-]
-
-reg_combi = [
-    (dv, [x for y in iv_combi for x in y])
-    for dv in dependent_variables
-    for iv_combi in product(*([[[name_lag_variable(dv)]]] + iv_chunk_list))
-]
+reg_combi = construct_regress_vars(
+    dependent_variables=dependent_variables,
+    iv_chunk_list=iv_chunk_list_unlagged,
+    lag_iv=True,
+    with_lag_dv=True,
+    without_lag_dv=False,
+)
 
 # Get the regression panel dataset from pickled file
 reg_panel = pd.read_pickle(Path(TABLE_PATH) / "reg_panel.pkl")
@@ -48,6 +43,7 @@ reg_panel = pd.read_pickle(Path(TABLE_PATH) / "reg_panel.pkl")
 for variable in reg_panel.columns:
     if variable not in ["Date", "Token", "is_boom", "Stable"]:
         reg_panel = lag_variable(reg_panel, variable, "Date", "Token")
+
 
 LAG_DV_NAME = "$\it Dominance_{t-1}$"
 result_full = render_regress_table(
