@@ -1,4 +1,6 @@
 import logging
+from typing import Union
+
 import numpy as np
 import pandas as pd
 
@@ -113,18 +115,15 @@ def boom_bust_periods(
     return boom_bust_list
 
 
-def boom_bust(
-    time_price: pd.DataFrame, boom_change: float = 0.3, bust_change: float = 0.3
-) -> dict[str, list[tuple[int, int]]]:
+# allow time to be both integer and pandas._libs.tslibs.timestamps.Timestamp
+def is_boom(boom_bust_list: list, time: Union[int, pd.Timestamp]) -> bool:
     """
-    change the format of boom_bust_list to a dict
-    {"boom": [(start, end)], "bust": [(start, end)], "none": [(start, end)]}
+    determine if the given time is in a boom period
     """
-    boom_bust_list = boom_bust_periods(time_price, boom_change, bust_change)
-    boom_bust_dict = {"boom": [], "bust": [], "none": []}
     for i in boom_bust_list:
-        boom_bust_dict[i["main_trend"]].append((i["start"], i["end"]))
-    return boom_bust_dict
+        if i["main_trend"] == "boom" and i["start"] <= time <= i["end"]:
+            return True
+    return False
 
 
 if __name__ == "__main__":

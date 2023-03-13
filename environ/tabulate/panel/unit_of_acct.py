@@ -183,31 +183,33 @@ def depegging_degree(price: float) -> float:
     return np.log(1 / max(0.0001, price) if price < 1 else price)
 
 
-def _merge_pegging(reg_panel: pd.DataFrame) -> pd.DataFrame:
+def _merge_pegging(
+    reg_panel: pd.DataFrame, price_col_name: str = "exchange_to_underlying"
+) -> pd.DataFrame:
     """
     Function to merge the pegging degree.
     """
 
     reg_panel["pegging_degree"] = reg_panel["Stable"] * (
-        reg_panel["dollar_exchange_rate"]
+        reg_panel[price_col_name]
     ).apply(pegging_degree)
 
     reg_panel["depegging_degree"] = reg_panel["Stable"] * (
-        reg_panel["dollar_exchange_rate"]
+        reg_panel[price_col_name]
     ).apply(depegging_degree)
 
     reg_panel["pegging_degree_uppeg"] = reg_panel["pegging_degree"] * (
-        reg_panel["dollar_exchange_rate"] > 1
+        reg_panel[price_col_name] > 1
     )
     reg_panel["pegging_degree_downpeg"] = reg_panel["pegging_degree"] * (
-        reg_panel["dollar_exchange_rate"] < 1
+        reg_panel[price_col_name] < 1
     )
 
     reg_panel["depegging_degree_uppeg"] = reg_panel["depegging_degree"] * (
-        reg_panel["dollar_exchange_rate"] > 1
+        reg_panel[price_col_name] > 1
     )
     reg_panel["depegging_degree_downpeg"] = reg_panel["depegging_degree"] * (
-        reg_panel["dollar_exchange_rate"] < 1
+        reg_panel[price_col_name] < 1
     )
     return reg_panel
 

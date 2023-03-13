@@ -5,7 +5,7 @@ plot moving average of time series
 import matplotlib.pyplot as plt
 import matplotlib.dates as md
 import pandas as pd
-from environ.process.spindex.boom_bust import BOOM_BUST
+from environ.process.market.boom_bust import BOOM_BUST
 
 COLOR_DICT = {
     "WETH": "blue",

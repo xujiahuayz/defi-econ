@@ -8,7 +8,7 @@ import glob
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 from environ.utils.config_parser import Config
-from environ.utils.computations import boom_bust
+from environ.utils.boom_calculator import boom_bust
 
 # Initialize config
 config = Config()

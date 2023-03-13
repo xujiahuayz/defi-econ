@@ -15,93 +15,16 @@ import numpy as np
 import statsmodels.api as sm
 from matplotlib import pyplot as plt
 from stargazer.stargazer import Stargazer
-from environ.utils.config_parser import Config
+from environ.constants import (
+    FIGURE_PATH,
+    TABLE_PATH,
+    NAMING_DIC_HERFINDAHL_LAG,
+    NAMING_DIC_PROPERTIES_OF_DOMINANCE_LAG,
+    NAMING_DIC_SPECIFICATION_LAG,
+)
 
 # ignore the warnings
 warnings.filterwarnings("ignore")
-
-# Initialize the config parser
-config = Config()
-
-# Initialize the path
-TABLE_PATH = config["dev"]["config"]["result"]["TABLE_PATH"]
-FIGURE_PATH = config["dev"]["config"]["result"]["FIGURE_PATH"]
-
-# Initialize constants
-NAMING_DIC_PROPERTIES_OF_DOMINANCE_LAG = {
-    # Dominance
-    "${\it VShare}$": "${\it-1 VShare}$",
-    "${\it VShare}^{\it In}$": "${\it-1 VShare}^{\it-1 In}$",
-    "${\it VShare}^{\it Out}$": "${\it-1 VShare}^{\it-1 Out}$",
-    # Eigenvector
-    "${\it EigenCent}^{In}$": "${\it-1 EigenCent}^{In}$",
-    "${\it EigenCent}^{Out}$": "${\it-1 EigenCent}^{Out}$",
-    # Betweenness
-    "${\it BetwCent}^C$": "${\it-1 BetwCent}^C$",
-    "${\it BetwCent}^V$": "${\it-1 BetwCent}^V$",
-    # Store
-    "${\it BorrowShare}$": "${\it-1 BorrowShare}$",
-    "${\it SupplyShare}$": "${\it-1 SupplyShare}$",
-    "${\it BorrowAPY}^{USD}$": "${\it-1 BorrowAPY}^{USD}$",
-    "${\it SupplyAPY}^{USD}$": "${\it-1 SupplyAPY}^{USD}$",
-    "${\it Beta}$": "${\it-1 Beta}$",
-    "${\it \sigma}^{USD}$": "${\it-1 \sigma}^{USD}$",
-    "${\it \mu}^{USD}$": "${\it-1 \mu}^{USD}$",
-    # Other
-    "${\it CorrGas}$": "${\it-1 CorrGas}$",
-    "${\it CorrSP}$": "${\it-1 CorrSP}$",
-    "${\it CorrETH}$": "${\it-1 CorrETH}$",
-    "${R}^{\it USD}$": "${R}^{\it-1 USD}$",
-    "${\it MCap}^{USD}$": "${\it-1 MCap}^{USD}$",
-    "${\i Nonstable}$": "${\i Nonstable}$",
-    "${\i IsWETH}$": "${\i IsWETH}$",
-    "${\t GasPrice}$": "${\t-1 GasPrice}$",
-    "${\it ExchangeRate}^{USD}$": "${\it-1 ExchangeRate}^{USD}$",
-    "${\it LiquidityShare}$": "${\it-1 LiquidityShare}$",
-    "${\it exceedance}^{USD}$": "${\it-1 exceedance}^{USD}$",
-    "${\t \sigma}_{Gas}$": "${\t-1 \sigma}_{Gas}$",
-    # Drop
-    "${\it CorrSent}$": "${\it-1 CorrSent}$",
-}
-
-NAMING_DIC_SPECIFICATION_LAG = {
-    "${\it AvgEigenCent}$": "${\it-7 AvgEigenCent}$",
-    "${\it EigenCent}^{In}$": "${\it-7 EigenCent}^{In}$",
-    "${\it EigenCent}^{Out}$": "${\it-7 EigenCent}^{Out}$",
-    "${\it BetwCent}^C$": "${\it-7 BetwCent}^C$",
-    "${\it BetwCent}^V$": "${\it-7 BetwCent}^V$",
-    "${\it VShare}$": "${\it-7 VShare}$",
-    "${\it VShare}^{\it In}$": "${\it-7 VShare}^{\it-7 In}$",
-    "${\it VShare}^{\it Out}$": "${\it-7 VShare}^{\it-7 Out}$",
-    "${\i Stable}$": "${\i Stable}$",
-    "${\it PeggingDegree}$": "${\it-7 PeggingDegree}$",
-    "${\it DepeggingDegree}$": "${\it-7 DepeggingDegree}$",
-    "${\it PeggingDegree}^{Uppeg}$": "${\it-7 PeggingDegree}^{Uppeg}$",
-    "${\it PeggingDegree}^{Downpeg}$": "${\it-7 PeggingDegree}^{Downpeg}$",
-    "${\it DepeggingDegree}^{Uppeg}$": "${\it-7 DepeggingDegree}^{Uppeg}$",
-    "${\it DepeggingDegree}^{Downpeg}$": "${\it-7 DepeggingDegree}^{Downpeg}$",
-    "${\it CorrGas}$": "${\it-7 CorrGas}$",
-    "${\it CorrETH}$": "${\it-7 CorrETH}$",
-    "${\it CorrSP}$": "${\it-7 CorrSP}$",
-    "${\it \sigma}^{USD}$": "${\it-7 \sigma}^{USD}$",
-    "${\it StableShare}$": "${\it-7 StableShare}$",
-    "${\it SupplyShare}$": "${\it-7 SupplyShare}$",
-    "${\it \ln MCap}^{USD}$": "${\it-7 \ln MCap}^{USD}$",
-    "${\it MCapShare}$": "${\it-7 MCapShare}$",
-}
-
-NAMING_DIC_HERFINDAHL_LAG = {
-    "${\t HHIVolume}$": "${\t-1 HHIVolume}$",
-    "${\t HHIEigenCent}^{In}$": "${\t-1 HHIEigenCent}^{In}$",
-    "${\t HHIEigenCent}^{Out}$": "${\t-1 HHIEigenCent}^{Out}$",
-    "${\t HHIBetwCent}^C$": "${\t-1 HHIBetwCent}^C$",
-    "${\t HHIBetwCent}^V$": "${\t-1 HHIBetwCent}^V$",
-    "${\t TotalVolume}$": "${\t-1 TotalVolume}$",
-    "${\t R}^{USD}_{SP}$": "${\t-1 R}^{USD}_{SP}$",
-    "${\t \sigma}^{USD}_{SP}$": "${\t-1 \sigma}^{USD}_{SP}$",
-    "${\t GasPrice}$": "${\t-1 GasPrice}$",
-    "${\t \sigma}_{Gas}$": "${\t-1 \sigma}_{Gas}$",
-}
 
 
 def generate_regression_specification(reg_panel: pd.DataFrame, lag: bool) -> None:
@@ -264,112 +187,6 @@ def generate_regression_specification(reg_panel: pd.DataFrame, lag: bool) -> Non
         ) as to_file:
             to_file.write(stargazer.render_html())
 
-        # # loop through the dependent variables as eigenvector centrality
-        # for dependent_variable in [
-        #     "${\it AvgEigenCent}$",
-        #     "${\it BetwCent}^C$",
-        #     "${\it BetwCent}^V$",
-        #     "${\it VShare}$",
-        # ]:
-        #     # record the dependet variables
-        #     stargazer_col_list.append(dependent_variable)
-        #     independent_variables = [
-        #         "${\it CorrETH}$",
-        #         "${\it CorrSP}$",
-        #         "${\it \sigma}^{USD}$",
-        #         "${\it StableShare}$",
-        #         "${\i Stable}$",
-        #         "${\it StableDepeg}$",
-        #         "${\it CorrGas}$",
-        #         "${\it \ln MCap}^{USD}$",
-        #         "${\it SupplyShare}$",
-        #     ]
-
-        #     reg_list = [
-        #         "Date",
-        #         "Token",
-        #         dependent_variable,
-        #         "${\it CorrETH}$",
-        #         "${\it CorrSP}$",
-        #         "${\it \sigma}^{USD}$",
-        #         "${\it StableShare}$",
-        #         "${\i Stable}$",
-        #         "${\it StableDepeg}$" "${\it CorrGas}$",
-        #         "${\it \ln MCap}^{USD}$",
-        #         "${\it SupplyShare}$",
-        #     ]
-
-        #     # isolate the data for the regression and drop the missing values
-        #     processed_panel = reg_subsample[reg_list].dropna().copy()
-
-        #     # create the dummy variables
-        #     dummy_vars = pd.get_dummies(processed_panel["Token"], drop_first=True)
-
-        #     # add the dummy variables to the data
-        #     processed_panel = pd.concat([processed_panel, dummy_vars], axis=1)
-
-        #     # set the independent variables equal to the
-        #     # otal panel minus the dependent variable
-        #     independent_variables = [
-        #         var for var in processed_panel.columns if var != dependent_variable
-        #     ]
-
-        #     # independent variables
-        #     independent_variables = processed_panel[independent_variables].copy()
-
-        #     # lag the independent variables
-        #     if lag:
-        #         # one lag of in the group of "Token" and "Date"
-        #         independent_variables = independent_variables.groupby(["Token"]).shift(
-        #             1
-        #         )
-        #         # rename the columns
-        #         independent_variables = independent_variables.rename(
-        #             columns=NAMING_DIC_HERFINDAHL_LAG
-        #         )
-        #         # drop the column of "Date"
-        #         independent_variables = independent_variables.drop(columns=["Date"])
-        #     else:
-        #         # drop the column of "Date" and "Token"
-        #         independent_variables = independent_variables.drop(
-        #             ["Date", "Token"], axis=1
-        #         )
-
-        #     # run the regression using
-        #     model = sm.OLS(
-        #         processed_panel[dependent_variable],
-        #         independent_variables,
-        #         missing="drop",
-        #     ).fit()
-
-        #     # store the results
-        #     stargazer_list.append(model)
-
-        # # use stargazer to create the regression table
-        # stargazer = Stargazer(stargazer_list)
-
-        # # set the title of the table
-        # stargazer.title("Regression of Specification")
-
-        # # customize the column name
-        # stargazer.custom_columns(
-        #     stargazer_col_list,
-        #     [1 for _ in stargazer_col_list],
-        # )
-
-        # # save the table to a latex file
-        # with open(
-        #     rf"{TABLE_PATH}/regression_specification_{status}.tex", "w"
-        # ) as to_file:
-        #     to_file.write(stargazer.render_latex())
-
-        # # save the table to a html file
-        # with open(
-        #     rf"{TABLE_PATH}/regression_specification_{status}.html", "w"
-        # ) as to_file:
-        #     to_file.write(stargazer.render_html())
-
-        # save the panel dataset as a csv file
         reg_panel.to_csv(rf"{TABLE_PATH}/regression_panel.csv")
 
 
@@ -461,87 +278,6 @@ def generate_regression_herfindahl(
 
         # store the results
         stargazer_list.append(model)
-
-    # # loop through the dependent variables as eigenvector centrality
-    # for dependent_variable in [
-    #     "${\t HHIVolume}$",
-    #     "${\t HHIBetwCent}^C$",
-    #     "${\t HHIBetwCent}^V$",
-    #     "${\t HHITVL}$",
-    # ]:
-
-    #     # record the dependet variables
-    #     stargazer_col_list.append(dependent_variable)
-    #     independent_variables = reg_herfindahl[
-    #         [
-    #             "${\t TotalVolume}$",
-    #             "${\t R}^{USD}_{SP}$",
-    #             "${\t \sigma}^{USD}_{SP}$",
-    #             "${\t GasPrice}$",
-    #             "${\t \sigma}_{Gas}$",
-    #             # "${\t DeFiboom}$",
-    #             # "${\t DeFibust}$",
-    #         ]
-    #     ].copy()
-
-    #     if lag:
-    #         # one lag of the independent variable
-    #         independent_variables = independent_variables.shift(1)
-
-    #         # rename the columns using NAMING_DIC_HERFINDAHL_LAG
-    #         independent_variables = independent_variables.rename(
-    #             columns=NAMING_DIC_HERFINDAHL_LAG
-    #         )
-
-    #     # run the regression
-    #     model = sm.OLS(
-    #         reg_herfindahl[dependent_variable],
-    #         sm.add_constant(independent_variables),
-    #         missing="drop",
-    #     ).fit()
-
-    #     if standardized:
-    #         # append the dependent variable to the left of  independent variables
-    #         full_panel = pd.concat(
-    #             [reg_herfindahl[dependent_variable], independent_variables], axis=1
-    #         )
-
-    #         # drop the missing values
-    #         full_panel = full_panel.dropna()
-
-    #         # calculate the std of the independent variables
-    #         std_y = full_panel[dependent_variable].std()
-
-    #         # iterate through sm.add_constant(independent_variables)
-    #         for _, var in enumerate(sm.add_constant(independent_variables)):
-    #             # calculate the std of the independent variables
-    #             std_x = sm.add_constant(independent_variables)[var].std()
-
-    #             # calculate the standardized coefficient
-    #             standardized_coefficient = model.params[var] * std_x / std_y
-
-    #             # append the standardized coefficient to the dataframe
-    #             standardized_coefficient_df = standardized_coefficient_df.append(
-    #                 {
-    #                     "Dependent Variable": dependent_variable,
-    #                     "Independent Variable": var,
-    #                     "Standardized Coefficient": standardized_coefficient,
-    #                 },
-    #                 ignore_index=True,
-    #             )
-
-    #             # # update the coefficient of the independent variables
-    #             # model.params[var] = standardized_coefficient
-
-    #     # store the results
-    #     stargazer_list.append(model)
-
-    # # save the standardized coefficient to a csv file
-    # if standardized:
-    #     standardized_coefficient_df.to_csv(
-    #         rf"{TABLE_PATH}/standardized_coefficient_herfindahl.csv",
-    #         index=False,
-    #     )
 
     # use stargazer to create the regression table
     stargazer = Stargazer(stargazer_list)
@@ -885,9 +621,6 @@ def generate_reg_property_of_dominance(
         rf"{TABLE_PATH}/regression_properties_of_dominance_{file_name}.html", "w"
     ) as to_file:
         to_file.write(stargazer.render_html())
-
-    # # save the panel dataset as a csv file
-    # reg_panel.to_csv(rf"{TABLE_PATH}/regression_panel.csv")
 
 
 def realized_holding_period(reg_panel: pd.DataFrame, lag: bool) -> None:

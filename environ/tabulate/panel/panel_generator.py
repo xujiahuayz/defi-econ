@@ -12,9 +12,9 @@ Desc    : Generate the panel for regression.
 import glob
 import pandas as pd
 import numpy as np
+from environ.process.market.boom_bust import BOOM_BUST
 from environ.utils.config_parser import Config
-from environ.utils.computations import boom_bust
-from environ.process.spindex.sp import sp_df
+from environ.utils.boom_calculator import is_boom
 import matplotlib.dates as md
 
 # Initialize config
@@ -862,35 +862,16 @@ def _merge_avg_eigenvec(reg_panel: pd.DataFrame) -> pd.DataFrame:
     return reg_panel
 
 
-def _merge_boom_bust(reg_panel: pd.DataFrame, sp_df=sp_df) -> pd.DataFrame:
+def _merge_boom_bust(
+    reg_panel: pd.DataFrame, boom_bust: list = BOOM_BUST
+) -> pd.DataFrame:
     """
     Function to merge the boom and bust dummy.
     """
 
-    # convert date to timestamp
-    sp_df["time"] = sp_df["Date"].apply(lambda x: x.timestamp())
-
-    # replace s&p colume with price
-    sp_df = sp_df.rename(columns={"S&P": "price"})
-
-    BOOM_BUST = boom_bust(sp_df)
-
-    reg_panel["boom"] = 0
-    reg_panel["bust"] = 0
-
-    for boom in BOOM_BUST["boom"]:
-        reg_panel.loc[
-            (reg_panel["Date"] >= pd.to_datetime(boom[0], unit="s"))
-            & (reg_panel["Date"] <= pd.to_datetime(boom[1], unit="s")),
-            "boom",
-        ] = 1
-
-    for bust in BOOM_BUST["bust"]:
-        reg_panel.loc[
-            (reg_panel["Date"] >= pd.to_datetime(bust[0], unit="s"))
-            & (reg_panel["Date"] <= pd.to_datetime(bust[1], unit="s")),
-            "bust",
-        ] = 1
+    reg_panel["is_boom"] = reg_panel["Date"].apply(
+        lambda x: is_boom(boom_bust_list=boom_bust, time=x)
+    )
 
     return reg_panel
 

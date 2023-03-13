@@ -6,26 +6,7 @@ import numpy as np
 import matplotlib.colors as colors
 import statsmodels.api as sm
 from stargazer.stargazer import Stargazer
-
-naming_dict = {
-    "TVL_share": "${\it LiquidityShare}$",
-    "Inflow_centrality": "${\it EigenCent}^{In}$",
-    "Outflow_centrality": "${\it EigenCent}^{Out}$",
-    "Volume_share": "${\it VShare}$",
-    "volume_in_share": "${\it VShare}^{\it In}$",
-    "volume_out_share": "${\it VShare}^{\it Out}$",
-    "Borrow_share": "${\it BorrowShare}$",
-    "Supply_share": "${\it SupplyShare}$",
-    "betweenness_centrality_count": "${\it BetwCent}^C$",
-    "betweenness_centrality_volume": "${\it BetwCent}^V$",
-    "cov_gas": "${\it CovGas}$",
-    "cov_sp": "${\it CovSP}$",
-    "cov_eth": "${\it CovETH}$",
-    "log_return": "${R}^{\it USD}$",
-    "std": "${\it \sigma}^{USD}$",
-    "borrow_rate": "${\it BorrowAPY}^{USD}$",
-    "supply_rates": "${\it SupplyAPY}^{USD}$",
-}
+from environ.constants import NAMING_DICT_OLD
 
 
 def reg_panel():
@@ -535,7 +516,7 @@ def reg_panel():
     corr = reg_panel.corr().round(2)
 
     # change the column names to be more readable
-    corr = corr.rename(columns=naming_dict)
+    corr = corr.rename(columns=NAMING_DICT_OLD)
 
     # set the borrow_rate, borrow_rate to 1
     # TODO: check why
@@ -593,7 +574,7 @@ def reg_panel():
     corr.to_csv(rf"tables/correlation_matrix.csv")
 
     # rename the panel column names to be more readable
-    reg_panel = reg_panel.rename(columns=naming_dict)
+    reg_panel = reg_panel.rename(columns=NAMING_DICT_OLD)
 
     # calculate the summary statistics of the panel dataset
     summary = reg_panel.describe()
@@ -621,32 +602,6 @@ def reg_panel():
     # # panel regression with time fixed effects of Date between the Inflow_centrality with Volume_share
     # # create the dependent variable
     Y = reg_panel["${\it VShare}$"]
-
-    # # drop all variables except for the "${\it InflowCentrality}$", "${\it BetwCent}^C$", "${\it \sigma}^{USD}$" and dummy variables
-
-    # # create the independent variable
-    # X = reg_panel.drop(
-    #     [
-    #         "${\it VShare}$",
-    #         "${\it LiquidityShare}$",
-    #         "${\it EigenCent}^{Out}$",
-    #         "${\it VShare}^{\it In}$",
-    #         "${\it VShare}^{\it Out}$",
-    #         "${\it BorrowShare}$",
-    #         "${\it SupplyShare}$",
-    #         "${\it BetwCent}^V$",
-    #         "${\it BorrowAPY}^{USD}$",
-    #         "${\it SupplyAPY}^{USD}$",
-    #         "Token",
-    #         "Date",
-    #         "year_month",
-    #     ],
-    #     axis=1,
-    # )
-
-    # # save the independent variable as a csv file
-    # X.to_csv(rf"tables/independent_variables.csv")
-    # print(X)
 
     X = reg_panel[
         ["${\it EigenCent}^{In}$", "${\it BetwCent}^C$", "${\it SupplyShare}$"]
@@ -689,22 +644,3 @@ def reg_panel():
 
 if __name__ == "__main__":
     reg_panel()
-    naming_dict = {
-        "TVL_share": "${\it LiquidityShare}$",
-        "Inflow_centrality": "${\it EigenCent}^{In}$",
-        "Outflow_centrality": "${\it EigenCent}^{Out}$",
-        "Volume_share": "${\it VShare}$",
-        "volume_in_share": "${\it VShare}^{\it In}$",
-        "volume_out_share": "${\it VShare}^{\it Out}$",
-        "Borrow_share": "${\it BorrowShare}$",
-        "Supply_share": "${\it SupplyShare}$",
-        "betweenness_centrality_count": "${\it BetwCent}^C$",
-        "betweenness_centrality_volume": "${\it BetwCent}^V$",
-        "cov_gas": "${\it CovGas}$",
-        "cov_sp": "${\it CovSP}$",
-        "cov_eth": "${\it CovETH}$",
-        "log_return": "${R}^{\it USD}$",
-        "std": "${\it \sigma}^{USD}$",
-        "borrow_rate": "${\it BorrowAPY}^{USD}$",
-        "supply_rates": "${\it SupplyAPY}^{USD}$",
-    }

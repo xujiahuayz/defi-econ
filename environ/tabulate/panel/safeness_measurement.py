@@ -5,9 +5,7 @@ Functions to construct value stores proxies for Panel.
 import warnings
 import pandas as pd
 import numpy as np
-import datetime
 from tqdm import tqdm
-import statsmodels.api as sm
 from environ.utils.config_parser import Config
 from environ.utils.info_logger import print_info_log
 
@@ -114,42 +112,6 @@ def _beta(reg_panel: pd.DataFrame) -> pd.DataFrame:
 
     # sort the dataframe by date
     ret = ret.sort_values(by=["Date"], ascending=True)
-
-    # # get the 30-day rolling beta of each token via rolling linear regression using statsmodels
-    # for col_name in tqdm(col):
-    #     for _, row in ret.iterrows():
-
-    #         # skip the sample with missing values
-    #         if (
-    #             ret.loc[
-    #                 (ret["Date"] > row["Date"] - datetime.timedelta(days=30))
-    #                 & (ret["Date"] <= row["Date"]),
-    #                 [col_name, "S&P"],
-    #             ]
-    #             .isnull()
-    #             .values.any()
-    #         ):
-    #             continue
-
-    #         # calculate the beta
-    #         ret.loc[ret["Date"] == row["Date"], f"{col_name}_beta"] = (
-    #             sm.OLS(
-    #                 endog=ret.loc[
-    #                     (ret["Date"] > row["Date"] - datetime.timedelta(days=30))
-    #                     & (ret["Date"] <= row["Date"]),
-    #                     col_name,
-    #                 ],
-    #                 exog=sm.add_constant(
-    #                     ret.loc[
-    #                         (ret["Date"] > row["Date"] - datetime.timedelta(days=30))
-    #                         & (ret["Date"] <= row["Date"]),
-    #                         "S&P",
-    #                     ]
-    #                 ),
-    #             )
-    #             .fit()
-    #             .params[1]
-    #         )
 
     for i in col:
         rolling_cov = ret[i].rolling(30).cov(ret["S&P"])
