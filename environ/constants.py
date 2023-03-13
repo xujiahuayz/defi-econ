@@ -99,7 +99,7 @@ NAMING_DICT = {
     "S&P": "{\it R}^{USD}_{SP}",
     # TODO: to be removed
     "S&P_volatility": "{\it \sigma}^{USD}_{SP}",
-    "S&P_log_return_vol_1_30": "{\it \sigma}^{SP}_{USD}",
+    "S&P_log_return_vol_1_30": "{\it \sigma}^{USD}_{SP}",
     "depeg_pers": "{\it DepegPersist}",
     "is_boom": "{\it IsBoom}",
 }
