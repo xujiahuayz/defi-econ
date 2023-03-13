@@ -7,6 +7,7 @@ from environ.constants import TABLE_PATH
 from environ.utils.variable_constructer import (
     name_boom_interact_var,
     name_lag_variable,
+    name_log_return_variable,
 )
 from environ.tabulate.render_regression import (
     construct_regress_vars,
@@ -32,14 +33,23 @@ for dv in dependent_variables:
 
 
 iv_chunk_list_unlagged = [
-    [["std", "corr_gas", "mcap_share", "Supply_share"]],
+    [["std", "mcap_share", "Supply_share"]],
+    [
+        # ["corr_gas_with_laggedreturn"],
+        ["corr_gas"]
+    ],
     [
         # ["Stable", "depegging_degree"],
         # ["pegging_degree"],
         # ["depeg_pers"],
         ["stableshare"],
     ],
-    [["corr_eth", "corr_sp"]],
+    [
+        [
+            "corr_eth"
+            #   , "corr_sp"
+        ]
+    ],
 ]
 
 LAG_DV_NAME = "$\it Dominance_{t-1}$"
@@ -53,7 +63,9 @@ for ivs_chunk in iv_chunk_list_unlagged:
         this_ivs = []
         for v in ivs:
             if v not in ["is_boom", "Stable"]:
-                lagged_var = name_lag_variable(v)
+                lagged_var = (
+                    v if v == "corr_gas_with_laggedreturn" else name_lag_variable(v)
+                )
                 this_ivs.extend([lagged_var, name_boom_interact_var(lagged_var)])
                 iv_set.add(v)
             else:
@@ -61,6 +73,27 @@ for ivs_chunk in iv_chunk_list_unlagged:
         this_ivs_chunk.append(this_ivs)
     iv_chunk_list.append(this_ivs_chunk)
 
+for token, group in reg_panel.groupby("Token"):
+    reg_panel.loc[group.index, "corr_gas_with_laggedreturn"] = (
+        group["log_return"]
+        .shift(1)
+        .rolling(30)
+        .corr(group[name_log_return_variable("gas_price_usd", 1)])
+    )
+
+# flatten iv_chunk_list_unlagged and dependent_variables
+variables = [
+    v
+    for ivs_chunk in iv_chunk_list_unlagged
+    for ivs in ivs_chunk
+    for v in ivs
+    if v not in ["is_boom", "Stable", "corr_gas_with_laggedreturn"]
+]
+variables.extend(dependent_variables)
+reg_panel = add_lag_interact_vars(reg_panel, variables=variables)
+reg_panel[name_boom_interact_var("corr_gas_with_laggedreturn")] = (
+    reg_panel["is_boom"] * reg_panel["corr_gas_with_laggedreturn"]
+)
 
 # # Get the regression panel dataset from pickled file
 # reg_panel = pd.read_pickle(Path(TABLE_PATH) / "reg_panel.pkl")
@@ -83,7 +116,15 @@ reg_combi_interact = construct_regress_vars(
     without_lag_dv=False,
 )
 
-reg_panel = add_lag_interact_vars(reg_panel)
+
+# TOO slow below: calculate the 30-day correlation between lagged token returns and current gas price
+# reg_panel["corr_gas_with_laggedreturn"] = reg_panel.groupby("Token")[
+#     name_log_return_variable("gas_price_usd", 1)
+# ].transform(
+#     lambda x: x.rolling(30).corr(reg_panel[name_lag_variable("std")])
+# )
+
+
 result_full_interact = render_regress_table(
     reg_panel=reg_panel,
     reg_combi=reg_combi_interact,
