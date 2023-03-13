@@ -12,6 +12,12 @@ from environ.tabulate.panel.depeg_persist import _merge_depeg_persistancy
 from environ.tabulate.panel.fiat_stable_price import _merge_fiat_underlying
 from environ.tabulate.panel.panel_generator import _merge_boom_bust
 from environ.tabulate.panel.unit_of_acct import _merge_pegging
+from environ.process.market.prepare_market_data import market_data
+from environ.utils.variable_constructer import (
+    name_boom_interact_var,
+    name_lag_variable,
+    name_log_return_variable,
+)
 
 # read csv file as pd.DataFrame where Date column is parsed as datetime
 reg_panel = pd.read_csv(
@@ -24,17 +30,27 @@ reg_panel = pd.read_csv(
 # remove non-alphanumeric characters from column names
 reg_panel.columns = reg_panel.columns.str.replace(r"\W", "")
 NAMING_DICT_reverted = {re.sub(r"\W+", "", v): k for k, v in NAMING_DICT_OLD.items()}
-reg_panel = reg_panel.rename(columns=NAMING_DICT_reverted)
+reg_panel.rename(columns=NAMING_DICT_reverted, inplace=True)
 
-# get GasPrice
+# merge market data
+reg_panel = reg_panel.merge(market_data, on=["Date"], how="left")
+# calculate rolling 30-day correlation between daily returns Token and daily gas_price return per Token level
+reg_panel["corr_gas"] = reg_panel.groupby("Token")[
+    name_log_return_variable("gas_price_usd", 1)
+].transform(lambda x: x.rolling(30).corr(reg_panel["dollar_exchange_rate"]))
+
+reg_panel["corr_sp"] = reg_panel.groupby("Token")[
+    name_log_return_variable("S&P", 1)
+].transform(lambda x: x.rolling(30).corr(reg_panel["dollar_exchange_rate"]))
+
 
 # merge boom bust cycles
 reg_panel = _merge_boom_bust(reg_panel)
-reg_panel = _merge_fiat_underlying(
-    reg_panel, new_price_col_name="exchange_to_underlying"
-)
-reg_panel = _merge_depeg_persistancy(reg_panel, price_col_name="exchange_to_underlying")
-reg_panel = _merge_pegging(reg_panel, price_col_name="exchange_to_underlying")
+# reg_panel = _merge_fiat_underlying(
+#     reg_panel, new_price_col_name="exchange_to_underlying"
+# )
+# reg_panel = _merge_depeg_persistancy(reg_panel, price_col_name="exchange_to_underlying")
+# reg_panel = _merge_pegging(reg_panel, price_col_name="exchange_to_underlying")
 
 
 reg_panel = reg_panel.set_index(["Token", "Date"])

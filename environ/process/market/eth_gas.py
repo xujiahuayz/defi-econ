@@ -11,15 +11,16 @@ from environ.constants import GLOBAL_DATA_PATH
 gas_df = pd.read_csv(
     Path(GLOBAL_DATA_PATH) / "gasprice.csv",
     index_col=None,
-    skiprows=1,
+    parse_dates=["Date(UTC)"],
 )
 
 gas_df.columns = ["Date", "timestamp", "gas_price_wei"]
 
+# read the data and specify date column as datetime
 ether_df = pd.read_csv(
     Path(GLOBAL_DATA_PATH) / "etherprice.csv",
     index_col=None,
-    skiprows=1,
+    parse_dates=["Date(UTC)"],
 )
 
 ether_df.columns = ["Date", "timestamp", "ether_price_usd"]

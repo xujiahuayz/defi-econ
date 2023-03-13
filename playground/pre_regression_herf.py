@@ -5,6 +5,7 @@ import pandas as pd
 
 from environ.constants import TABLE_PATH
 from environ.tabulate.panel.panel_generator import _merge_boom_bust
+from environ.process.market.prepare_market_data import market_data
 
 # read csv file as pd.DataFrame where Date column is parsed as datetime
 herf_panel = pd.read_csv(
@@ -14,6 +15,7 @@ herf_panel = pd.read_csv(
 
 # merge boom bust cycles
 herf_panel = _merge_boom_bust(herf_panel)
+herf_panel = herf_panel.merge(market_data, on=["Date"], how="left")
 
 herf_panel = herf_panel.set_index(["Date"])
 

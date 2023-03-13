@@ -14,7 +14,8 @@ from environ.utils.variable_constructer import (
 # Lag all variable except the Date and Token
 def add_lag_interact_vars(reg_panel: pd.DataFrame) -> pd.DataFrame:
     for variable in reg_panel.columns:
-        if variable not in ["is_boom", "boom", "bust", "Date", "const"]:
+        # only proceed if the variable is numeric
+        if reg_panel[variable].dtype in ("float64", "int64", "float32", "int32"):
             reg_panel = lag_variable(reg_panel, variable, "Date", "Token")
             lagged_var = name_lag_variable(variable)
             reg_panel[name_boom_interact_var(lagged_var)] = (
