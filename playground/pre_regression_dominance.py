@@ -39,6 +39,11 @@ reg_panel["corr_gas"] = reg_panel.groupby("Token")[
     name_log_return_variable("gas_price_usd", 1)
 ].transform(lambda x: x.rolling(30).corr(reg_panel["dollar_exchange_rate"]))
 
+reg_panel["corr_eth"] = reg_panel.groupby("Token")[
+    name_log_return_variable("ether_price_usd", 1)
+].transform(lambda x: x.rolling(30).corr(reg_panel["dollar_exchange_rate"]))
+
+
 reg_panel["corr_sp"] = reg_panel.groupby("Token")[
     name_log_return_variable("S&P", 1)
 ].transform(lambda x: x.rolling(30).corr(reg_panel["dollar_exchange_rate"]))
