@@ -18,6 +18,7 @@ from scripts.prepare_panel import add_lag_interact_vars
 
 reg_panel = pd.read_pickle(Path(TABLE_PATH) / "reg_panel.pkl")
 
+
 dependent_variables = [
     "avg_eigenvector_centrality",
     "betweenness_centrality_volume",
@@ -25,6 +26,11 @@ dependent_variables = [
     "Volume_share",
     "TVL_share",
 ]
+
+# fill the missing values with 0 for all dependent variables
+for dv in dependent_variables:
+    reg_panel[dv] = reg_panel[dv].fillna(0)
+
 
 iv_chunk_list_unlagged = [
     [["std", "corr_gas", "mcap_share", "Supply_share"]],
