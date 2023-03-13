@@ -4,24 +4,39 @@ from pathlib import Path
 
 import pandas as pd
 from linearmodels.panel import PanelOLS
+import statsmodels.api as sm
 
 from environ.constants import ALL_NAMING_DICT, TABLE_PATH
-from environ.utils.lags import lag_variable, name_lag_variable
+from environ.utils.variable_constructer import lag_variable, name_lag_variable
 
 REGRESSION_NAMING_DICT = {
     "r2": "$R^2$",
     "r2_within": "$R^2_{within}$",
     "nobs": "N",
-    "fe": "\midrule fixed effect",
+    "fe": "fixed effect",
     "regressand": "Regressand",
 }
+
+
+def fix_effect(iv: list[str]) -> bool:
+    """
+    Check whether the fixed-effect regression should be run.
+
+    Args:
+        iv (list[str]): The independent variables.
+
+    Returns:
+        bool: Whether the fixed-effect regression should be run.
+    """
+    return False if "Stable" in iv else True
 
 
 def regress(
     data: pd.DataFrame,
     dv: str = "Volume_share",
     iv: list[str] = ["is_boom", "mcap_share"],
-    entity_effect: bool = True,
+    # method can be "ols", or "panel"
+    method: str = "panel",
 ):
     """
     Run the fixed-effect regression.
@@ -40,18 +55,26 @@ def regress(
 
     # Run the fixed-effect regression
     # catch error and print y and X
-    model = PanelOLS(
-        dependent_var,
-        independent_var,
-        entity_effects=entity_effect,
-        drop_absorbed=True,
-        check_rank=False,
-    ).fit()
+    if method == "panel":
+        model = PanelOLS(
+            dependent_var,
+            independent_var,
+            entity_effects=fix_effect(iv),
+            drop_absorbed=True,
+            check_rank=False,
+        ).fit()
+    elif method == "ols":
+        model = sm.OLS(dependent_var, independent_var, missing="drop").fit()
+    else:
+        raise ValueError(f"method {method} must be either 'ols' or 'panel'")
     return model
 
 
 def render_regression_column(
-    reg_panel: pd.DataFrame, dv: str, iv: list[str], entity_effect: bool = True
+    reg_panel: pd.DataFrame,
+    dv: str,
+    iv: list[str],
+    method: str = "panel",
 ) -> pd.Series:
     """
     Render the regression column.
@@ -65,11 +88,12 @@ def render_regression_column(
     Returns:
         pd.Series: The regression column.
     """
-    regression_result = regress(
-        data=reg_panel, dv=dv, iv=iv, entity_effect=entity_effect
-    )
+    regression_result = regress(data=reg_panel, dv=dv, iv=iv, method=method)
     # merge three pd.Series: regression_result.params, regression_result.std_errors, regression_result.pvalues into one dataframe
     result_column = pd.Series({"regressand": dv})
+    std_errors = (
+        regression_result.std_errors if method == "panel" else regression_result.bse
+    )
     for i, v in regression_result.params.items():
         # format v to exactly 3 decimal places
         v = "{:.3f}".format(v)
@@ -78,17 +102,15 @@ def render_regression_column(
         star = f"{{{'***' if pvalue < 0.01 else '**' if pvalue < 0.05 else '*' if pvalue < 0.1 else ''}}}"
         # add standard error
         line1 = f"${v}^{star}$"
-        line2 = f"({regression_result.std_errors[i]:.3f})"
+        line2 = f"({std_errors[i]:.3f})"
 
-        v = "\makecell{" + line1 + " \\\\" + line2 + "}"
-        result_column[i] = v
+        result_column[i] = rf"{line1} \\ {line2}"
 
-    result_column["fe"] = "yes" if entity_effect else "no"
-    # number of observations with thousands separator
-    result_column["nobs"] = f"{regression_result.nobs:,}"
+    if method == "panel":
+        result_column["fe"] = "yes" if fix_effect(iv) else "no"
+    # number of observations with thousands separator and without decimal places
+    result_column["nobs"] = f"{regression_result.nobs:,.0f}"
     result_column["r2"] = f"{regression_result.rsquared:.3f}"
-    # add within r2
-    result_column["r2_within"] = f"{regression_result.rsquared_within:.3f}"
     return result_column
 
 
@@ -116,7 +138,12 @@ def construct_regress_vars(
         # lag all iv above
         iv_chunk_list = [
             [
-                [name_lag_variable(v) if v not in ["Stable"] else v for v in iv]
+                [
+                    name_lag_variable(v)
+                    if v not in ["Stable", "is_boom", "const"]
+                    else v
+                    for v in iv
+                ]
                 for iv in iv_chunk
             ]
             for iv_chunk in iv_chunk_list
@@ -139,9 +166,9 @@ def construct_regress_vars(
 
 def render_regress_table(
     reg_panel: pd.DataFrame,
-    file_name: str,
     reg_combi: list[tuple[str, list[str]]],
     lag_dv: str = "$\it Dominance_{t-1}$",
+    method: str = "panel",
 ) -> pd.DataFrame:
     """
     Render the regression table.
@@ -159,19 +186,17 @@ def render_regress_table(
     result_table = pd.DataFrame()
     counter = 0
     # initiate all_ivs set
-    all_ivs = set()
-    for dv, iv in reg_combi:
+    all_ivs = []
+    for dv, ivs in reg_combi:
         lag_dv_name = name_lag_variable(dv)
-        result_column = render_regression_column(
-            reg_panel, dv, iv, entity_effect=False if "Stable" in iv else True
-        )
+        result_column = render_regression_column(reg_panel, dv, ivs, method=method)
         # rename result_column index
         result_column = result_column.rename(
             index={
                 lag_dv_name: lag_dv,
             }
         )
-        result_column["regressand"] = ALL_NAMING_DICT[dv]
+        result_column["regressand"] = dv
 
         counter += 1
         result_column_df = result_column.to_frame(name=f"({counter})")
@@ -179,7 +204,7 @@ def render_regress_table(
         # merge result_column into result_table, keep  name as column name
         result_table = result_table.join(result_column_df, how="outer")
         # add iv elements to all_ivs
-        all_ivs.update(iv)
+        all_ivs.extend([x for x in ivs if x not in all_ivs])
 
     # reorder rows in result_table, include only rows in index already
 
@@ -190,8 +215,7 @@ def render_regress_table(
                 "regressand",
                 lag_dv,
             ]
-            # TODO: force order of all_ivs
-            + list(all_ivs)
+            + all_ivs
             + [
                 "fe",
                 "nobs",
@@ -201,17 +225,39 @@ def render_regress_table(
         if x in result_table.index
     ]
     result_table_fine = result_table.reindex(rows).fillna("")
+    return result_table_fine
 
-    # rename result_table index with REGRESSION_NAMING_DICT and NAMING_DICT_LAG and NAMING_DICT combined
-    result_table_fine = result_table_fine.rename(index=REGRESSION_NAMING_DICT).rename(
-        index=ALL_NAMING_DICT
+
+def render_regress_table_latex(
+    result_table: pd.DataFrame, method: str = "panel", file_name: str = "test"
+) -> pd.DataFrame:
+    """
+    Render the regression table in latex.
+    """
+
+    result_table_latex = result_table.rename(index=ALL_NAMING_DICT)
+    # rename each cell in the "regressand" row with ALL_NAMING_DICT[xxx]
+    result_table_latex.loc["regressand"] = result_table_latex.loc["regressand"].map(
+        ALL_NAMING_DICT
     )
+    result_table_latex.rename(index=REGRESSION_NAMING_DICT, inplace=True)
 
-    # transform result_table to latex table
-    result_table_fine.to_latex(
+    iv_end = -3 if method == "panel" else -2
+    # for each cell from row 2 to 4th last row, add \makecell{xx} to make the cell wrap
+    for row in result_table_latex.index[1:iv_end]:
+        for col in result_table_latex.columns:
+            result_table_latex.loc[
+                row, col
+            ] = f"\\makecell{{{result_table_latex.loc[row, col]}}}"
+    # add \midrule to the 4th last row
+    original_index = result_table_latex.index[iv_end]
+    result_table_latex = result_table_latex.rename(
+        index={original_index: "\midrule " + original_index}
+    )
+    result_table_latex.to_latex(
         Path(TABLE_PATH) / f"regression_table_{file_name}.tex", escape=False
     )
-    return result_table_fine
+    return result_table_latex
 
 
 if __name__ == "__main__":
@@ -234,6 +280,8 @@ if __name__ == "__main__":
 
     result_full = render_regress_table(
         reg_panel=reg_panel,
-        file_name="full",
         reg_combi=reg_combi,
+    )
+    result_in_latex = render_regress_table_latex(
+        result_table=result_full, method="panel", file_name="test"
     )

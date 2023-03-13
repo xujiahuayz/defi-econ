@@ -1,11 +1,10 @@
 from os import path
-from environ.settings import PROJECT_ROOT
-from environ.utils.lags import lag_naming_dict
 
-BOOM_BUST = {
-    "boom": [(1469966400, 1472558500), (1469966800, 1469966900)],
-    "bust": [(1472558500, 1475150600), (1469966900, 1469967000)],
-}
+from environ.settings import PROJECT_ROOT
+from environ.utils.variable_constructer import (
+    name_boom_interact_var,
+    name_lag_variable,
+)
 
 FIGURE_PATH = path.join(PROJECT_ROOT, "figures")
 TABLE_PATH = path.join(PROJECT_ROOT, "tables")
@@ -64,9 +63,9 @@ NAMING_DICT = {
     "supply_rates": "{\it SupplyAPY}^{USD}",
     "beta": "{\it Beta}",
     "average_return": "{\it \mu}^{USD}",
-    "corr_gas": "{\it CorrGas}",
-    "corr_sp": "{\it CorrSP}",
-    "corr_eth": "{\it CorrETH}",
+    "corr_gas": "{\it CorGas}",
+    "corr_sp": "{\it CorSP}",
+    "corr_eth": "{\it CorETH}",
     "Nonstable": "{\it Nonstable}",
     "Stable": "{\it IsStable}",
     "IsWETH": "{\it IsWETH}",
@@ -91,16 +90,28 @@ NAMING_DICT = {
     "herfindahl_betweenness_centrality_count": "{\it HHIBetwCent}^C",
     "herfindahl_betweenness_centrality_volume": "{\it HHIBetwCent}^V",
     "herfindahl_tvl": "{\it HHITVL}",
-    "total_volumes": "{\it TotalVolume}",
+    "total_volumes": "{\it MarketVolume}",
     "S&P": "{\it R}^{USD}_{SP}",
     "S&P_volatility": "{\it \sigma}^{USD}_{SP}",
     "depeg_pers": "{\it DepegPersist}",
+    "is_boom": "{\it IsBoom}",
 }
 
-NAMING_DICT_LAG = lag_naming_dict(NAMING_DICT)
+NAMING_DICT_LAG = {
+    name_lag_variable(k): "{" + v + "}_{t-1}" for k, v in NAMING_DICT.items()
+}
+
+
+# boom_naming_dict with NAMING_DICT and NAMING_DICT_LAG
+BOOM_INTERACTION_DICT = {
+    name_boom_interact_var(k): f"{v} : {NAMING_DICT['is_boom']}"
+    for k, v in {**NAMING_DICT_LAG, **NAMING_DICT}.items()
+}
+
 
 ALL_NAMING_DICT = {
-    k: "$" + v + "$" for k, v in {**NAMING_DICT_LAG, **NAMING_DICT}.items()
+    k: "$" + v + "$"
+    for k, v in {**NAMING_DICT_LAG, **NAMING_DICT, **BOOM_INTERACTION_DICT}.items()
 }
 
 NAMING_DICT_OLD = {
@@ -162,7 +173,7 @@ NAMING_DIC_PROPERTIES_OF_DOMINANCE = {
     "dollar_exchange_rate": "${\it ExchangeRate}^{USD}$",
     "TVL_share": "${\it LiquidityShare}$",
     "exceedance": "${\it exceedance}^{USD}$",
-    "Gas_fee_volatility": "${\it \sigma}_{Gas}$",
+    "Gas_fee_volatility": "${\it \sigma}_{\it Gas}$",
     "avg_eigenvector_centrality": "${\it AvgEigenCent}$",
     "stableshare": "${\it StableShare}$",
     "boom": "${\it DeFiboom}$",
