@@ -1,10 +1,11 @@
 from os import path
 
 from environ.settings import PROJECT_ROOT
-from environ.utils.variable_constructer import (
-    name_boom_interact_var,
-    name_lag_variable,
-)
+from environ.utils.variable_constructer import name_boom_interact_var, name_lag_variable
+
+# google what is my user agent to get it
+USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"
+
 
 FIGURE_PATH = path.join(PROJECT_ROOT, "figures")
 TABLE_PATH = path.join(PROJECT_ROOT, "tables")
@@ -69,7 +70,9 @@ NAMING_DICT = {
     "Nonstable": "{\it Nonstable}",
     "Stable": "{\it IsStable}",
     "IsWETH": "{\it IsWETH}",
-    "Gas_fee": "{\it GasPrice}",
+    # TODO: to be removed
+    "Gas_fee": "{\it GasPrice_old}",
+    "gas_price_usd": "{\it GasPrice}^{USD}",
     "dollar_exchange_rate": "{\it ExchangeRate}^{USD}",
     "exceedance": "{\it exceedance}^{USD}",
     "Gas_fee_volatility": "{\it \sigma}_{Gas}",

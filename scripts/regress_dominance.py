@@ -5,7 +5,6 @@ import pandas as pd
 
 from environ.constants import TABLE_PATH
 from environ.utils.variable_constructer import (
-    lag_variable,
     name_boom_interact_var,
     name_lag_variable,
 )

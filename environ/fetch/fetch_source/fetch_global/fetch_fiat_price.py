@@ -2,12 +2,11 @@
 download fiat price from yahoo finance
 """
 
+from pathlib import Path
 
 import requests
-from environ.constants import GLOBAL_DATA_PATH, FIAT_LIST
 
-# google what is my user agent to get it
-USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"
+from environ.constants import FIAT_LIST, GLOBAL_DATA_PATH, USER_AGENT
 
 
 def get_fiat_usd_price(
@@ -24,7 +23,7 @@ def get_fiat_usd_price(
     # use requests to download the data
     r = requests.get(url, headers={"User-Agent": user_agent})
     # save the data to a csv file
-    with open(f"{GLOBAL_DATA_PATH}/{fiat}_price.csv", "wb") as f:
+    with open(Path(GLOBAL_DATA_PATH) / f"{fiat}_price.csv", "wb") as f:
         f.write(r.content)
     return url
 

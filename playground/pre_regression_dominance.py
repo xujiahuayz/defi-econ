@@ -26,6 +26,8 @@ reg_panel.columns = reg_panel.columns.str.replace(r"\W", "")
 NAMING_DICT_reverted = {re.sub(r"\W+", "", v): k for k, v in NAMING_DICT_OLD.items()}
 reg_panel = reg_panel.rename(columns=NAMING_DICT_reverted)
 
+# get GasPrice
+
 # merge boom bust cycles
 reg_panel = _merge_boom_bust(reg_panel)
 reg_panel = _merge_fiat_underlying(
@@ -36,6 +38,7 @@ reg_panel = _merge_pegging(reg_panel, price_col_name="exchange_to_underlying")
 
 
 reg_panel = reg_panel.set_index(["Token", "Date"])
+
 
 # pickle the reg_panel
 reg_panel.to_pickle(path.join(TABLE_PATH, "reg_panel.pkl"))
