@@ -8,14 +8,9 @@ from os import path
 import pandas as pd
 
 from environ.constants import NAMING_DICT_OLD, TABLE_PATH
-from environ.tabulate.panel.depeg_persist import _merge_depeg_persistancy
-from environ.tabulate.panel.fiat_stable_price import _merge_fiat_underlying
 from environ.tabulate.panel.panel_generator import _merge_boom_bust
-from environ.tabulate.panel.unit_of_acct import _merge_pegging
 from environ.process.market.prepare_market_data import market_data
 from environ.utils.variable_constructer import (
-    name_boom_interact_var,
-    name_lag_variable,
     name_log_return_variable,
 )
 

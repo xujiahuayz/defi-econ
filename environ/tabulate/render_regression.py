@@ -71,10 +71,11 @@ def regress(
 
 
 def render_regression_column(
-    reg_panel: pd.DataFrame,
+    data: pd.DataFrame,
     dv: str,
     iv: list[str],
     method: str = "panel",
+    standard_beta: bool = False,
 ) -> pd.Series:
     """
     Render the regression column.
@@ -83,26 +84,33 @@ def render_regression_column(
         reg_panel (pd.DataFrame): The data to run the regression on.
         dv (str): The dependent variable.
         iv (list[str]): The independent variables.
-        entity_effect (bool, optional): Whether to include entity effect. Defaults to True.
+        method (str, optional): The method to run the regression. Defaults to "panel".
+        standard_beta (bool, optional): Whether to use standard beta. Defaults to False.
 
     Returns:
         pd.Series: The regression column.
     """
-    regression_result = regress(data=reg_panel, dv=dv, iv=iv, method=method)
+    regression_result = regress(data=data, dv=dv, iv=iv, method=method)
+
     # merge three pd.Series: regression_result.params, regression_result.std_errors, regression_result.pvalues into one dataframe
     result_column = pd.Series({"regressand": dv})
-    std_errors = (
-        regression_result.std_errors if method == "panel" else regression_result.bse
-    )
+    if standard_beta:
+        # calculate the standard deviation of [dv] + iv
+        line2_items = data[iv].std() / data[dv].std()
+    else:
+        line2_items = (
+            regression_result.std_errors if method == "panel" else regression_result.bse
+        )
+
     for i, v in regression_result.params.items():
         # format v to exactly 3 decimal places
-        v = "{:.3f}".format(v)
+        beta = "{:.3f}".format(v)
         # add * according to p-value
         pvalue = regression_result.pvalues[i]
         star = f"{{{'***' if pvalue < 0.01 else '**' if pvalue < 0.05 else '*' if pvalue < 0.1 else ''}}}"
         # add standard error
-        line1 = f"${v}^{star}$"
-        line2 = f"({std_errors[i]:.3f})"
+        line1 = f"${beta}^{star}$"
+        line2 = f"(${line2_items[i] * v**standard_beta :.3f}$)"
 
         result_column[i] = rf"{line1} \\ {line2}"
 
@@ -169,7 +177,8 @@ def render_regress_table(
     reg_panel: pd.DataFrame,
     reg_combi: list[tuple[str, list[str]]],
     lag_dv: str = "$\it Dominance_{t-1}$",
-    method: str = "panel",
+    **kargs,
+    # method: str = "panel",
 ) -> pd.DataFrame:
     """
     Render the regression table.
@@ -190,7 +199,12 @@ def render_regress_table(
     all_ivs = []
     for dv, ivs in reg_combi:
         lag_dv_name = name_lag_variable(dv)
-        result_column = render_regression_column(reg_panel, dv, ivs, method=method)
+        result_column = render_regression_column(
+            reg_panel,
+            dv,
+            ivs,
+            **kargs,
+        )
         # rename result_column index
         result_column = result_column.rename(
             index={
@@ -230,7 +244,7 @@ def render_regress_table(
 
 
 def render_regress_table_latex(
-    result_table: pd.DataFrame, method: str = "panel", file_name: str = "test"
+    result_table: pd.DataFrame, file_name: str = "test", method: str = "panel"
 ) -> pd.DataFrame:
     """
     Render the regression table in latex.
@@ -253,7 +267,7 @@ def render_regress_table_latex(
     # add \midrule to the 4th last row
     original_index = result_table_latex.index[iv_end]
     result_table_latex = result_table_latex.rename(
-        index={original_index: "\midrule " + original_index}
+        index={original_index: f"\\midrule {original_index}"}
     )
     result_table_latex.to_latex(
         Path(TABLE_PATH) / f"regression_table_{file_name}.tex", escape=False
@@ -275,14 +289,24 @@ if __name__ == "__main__":
         dependent_variables=["Volume_share", "avg_eigenvector_centrality"],
         iv_chunk_list=[[["corr_eth"]], [["Stable"], ["std", "Stable"]]],
         lag_iv=True,
-        with_lag_dv=True,
-        without_lag_dv=True,
+        with_lag_dv=False,
+        without_lag_dv=False,
     )
 
     result_full = render_regress_table(
         reg_panel=reg_panel,
         reg_combi=reg_combi,
+        method="panel",
+        standard_beta=True,
     )
     result_in_latex = render_regress_table_latex(
-        result_table=result_full, method="panel", file_name="test"
+        result_table=result_full, file_name="test"
+    )
+    # test one column
+    result_one_column = render_regression_column(
+        data=reg_panel,
+        dv=reg_combi[0][0],
+        iv=reg_combi[0][1],
+        method="panel",
+        standard_beta=True,
     )

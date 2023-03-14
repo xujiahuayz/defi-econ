@@ -2,10 +2,6 @@
 fetch gas and ether price from etherscan
 """
 
-"""
-download fiat price from yahoo finance
-"""
-
 from pathlib import Path
 
 import requests
