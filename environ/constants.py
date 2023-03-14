@@ -11,13 +11,109 @@ FIGURE_PATH = path.join(PROJECT_ROOT, "figures")
 TABLE_PATH = path.join(PROJECT_ROOT, "tables")
 GLOBAL_DATA_PATH = path.join(PROJECT_ROOT, "data", "data_global")
 
-# TODO: complete, note that WBTC is dummy -- need checking
-COMPOUND_DICT = {
-    "WBTC": {
-        "pool_address": "0x4d2f5cfba55ae412221182d8475bc85799a5644b",
-        "start_time": 1577836800,
-    }
-}
+# Compound pool deployment time
+COMPOUND_DEPLOYMENT_DATE = [
+    {
+        "Token": "ETH",
+        "poolAddress": "0x4ddc2d193948926d02f9b1fe9e1daa0718270ed5",
+        "Date": "2019-05-07 01:25:18",
+    },
+    {
+        "Token": "USDC",
+        "poolAddress": "0x39aa39c021dfbae8fac545936693ac917d5e7563",
+        "Date": "2019-05-07 01:25:31",
+    },
+    {
+        "Token": "USDT",
+        "poolAddress": "0xf650c3d88d12db855b8bf7d11be6c55a4e07dcc9",
+        "Date": "2020-04-15 21:13:06",
+    },
+    {
+        "Token": "WBTC",
+        "poolAddress": "0xc11b1268c1a384e55c48c2391d8d480264a3a7f4",
+        "Date": "2019-07-16 19:47:37",
+    },
+    {
+        "Token": "DAI",
+        "poolAddress": "0x5d3a536e4d6dbd6114cc1ead35777bab948e3643",
+        "Date": "2019-11-23 01:03:33",
+    },
+    {
+        "Token": "UNI",
+        "poolAddress": "0x35a18000230da775cac24873d00ff85bccded550",
+        "Date": "2020-09-23 22:05:47",
+    },
+    {
+        "Token": "SAI",
+        "poolAddress": "0xf5dce57282a584d2746faf1593d3121fcac444dc",
+        "Date": "2019-05-07 01:24:12",
+    },
+    {
+        "Token": "REP",
+        "poolAddress": "0x158079ee67fce2f58472a96584a73c7ab9ac95c1",
+        "Date": "2019-05-07 01:24:48",
+    },
+    {
+        "Token": "MKR",
+        "poolAddress": "0x95b4ef2869ebd94beb4eee400a99824bf5dc325b",
+        "Date": "2021-07-16 05:30:17",
+    },
+    {
+        "Token": "YFI",
+        "poolAddress": "0x80a2ae356fc9ef4305676f7a3e2ed04e12c33946",
+        "Date": "2021-07-18 03:19:05",
+    },
+    {
+        "Token": "USDP",
+        "poolAddress": "0x041171993284df560249b57358f931d9eb7b925d",
+        "Date": "2021-09-19 19:42:57",
+    },
+    {
+        "Token": "ZRX",
+        "poolAddress": "0xb3319f5d18bc0d84dd1b4825dcde5d5f7266d407",
+        "Date": "2019-05-07 01:20:54",
+    },
+    {
+        "Token": "SUSHI",
+        "poolAddress": "0x4b0181102a0112a2ef11abee5563bb4a3176c9d7",
+        "Date": "2021-07-18 03:12:59",
+    },
+    {
+        "Token": "FEI",
+        "poolAddress": "0x7713dd9ca933848f6819f38b8352d9a15ea73f67",
+        "Date": "2021-09-15 02:26:35",
+    },
+    {
+        "Token": "BAT",
+        "poolAddress": "0x6c8c6b02e7b2be14d4fa6022dfd6d75921d90e4e",
+        "Date": "2019-05-07 01:21:25",
+    },
+    {
+        "Token": "COMP",
+        "poolAddress": "0x70e36f6bf80a52b3b46b3af8e106cc0ed743e8e4",
+        "Date": "2020-09-29 10:41:05",
+    },
+    {
+        "Token": "TUSD",
+        "poolAddress": "0x12392f67bdf24fae0af363c24ac620a2f67dad86",
+        "Date": "2020-10-07 11:45:29",
+    },
+    {
+        "Token": "AAVE",
+        "poolAddress": "0xe65cdb6479bac1e22340e4e755fae7e509ecd06c",
+        "Date": "2021-07-18 03:19:05",
+    },
+    {
+        "Token": "LINK",
+        "poolAddress": "0xface851a4921ce59e912d19329929ce6da6eb0c7",
+        "Date": "2021-04-21 21:38:22",
+    },
+    {
+        "Token": "WBTC2",
+        "poolAddress": "0xccF4429DB6322D5C611ee964527D42E5d685DD6a",
+        "Date": "2021-03-14 07:44:47",
+    },
+]
 
 STABLE_DICT = {
     "BUSD": {"underlying": "USD", "color": "blue", "line_type": "solid"},
