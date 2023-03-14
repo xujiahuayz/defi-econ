@@ -141,6 +141,7 @@ def construct_regress_vars(
                 [
                     name_lag_variable(v)
                     if v not in ["Stable", "is_boom", "const"]
+                    and v in list(ALL_NAMING_DICT.keys())
                     else v
                     for v in iv
                 ]

@@ -75,7 +75,9 @@ NAMING_DICT = {
     "gas_price_usd": "{\it GasPrice}^{USD}",
     "dollar_exchange_rate": "{\it ExchangeRate}^{USD}",
     "exceedance": "{\it exceedance}^{USD}",
+    # TODO: to be removed
     "Gas_fee_volatility": "{\it \sigma}_{Gas}",
+    "gas_price_usd_log_return_vol_1_30": "{\it \sigma}_{Gas}^{USD}",
     "avg_eigenvector_centrality": "{\it AvgEigenCent}",
     "stableshare": "{\it StableShare}",
     "stablecoin_deviation": "{\it StableDepeg}",
@@ -95,7 +97,9 @@ NAMING_DICT = {
     "herfindahl_tvl": "{\it HHITVL}",
     "total_volumes": "{\it MarketVolume}",
     "S&P": "{\it R}^{USD}_{SP}",
+    # TODO: to be removed
     "S&P_volatility": "{\it \sigma}^{USD}_{SP}",
+    "S&P_log_return_vol_1_30": "{\it \sigma}^{USD}_{SP}",
     "depeg_pers": "{\it DepegPersist}",
     "is_boom": "{\it IsBoom}",
 }

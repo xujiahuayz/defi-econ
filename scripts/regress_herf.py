@@ -13,6 +13,10 @@ from environ.tabulate.render_regression import (
     render_regress_table_latex,
 )
 
+from environ.utils.variable_constructer import (
+    name_log_return_vol_variable,
+)
+
 dependent_variables = [
     "herfindahl_volume",
     "herfindahl_betweenness_centrality_count",
@@ -25,9 +29,13 @@ iv_chunk_list_unlagged = [
         [
             "is_boom",
             "total_volumes",
-            "S&P_volatility",
-            "Gas_fee",
-            "Gas_fee_volatility",
+            name_log_return_vol_variable(
+                "S&P", rolling_window_return=1, rolling_window_vol=30
+            ),
+            "gas_price_usd",
+            name_log_return_vol_variable(
+                "gas_price_usd", rolling_window_return=1, rolling_window_vol=30
+            ),
             "const",
         ]
     ],
@@ -61,7 +69,8 @@ result_full = render_regress_table(
     reg_combi=reg_combi,
     lag_dv=LAG_DV_NAME,
     method="ols",
+    standard_beta=True,
 )
 result_full_latex = render_regress_table_latex(
-    result_table=result_full, method="ols", file_name="full_herf"
+    result_table=result_full, file_name="full_herf", method="ols"
 )
