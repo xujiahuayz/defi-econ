@@ -15,7 +15,7 @@ def name_boom_interact_var(variable: str) -> str:
     return f"{variable}_boom"
 
 
-def name_lag_variable(variable: str) -> str:
+def name_lag_variable(variable: str, lag: int = 1) -> str:
     """
     Name the lagged variable.
 
@@ -25,7 +25,22 @@ def name_lag_variable(variable: str) -> str:
     Returns:
         str: The name of the lagged variable.
     """
-    return f"{variable}_lag"
+    return f"{variable}_lag_{lag}"
+
+
+# def name_lag_variable
+
+
+# NAMING_DICT_LAG = {
+#     name_lag_variable(k): "{" + v + "}_{t-1}" for k, v in NAMING_DICT.items()
+# }
+
+
+# # boom_naming_dict with NAMING_DICT and NAMING_DICT_LAG
+# BOOM_INTERACTION_DICT = {
+#     name_boom_interact_var(k): f"{v} : {NAMING_DICT['is_boom']}"
+#     for k, v in {**NAMING_DICT_LAG, **NAMING_DICT}.items()
+# }
 
 
 def name_log_return_variable(variable: str, rolling_window_return: int) -> str:
@@ -43,6 +58,7 @@ def lag_variable(
     variable: str,
     time_variable: str,
     entity_variable: str = "",
+    lag: int = 1,
 ) -> pd.DataFrame:
     """
     Lag the variable by lag 1.
@@ -63,7 +79,7 @@ def lag_variable(
         if entity_variable
         else panel_data[variable]
     )
-    panel_data[name_lag_variable(variable)] = grouped_panel.shift(1)
+    panel_data[name_lag_variable(variable, lag=lag)] = grouped_panel.shift(lag)
 
     return panel_data
 
