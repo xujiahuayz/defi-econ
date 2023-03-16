@@ -1,6 +1,7 @@
 # get the regression panel dataset from pickled file
 from itertools import product
 from pathlib import Path
+from typing import Union
 
 import pandas as pd
 from linearmodels.panel import PanelOLS
@@ -12,6 +13,7 @@ from environ.utils.variable_constructer import (
     map_variable_name_latex,
     name_lag_variable,
 )
+from environ.utils.caching import cache
 
 REGRESSION_NAMING_DICT = {
     "r2": "$R^2$",
@@ -51,6 +53,10 @@ def regress(
         iv (list[str], optional): The independent variables. Defaults to ["is_boom", "mcap_share"].
         entity_effect (bool, optional): Whether to include entity effect. Defaults to True.
     """
+    # if method not in ["ols", "panel"], raise f"method {method} must be either 'ols' or 'panel'"
+    if method not in ["ols", "panel"]:
+        raise ValueError(f"method {method} must be either 'ols' or 'panel'")
+
     # Define the dependent variable
     dependent_var = data[dv]
 
@@ -59,19 +65,24 @@ def regress(
 
     # Run the fixed-effect regression
     # catch error and print y and X
-    if method == "panel":
-        model = PanelOLS(
-            dependent_var,
-            independent_var,
-            entity_effects=fix_effect(iv),
-            drop_absorbed=True,
-            check_rank=False,
-        ).fit()
-    elif method == "ols":
-        model = sm.OLS(dependent_var, independent_var, missing="drop").fit()
-    else:
-        raise ValueError(f"method {method} must be either 'ols' or 'panel'")
-    return model
+    # TODO: add proper cache
+    @cache(ttl=60 * 60 * 24 * 7, min_memory_time=0.00001, min_disk_time=0.1)
+    def regression(
+        dependent_var: pd.Series, independent_var: pd.DataFrame, method: str
+    ):
+        if method == "panel":
+            model = PanelOLS(
+                dependent_var,
+                independent_var,
+                entity_effects=fix_effect(iv),
+                drop_absorbed=True,
+                check_rank=False,
+            ).fit()
+        else:
+            model = sm.OLS(dependent_var, independent_var, missing="drop").fit()
+        return model
+
+    return regression(dependent_var, independent_var, method)
 
 
 def render_regression_column(

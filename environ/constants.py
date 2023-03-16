@@ -1,14 +1,16 @@
 from os import path
 
 from environ.settings import PROJECT_ROOT
+from pathlib import Path
 
 # google what is my user agent to get it
 USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"
 
 
-FIGURE_PATH = path.join(PROJECT_ROOT, "figures")
-TABLE_PATH = path.join(PROJECT_ROOT, "tables")
-GLOBAL_DATA_PATH = path.join(PROJECT_ROOT, "data", "data_global")
+FIGURE_PATH = Path(PROJECT_ROOT) / "figures"
+TABLE_PATH = Path(PROJECT_ROOT) / "tables"
+GLOBAL_DATA_PATH = Path(PROJECT_ROOT) / "data", "data_global"
+CACHE_PATH = Path(PROJECT_ROOT) / ".cache"
 
 # Compound pool deployment time
 COMPOUND_DEPLOYMENT_DATE = [
