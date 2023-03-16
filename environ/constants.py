@@ -1,7 +1,6 @@
 from os import path
 
 from environ.settings import PROJECT_ROOT
-from environ.utils.variable_constructer import name_boom_interact_var, name_lag_variable
 
 # google what is my user agent to get it
 USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"
@@ -140,7 +139,7 @@ STABLE_DICT = {
 # get all unique underling from stable_dict
 FIAT_LIST = list(set([v["underlying"] for v in STABLE_DICT.values()]))
 
-NAMING_DICT = {
+ALL_NAMING_DICT = {
     "TVL_share": "{\it LiquidityShare}",
     "Inflow_centrality": "{\it EigenCent}^{In}",
     "Outflow_centrality": "{\it EigenCent}^{Out}",
@@ -198,23 +197,6 @@ NAMING_DICT = {
     "S&P_log_return_vol_1_30": "{\it \sigma}^{USD}_{SP}",
     "depeg_pers": "{\it DepegPersist}",
     "is_boom": "{\it IsBoom}",
-}
-
-NAMING_DICT_LAG = {
-    name_lag_variable(k): "{" + v + "}_{t-1}" for k, v in NAMING_DICT.items()
-}
-
-
-# boom_naming_dict with NAMING_DICT and NAMING_DICT_LAG
-BOOM_INTERACTION_DICT = {
-    name_boom_interact_var(k): f"{v} : {NAMING_DICT['is_boom']}"
-    for k, v in {**NAMING_DICT_LAG, **NAMING_DICT}.items()
-}
-
-
-ALL_NAMING_DICT = {
-    k: "$" + v + "$"
-    for k, v in {**NAMING_DICT_LAG, **NAMING_DICT, **BOOM_INTERACTION_DICT}.items()
 }
 
 NAMING_DICT_OLD = {

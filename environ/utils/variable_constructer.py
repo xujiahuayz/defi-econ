@@ -1,18 +1,8 @@
+from typing import Union
 import numpy as np
 import pandas as pd
 
-
-def name_boom_interact_var(variable: str) -> str:
-    """
-    Name the boom interact variable.
-
-    Args:
-        variable (str): The name of the variable.
-
-    Returns:
-        str: The name of the boom interact variable.
-    """
-    return f"{variable}_boom"
+from environ.constants import ALL_NAMING_DICT
 
 
 def name_lag_variable(variable: str, lag: int = 1) -> str:
@@ -28,19 +18,38 @@ def name_lag_variable(variable: str, lag: int = 1) -> str:
     return f"{variable}_lag_{lag}"
 
 
-# def name_lag_variable
+def name_interaction_variable(variable1: str, variable2: str) -> str:
+    """
+    Name the interaction variable.
+
+    Args:
+        variable1 (str): The name of the first variable.
+        variable2 (str): The name of the second variable.
+
+    Returns:
+        str: The name of the interaction variable.
+    """
+    return f"{variable1}*{variable2}"
 
 
-# NAMING_DICT_LAG = {
-#     name_lag_variable(k): "{" + v + "}_{t-1}" for k, v in NAMING_DICT.items()
-# }
+def map_variable_name_latex(variable: str) -> str:
+    """
+    map the variable name to latex.
+    """
 
+    # split the variable name by * for interaction variable
+    variables = variable.split("*")
+    # check lag for each variable
+    for i, var in enumerate(variables):
+        if "_lag_" in var:
+            var, lag = var.split("_lag_")
+            var = ALL_NAMING_DICT[var] if var in ALL_NAMING_DICT else var
+            variables[i] = f"{var}_{{t-{lag}}}"
+        else:
+            variables[i] = ALL_NAMING_DICT[var] if var in ALL_NAMING_DICT else var
 
-# # boom_naming_dict with NAMING_DICT and NAMING_DICT_LAG
-# BOOM_INTERACTION_DICT = {
-#     name_boom_interact_var(k): f"{v} : {NAMING_DICT['is_boom']}"
-#     for k, v in {**NAMING_DICT_LAG, **NAMING_DICT}.items()
-# }
+    # combine all with ":" for interaction variables, accommodating for the case of 3 variables
+    return f'${":".join(variables)}$'
 
 
 def name_log_return_variable(variable: str, rolling_window_return: int) -> str:
@@ -54,8 +63,8 @@ def name_log_return_vol_variable(
 
 
 def lag_variable(
-    panel_data: pd.DataFrame,
-    variable: str,
+    data: pd.DataFrame,
+    variable: Union[str, list[str]],
     time_variable: str,
     entity_variable: str = "",
     lag: int = 1,
@@ -69,19 +78,20 @@ def lag_variable(
         time_variable (str): The name of the time variable.
     """
     # Sort the dataset by the time variable
-    panel_data = panel_data.sort_values(by=time_variable)
+    data = data.sort_values(by=time_variable)
 
-    # Lag the variable by lag 1
-    # TODO: this assumes there is no gap in the time variable -- need to double check
+    # Group by entity_variable if it is provided, otherwise use the whole panel_data as a group
+    groupby = data.groupby([entity_variable] if entity_variable else [])
 
-    grouped_panel = (
-        panel_data.groupby(entity_variable)[variable]
-        if entity_variable
-        else panel_data[variable]
-    )
-    panel_data[name_lag_variable(variable, lag=lag)] = grouped_panel.shift(lag)
+    # Define the lagged variable name using the name_lag_variable helper function
+    if isinstance(variable, str):
+        variable = [variable]
+    lagged_names = [name_lag_variable(var, lag) for var in variable]
 
-    return panel_data
+    # Apply the shift to each group
+    data[lagged_names] = groupby[variable].apply(lambda x: x.shift(lag))
+
+    return data
 
 
 def log_return(
@@ -154,7 +164,7 @@ def return_vol(
 
 if __name__ == "__main__":
     # create a dummy dataset
-    data = pd.DataFrame(
+    dummy_data = pd.DataFrame(
         {
             "Date": pd.date_range("2020-01-01", "2020-01-20").append(
                 pd.date_range("2020-02-01", "2020-02-10")
@@ -164,5 +174,12 @@ if __name__ == "__main__":
         }
     )
 
-    new_data = log_return(data, "price1", "Date", 2)
+    new_data = log_return(dummy_data, "price1", "Date", 2)
     new_data = return_vol(new_data, "price1", 2, 6)
+    var_name = name_interaction_variable(
+        name_interaction_variable(
+            name_log_return_vol_variable("price1", 2, 6), name_lag_variable("price2", 1)
+        ),
+        name_lag_variable("price2", 2),
+    )
+    map_variable_name_latex(variable=var_name)
