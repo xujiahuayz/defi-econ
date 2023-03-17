@@ -9,7 +9,7 @@ USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36
 
 FIGURE_PATH = Path(PROJECT_ROOT) / "figures"
 TABLE_PATH = Path(PROJECT_ROOT) / "tables"
-GLOBAL_DATA_PATH = Path(PROJECT_ROOT) / "data", "data_global"
+GLOBAL_DATA_PATH = Path(PROJECT_ROOT) / "data" / "data_global"
 CACHE_PATH = Path(PROJECT_ROOT) / ".cache"
 
 # Compound pool deployment time

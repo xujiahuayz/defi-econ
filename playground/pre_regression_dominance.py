@@ -3,8 +3,6 @@ run regression on the panel data
 """
 
 import re
-from os import path
-
 import pandas as pd
 
 from environ.constants import NAMING_DICT_OLD, TABLE_PATH
@@ -15,9 +13,7 @@ from environ.utils.variable_constructer import (
 )
 
 # read csv file as pd.DataFrame where Date column is parsed as datetime
-reg_panel = pd.read_csv(
-    path.join(TABLE_PATH, "regression_panel.csv"), parse_dates=["Date"]
-)
+reg_panel = pd.read_csv(TABLE_PATH / "regression_panel.csv", parse_dates=["Date"])
 
 
 # TODO: the below would not be necessary if the column names were not changed
@@ -64,4 +60,4 @@ reg_panel = reg_panel.set_index(["Token", "Date"])
 
 
 # pickle the reg_panel
-reg_panel.to_pickle(path.join(TABLE_PATH, "reg_panel.pkl"))
+reg_panel.to_pickle(TABLE_PATH / "reg_panel.pkl")
