@@ -1,19 +1,18 @@
 # get the regression panel dataset from pickled file
 from itertools import product
 from pathlib import Path
-from typing import Union
 
 import pandas as pd
-from linearmodels.panel import PanelOLS
 import statsmodels.api as sm
+from linearmodels.panel import PanelOLS
 
 from environ.constants import ALL_NAMING_DICT, TABLE_PATH
+from environ.utils.caching import cache
 from environ.utils.variable_constructer import (
     lag_variable,
     map_variable_name_latex,
     name_lag_variable,
 )
-from environ.utils.caching import cache
 
 REGRESSION_NAMING_DICT = {
     "r2": "$R^2$",

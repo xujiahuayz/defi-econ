@@ -30,7 +30,7 @@ all_dev = betw_cents + other_dvs
 reg_panel[all_dev] = reg_panel[all_dev].fillna(0)
 
 reg_combi = []
-total_lag = 2
+total_lag = 7
 lag_range = range(1, total_lag + 1)
 for lag in lag_range:
     reg_panel = lag_variable(

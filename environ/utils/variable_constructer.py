@@ -77,17 +77,16 @@ def lag_variable(
         variable (str): The name of the variable to lag.
         time_variable (str): The name of the time variable.
     """
-    # Sort the dataset by the time variable
-    data = data.sort_values(by=time_variable)
-
-    # Group by entity_variable if it is provided, otherwise use the whole panel_data as a group
-    groupby = data.groupby([entity_variable] if entity_variable else [])
 
     # Define the lagged variable name using the name_lag_variable helper function
     if isinstance(variable, str):
         variable = [variable]
     lagged_names = [name_lag_variable(var, lag) for var in variable]
 
+    # Sort the dataset by the time variable
+    data = data.sort_values(by=time_variable)
+    # Group by entity_variable if it is provided, otherwise use the whole panel_data as a group
+    groupby = data.groupby(entity_variable) if entity_variable else data
     # Apply the shift to each group
     data[lagged_names] = groupby[variable].apply(lambda x: x.shift(lag))
 

@@ -4,16 +4,13 @@ from pathlib import Path
 import pandas as pd
 
 from environ.constants import TABLE_PATH
-from environ.utils.variable_constructer import (
-    lag_variable,
-)
 from environ.tabulate.render_regression import (
     construct_regress_vars,
     render_regress_table,
     render_regress_table_latex,
 )
-
 from environ.utils.variable_constructer import (
+    lag_variable,
     name_log_return_vol_variable,
 )
 
