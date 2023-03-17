@@ -1,13 +1,19 @@
 # get the regression panel dataset from pickled file
 from itertools import product
 from pathlib import Path
+from typing import Union
 
 import pandas as pd
 from linearmodels.panel import PanelOLS
 import statsmodels.api as sm
 
 from environ.constants import ALL_NAMING_DICT, TABLE_PATH
-from environ.utils.variable_constructer import lag_variable, name_lag_variable
+from environ.utils.variable_constructer import (
+    lag_variable,
+    map_variable_name_latex,
+    name_lag_variable,
+)
+from environ.utils.caching import cache
 
 REGRESSION_NAMING_DICT = {
     "r2": "$R^2$",
@@ -47,6 +53,10 @@ def regress(
         iv (list[str], optional): The independent variables. Defaults to ["is_boom", "mcap_share"].
         entity_effect (bool, optional): Whether to include entity effect. Defaults to True.
     """
+    # if method not in ["ols", "panel"], raise f"method {method} must be either 'ols' or 'panel'"
+    if method not in ["ols", "panel"]:
+        raise ValueError(f"method {method} must be either 'ols' or 'panel'")
+
     # Define the dependent variable
     dependent_var = data[dv]
 
@@ -55,26 +65,32 @@ def regress(
 
     # Run the fixed-effect regression
     # catch error and print y and X
-    if method == "panel":
-        model = PanelOLS(
-            dependent_var,
-            independent_var,
-            entity_effects=fix_effect(iv),
-            drop_absorbed=True,
-            check_rank=False,
-        ).fit()
-    elif method == "ols":
-        model = sm.OLS(dependent_var, independent_var, missing="drop").fit()
-    else:
-        raise ValueError(f"method {method} must be either 'ols' or 'panel'")
-    return model
+    # TODO: add proper cache
+    @cache(ttl=60 * 60 * 24 * 7, min_memory_time=0.00001, min_disk_time=0.1)
+    def regression(
+        dependent_var: pd.Series, independent_var: pd.DataFrame, method: str
+    ):
+        if method == "panel":
+            model = PanelOLS(
+                dependent_var,
+                independent_var,
+                entity_effects=fix_effect(iv),
+                drop_absorbed=True,
+                check_rank=False,
+            ).fit()
+        else:
+            model = sm.OLS(dependent_var, independent_var, missing="drop").fit()
+        return model
+
+    return regression(dependent_var, independent_var, method)
 
 
 def render_regression_column(
-    reg_panel: pd.DataFrame,
+    data: pd.DataFrame,
     dv: str,
     iv: list[str],
     method: str = "panel",
+    standard_beta: bool = False,
 ) -> pd.Series:
     """
     Render the regression column.
@@ -83,26 +99,33 @@ def render_regression_column(
         reg_panel (pd.DataFrame): The data to run the regression on.
         dv (str): The dependent variable.
         iv (list[str]): The independent variables.
-        entity_effect (bool, optional): Whether to include entity effect. Defaults to True.
+        method (str, optional): The method to run the regression. Defaults to "panel".
+        standard_beta (bool, optional): Whether to use standard beta. Defaults to False.
 
     Returns:
         pd.Series: The regression column.
     """
-    regression_result = regress(data=reg_panel, dv=dv, iv=iv, method=method)
+    regression_result = regress(data=data, dv=dv, iv=iv, method=method)
+
     # merge three pd.Series: regression_result.params, regression_result.std_errors, regression_result.pvalues into one dataframe
     result_column = pd.Series({"regressand": dv})
-    std_errors = (
-        regression_result.std_errors if method == "panel" else regression_result.bse
-    )
+    if standard_beta:
+        # calculate the standard deviation of [dv] + iv
+        line2_items = data[iv].std() / data[dv].std()
+    else:
+        line2_items = (
+            regression_result.std_errors if method == "panel" else regression_result.bse
+        )
+
     for i, v in regression_result.params.items():
         # format v to exactly 3 decimal places
-        v = "{:.3f}".format(v)
+        beta = "{:.3f}".format(v)
         # add * according to p-value
         pvalue = regression_result.pvalues[i]
         star = f"{{{'***' if pvalue < 0.01 else '**' if pvalue < 0.05 else '*' if pvalue < 0.1 else ''}}}"
         # add standard error
-        line1 = f"${v}^{star}$"
-        line2 = f"({std_errors[i]:.3f})"
+        line1 = f"${beta}^{star}$"
+        line2 = f"(${line2_items[i] * v**standard_beta :.3f}$)"
 
         result_column[i] = rf"{line1} \\ {line2}"
 
@@ -168,8 +191,9 @@ def construct_regress_vars(
 def render_regress_table(
     reg_panel: pd.DataFrame,
     reg_combi: list[tuple[str, list[str]]],
-    lag_dv: str = "$\it Dominance_{t-1}$",
-    method: str = "panel",
+    lag_dv: str = "",
+    **kargs,
+    # method: str = "panel",
 ) -> pd.DataFrame:
     """
     Render the regression table.
@@ -178,7 +202,7 @@ def render_regress_table(
         reg_panel (pd.DataFrame): The data to run the regression on.
         file_name (str): The file suffix of the regression table in latex.
         reg_combi (list[tuple[str, list[str]]]): The list of regressand and independent variables.
-        lag_dv (str, optional): The name of the lagged dependent variable. Defaults to "$\it Dominance_{t-1}$".
+        lag_dv (str, optional): The name of the lagged dependent variable.
 
     Returns:
         pd.DataFrame: The regression table.
@@ -189,14 +213,20 @@ def render_regress_table(
     # initiate all_ivs set
     all_ivs = []
     for dv, ivs in reg_combi:
-        lag_dv_name = name_lag_variable(dv)
-        result_column = render_regression_column(reg_panel, dv, ivs, method=method)
-        # rename result_column index
-        result_column = result_column.rename(
-            index={
-                lag_dv_name: lag_dv,
-            }
+        result_column = render_regression_column(
+            reg_panel,
+            dv,
+            ivs,
+            **kargs,
         )
+        # rename result_column index
+        if lag_dv:
+            lag_dv_name = name_lag_variable(dv)
+            result_column = result_column.rename(
+                index={
+                    lag_dv_name: lag_dv,
+                }
+            )
         result_column["regressand"] = dv
 
         counter += 1
@@ -230,30 +260,41 @@ def render_regress_table(
 
 
 def render_regress_table_latex(
-    result_table: pd.DataFrame, method: str = "panel", file_name: str = "test"
+    result_table: pd.DataFrame,
+    file_name: str = "test",
+    method: str = "panel",
 ) -> pd.DataFrame:
     """
     Render the regression table in latex.
     """
 
-    result_table_latex = result_table.rename(index=ALL_NAMING_DICT)
-    # rename each cell in the "regressand" row with ALL_NAMING_DICT[xxx]
-    result_table_latex.loc["regressand"] = result_table_latex.loc["regressand"].map(
-        ALL_NAMING_DICT
+    # map index with map_variable_name_latex, for index from line 2 to 4th last row
+    result_table_latex = result_table.copy()
+    result_table_latex.index = result_table_latex.index.map(
+        lambda x: x
+        if x in REGRESSION_NAMING_DICT.keys()
+        else map_variable_name_latex(x)
     )
+
+    # rename 'regressand' row
+    result_table_latex.loc["regressand"] = result_table_latex.loc["regressand"].map(
+        map_variable_name_latex
+    )
+
     result_table_latex.rename(index=REGRESSION_NAMING_DICT, inplace=True)
 
     iv_end = -3 if method == "panel" else -2
+
     # for each cell from row 2 to 4th last row, add \makecell{xx} to make the cell wrap
     for row in result_table_latex.index[1:iv_end]:
         for col in result_table_latex.columns:
             result_table_latex.loc[
                 row, col
             ] = f"\\makecell{{{result_table_latex.loc[row, col]}}}"
-    # add \midrule to the 4th last row
+
     original_index = result_table_latex.index[iv_end]
     result_table_latex = result_table_latex.rename(
-        index={original_index: "\midrule " + original_index}
+        index={original_index: f"\\midrule {original_index}"}
     )
     result_table_latex.to_latex(
         Path(TABLE_PATH) / f"regression_table_{file_name}.tex", escape=False
@@ -266,23 +307,33 @@ if __name__ == "__main__":
     # Get the regression panel dataset from pickled file
     reg_panel = pd.read_pickle(Path(TABLE_PATH) / "reg_panel.pkl")
 
-    # Lag all variable except the Date and Token
-    for variable in reg_panel.columns:
-        if variable not in ["Date", "Token"]:
-            reg_panel = lag_variable(reg_panel, variable, "Date", "Token")
-
+    dvs = ["Volume_share", "avg_eigenvector_centrality"]
+    ivs = [[["corr_eth"]], [["Stable"], ["std", "Stable"]]]
     reg_combi = construct_regress_vars(
-        dependent_variables=["Volume_share", "avg_eigenvector_centrality"],
-        iv_chunk_list=[[["corr_eth"]], [["Stable"], ["std", "Stable"]]],
+        dependent_variables=dvs,
+        iv_chunk_list=ivs,
         lag_iv=True,
-        with_lag_dv=True,
-        without_lag_dv=True,
+        with_lag_dv=False,
+        without_lag_dv=False,
     )
+
+    ivs_unique = list(set([w for y in ivs for x in y for w in x]))
+    reg_panel = lag_variable(reg_panel, dvs + ivs_unique, "Date", "Token")
 
     result_full = render_regress_table(
         reg_panel=reg_panel,
         reg_combi=reg_combi,
+        method="panel",
+        standard_beta=True,
     )
     result_in_latex = render_regress_table_latex(
-        result_table=result_full, method="panel", file_name="test"
+        result_table=result_full, file_name="test"
+    )
+    # test one column
+    result_one_column = render_regression_column(
+        data=reg_panel,
+        dv=reg_combi[0][0],
+        iv=reg_combi[0][1],
+        method="panel",
+        standard_beta=True,
     )

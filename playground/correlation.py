@@ -1,14 +1,10 @@
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
 import matplotlib.colors as colors
-from environ.constants import (
-    FIGURE_PATH,
-    TABLE_PATH,
-    NAMING_DIC_PROPERTIES_OF_DOMINANCE,
-    NAMING_DIC_HERFINDAHL,
-)
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+
+from environ.constants import FIGURE_PATH, TABLE_PATH
 
 # create the correlation matrix and set the decimal places to 2 and keep the digits
 corr = summary_panel.corr().round(4)

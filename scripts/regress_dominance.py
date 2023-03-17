@@ -9,18 +9,19 @@ from environ.tabulate.render_regression import (
     render_regress_table,
     render_regress_table_latex,
 )
-from environ.utils.variable_constructer import name_boom_interact_var, name_lag_variable
-from scripts.prepare_panel import add_lag_interact_vars
+from environ.utils.variable_constructer import (
+    lag_variable,
+    name_interaction_variable,
+    name_lag_variable,
+)
 
 reg_panel = pd.read_pickle(Path(TABLE_PATH) / "reg_panel.pkl")
 
 
 dependent_variables = [
-    "avg_eigenvector_centrality",
-    "betweenness_centrality_volume",
-    "betweenness_centrality_count",
     "Volume_share",
-    "TVL_share",
+    # "volume_in_share",
+    # "volume_out_share",
 ]
 
 # fill the missing values with 0 for all dependent variables
@@ -29,23 +30,8 @@ for dv in dependent_variables:
 
 
 iv_chunk_list_unlagged = [
-    [["std", "mcap_share", "Supply_share"]],
-    [
-        # ["corr_gas_with_laggedreturn"],
-        ["corr_gas"]
-    ],
-    [
-        # ["Stable", "depegging_degree"],
-        # ["pegging_degree"],
-        # ["depeg_pers"],
-        ["stableshare"],
-    ],
-    [
-        [
-            "corr_eth"
-            #   , "corr_sp"
-        ]
-    ],
+    [["betweenness_centrality_count"], ["betweenness_centrality_volume"]],
+    [[], ["avg_eigenvector_centrality"]],
 ]
 
 LAG_DV_NAME = "$\it Dominance_{t-1}$"
@@ -62,7 +48,9 @@ for ivs_chunk in iv_chunk_list_unlagged:
                 lagged_var = (
                     v if v == "corr_gas_with_laggedreturn" else name_lag_variable(v)
                 )
-                this_ivs.extend([lagged_var, name_boom_interact_var(lagged_var)])
+                this_ivs.extend(
+                    [lagged_var, name_interaction_variable(lagged_var, "is_boom")]
+                )
                 iv_set.add(v)
             else:
                 this_ivs.append(v)
@@ -79,14 +67,26 @@ variables = [
     if v not in ["is_boom", "Stable", "corr_gas_with_laggedreturn"]
 ]
 variables.extend(dependent_variables)
-reg_panel = add_lag_interact_vars(reg_panel, variables=variables)
+reg_panel = lag_variable(
+    data=reg_panel,
+    variable=dependent_variables + list(iv_set),
+    time_variable="Date",
+    entity_variable="Token",
+    lag=1,
+)
+for iv in iv_set:
+    lagged_var = name_lag_variable(iv)
+    reg_panel[name_interaction_variable(lagged_var, "is_boom")] = (
+        reg_panel[lagged_var] * reg_panel["is_boom"]
+    )
+
 
 reg_combi_interact = construct_regress_vars(
     dependent_variables=dependent_variables,
-    iv_chunk_list=iv_chunk_list,
+    iv_chunk_list=iv_chunk_list_unlagged,
     # no need to lag the ivs as they are already lagged
     lag_iv=False,
-    with_lag_dv=True,
+    with_lag_dv=False,
     without_lag_dv=False,
 )
 
@@ -95,10 +95,10 @@ result_full_interact = render_regress_table(
     reg_panel=reg_panel,
     reg_combi=reg_combi_interact,
     lag_dv=LAG_DV_NAME,
-    method="panel",
-    standard_beta=True,
+    method="ols",
+    standard_beta=False,
 )
 
 result_full_latex_interact = render_regress_table_latex(
-    result_table=result_full_interact, file_name="full_dom"
+    result_table=result_full_interact, file_name="full_vshare", method="ols"
 )

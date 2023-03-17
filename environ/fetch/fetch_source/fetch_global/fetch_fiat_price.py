@@ -18,7 +18,6 @@ def get_fiat_usd_price(
     """
     download fiat price from yahoo finance to csv file in GLOBAL_DATA_PATH
     """
-    # https://query1.finance.yahoo.com/v7/finance/download/SGDUSD=X?period1=1547020367&period2=1678000000&interval=1d
     url = f"https://query1.finance.yahoo.com/v7/finance/download/{fiat}USD=X?period1={start}&period2={end}&interval=1d"
     # use requests to download the data
     r = requests.get(url, headers={"User-Agent": user_agent})

@@ -10,14 +10,17 @@ Desc    : Fetch DeFi data.
 """
 # Import python modules
 from datetime import datetime
-from dateutil import relativedelta
+
 import pandas as pd
+from dateutil import relativedelta
+
+from environ.utils.args_parser import arg_parse_cmd
 
 # Import internal modules
 from environ.utils.info_logger import print_info_log
-from environ.utils.args_parser import arg_parse_cmd
-from .fetch_source.uniswap import fetch_uni
+
 from .fetch_source.compound import fetch_comp
+from .fetch_source.uniswap import fetch_uni
 
 # from .fetch_source.aave import fetch_aave
 
