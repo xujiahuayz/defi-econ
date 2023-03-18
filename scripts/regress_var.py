@@ -9,7 +9,6 @@ from environ.tabulate.render_regression import (
     construct_regress_vars,
     render_regress_table,
     render_regress_table_latex,
-    render_regression_column,
 )
 from environ.utils.variable_constructer import (
     diff_variable,
@@ -68,23 +67,16 @@ for b in betw_cents:
     )
 
 
-result_one_column = render_regression_column(
-    data=reg_panel,
-    dv=reg_combi[0][0],
-    iv=reg_combi[0][1],
-    method="panel",
-    standard_beta=False,
-)
+for k, q in {"full": "", "boom": "is_boom", "bust": "~is_boom"}.items():
+    reg_result = render_regress_table(
+        reg_panel=reg_panel.query(q) if q else reg_panel,
+        reg_combi=reg_combi,
+        method="panel",
+        standard_beta=False,
+        lag_dv="",
+        robust=True,
+    )
 
-
-result_full_interact = render_regress_table(
-    reg_panel=reg_panel,
-    reg_combi=reg_combi,
-    method="panel",
-    standard_beta=False,
-    lag_dv="",
-)
-
-result_full_latex_interact = render_regress_table_latex(
-    result_table=result_full_interact, file_name="full_dom_var"
-)
+    result_full_latex_interact = render_regress_table_latex(
+        result_table=reg_result, file_name=f"{k}_dom_var"
+    )

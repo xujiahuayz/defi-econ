@@ -1,7 +1,7 @@
 # get the regression panel dataset from pickled file
 from itertools import product
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional
 
 import pandas as pd
 import statsmodels.api as sm
@@ -41,8 +41,8 @@ def regress(
     data: pd.DataFrame,
     dv: str = "Volume_share",
     iv: list[str] = ["is_boom", "mcap_share"],
-    # method can be "ols", or "panel"
-    method: str = "panel",
+    method: Literal["panel", "ols"] = "panel",
+    robust: bool = False,
 ):
     """
     Run the fixed-effect regression.
@@ -51,7 +51,6 @@ def regress(
         data (pd.DataFrame): The data to run the regression on.
         dv (str, optional): The dependent variable. Defaults to "Volume_share".
         iv (list[str], optional): The independent variables. Defaults to ["is_boom", "mcap_share"].
-        entity_effect (bool, optional): Whether to include entity effect. Defaults to True.
     """
     # if method not in ["ols", "panel"], raise f"method {method} must be either 'ols' or 'panel'"
     if method not in ["ols", "panel"]:
@@ -65,11 +64,14 @@ def regress(
 
     # Run the fixed-effect regression
     # catch error and print y and X
-    # TODO: add proper cache
     @cache(ttl=60 * 60 * 24 * 7, min_memory_time=0.00001, min_disk_time=0.1)
     def regression(
-        dependent_var: pd.Series, independent_var: pd.DataFrame, method: str
+        dependent_var: pd.Series,
+        independent_var: pd.DataFrame,
+        method: str,
+        robust: bool,
     ):
+        # TODO: check robustness of the regression
         if method == "panel":
             model = PanelOLS(
                 dependent_var,
@@ -77,20 +79,29 @@ def regress(
                 entity_effects=fix_effect(iv),
                 drop_absorbed=True,
                 check_rank=False,
-            ).fit()
+            )
+            if robust:
+                model_fit = model.fit(cov_type="kernel", kernel="newey-west")
+            else:
+                model_fit = model.fit()
         else:
-            model = sm.OLS(dependent_var, independent_var, missing="drop").fit()
-        return model
+            model = sm.OLS(dependent_var, independent_var, missing="drop")
+            if robust:
+                model_fit = model.fit(cov_type="HAC", cov_kwds={"maxlags": 1})
+            else:
+                model_fit = model.fit()
+        return model_fit
 
-    return regression(dependent_var, independent_var, method)
+    return regression(dependent_var, independent_var, method, robust)
 
 
 def render_regression_column(
     data: pd.DataFrame,
     dv: str,
     iv: list[str],
-    method: str = "panel",
+    method: Literal["panel", "ols"] = "panel",
     standard_beta: bool = False,
+    **kwargs,
 ) -> pd.Series:
     """
     Render the regression column.
@@ -105,7 +116,7 @@ def render_regression_column(
     Returns:
         pd.Series: The regression column.
     """
-    regression_result = regress(data=data, dv=dv, iv=iv, method=method)
+    regression_result = regress(data=data, dv=dv, iv=iv, method=method, **kwargs)
 
     # merge three pd.Series: regression_result.params, regression_result.std_errors, regression_result.pvalues into one dataframe
     result_column = pd.Series({"regressand": dv})
@@ -262,7 +273,7 @@ def render_regress_table(
 def render_regress_table_latex(
     result_table: pd.DataFrame,
     file_name: str = "test",
-    method: str = "panel",
+    method: Literal["panel", "ols"] = "panel",
 ) -> pd.DataFrame:
     """
     Render the regression table in latex.

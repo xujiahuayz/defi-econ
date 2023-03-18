@@ -70,10 +70,10 @@ def map_variable_name_latex(variable: str) -> str:
         if "_diff_" in var:
             var, diff = var.split("_diff_")
             var = ALL_NAMING_DICT.get(var, var)
-            var = f"\\Delta^{{diff if diff != '1' else ''}} {var}"
+            var = f"\\Delta^{{{diff if diff != '1' else ''}}} {var}"
 
         if has_lag:
-            var = f"{var} (t-{lag})"
+            var = f"{var}_{{t-{lag}}}"
 
         return var
 
