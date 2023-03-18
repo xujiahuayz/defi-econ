@@ -67,6 +67,7 @@ result_full = render_regress_table(
     lag_dv=LAG_DV_NAME,
     method="ols",
     standard_beta=False,
+    robust=True,
 )
 result_full_latex = render_regress_table_latex(
     result_table=result_full, file_name="full_herf", method="ols"

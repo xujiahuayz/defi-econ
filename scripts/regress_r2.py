@@ -48,6 +48,7 @@ result_r2 = render_regress_table(
     reg_combi=reg_combi_interact,
     method="ols",
     standard_beta=False,
+    robust=False,
 )
 
 result_full_latex_interact = render_regress_table_latex(

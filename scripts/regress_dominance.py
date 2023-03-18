@@ -114,6 +114,7 @@ result_full_interact = render_regress_table(
     lag_dv=LAG_DV_NAME,
     method="panel",
     standard_beta=False,
+    robust=True,
 )
 
 result_full_latex_interact = render_regress_table_latex(

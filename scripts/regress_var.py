@@ -43,7 +43,8 @@ lag_range = range(1, total_lag + 1)
 for lag in lag_range:
     reg_panel = lag_variable(
         reg_panel,
-        [name_diff_variable(v, lag=1) for v in all_dev],
+        # [name_diff_variable(v, lag=1) for v in all_dev],
+        all_dev,
         time_variable="Date",
         entity_variable="Token",
         lag=lag,
@@ -51,7 +52,8 @@ for lag in lag_range:
 
 reg_combi = []
 for b in betw_cents:
-    dependent_variables = [name_diff_variable(v, lag=1) for v in other_dvs + [b]]
+    # dependent_variables = [name_diff_variable(v, lag=1) for v in other_dvs + [b]]
+    dependent_variables = other_dvs + [b]
     # fill the missing values with 0 for all dependent variables
     ivs = [
         name_lag_variable(dv, lag)

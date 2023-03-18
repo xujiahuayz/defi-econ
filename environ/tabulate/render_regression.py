@@ -130,13 +130,13 @@ def render_regression_column(
 
     for i, v in regression_result.params.items():
         # format v to exactly 3 decimal places
-        beta = "{:.3f}".format(v)
+        beta = "{:.4f}".format(v)
         # add * according to p-value
         pvalue = regression_result.pvalues[i]
         star = f"{{{'***' if pvalue < 0.01 else '**' if pvalue < 0.05 else '*' if pvalue < 0.1 else ''}}}"
         # add standard error
         line1 = f"${beta}^{star}$"
-        line2 = f"(${line2_items[i] * v**standard_beta :.3f}$)"
+        line2 = f"(${line2_items[i] * v**standard_beta :.4f}$)"
 
         result_column[i] = rf"{line1} \\ {line2}"
 

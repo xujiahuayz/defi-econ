@@ -66,6 +66,8 @@ def map_variable_name_latex(variable: str) -> str:
         has_lag = "_lag_" in var
         if has_lag:
             var, lag = var.split("_lag_")
+            if var in ALL_NAMING_DICT:
+                return f"{ALL_NAMING_DICT.get(var, var)}_{{t-{lag}}}"
 
         if "_diff_" in var:
             var, diff = var.split("_diff_")
