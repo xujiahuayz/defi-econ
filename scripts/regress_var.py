@@ -12,7 +12,9 @@ from environ.tabulate.render_regression import (
     render_regression_column,
 )
 from environ.utils.variable_constructer import (
+    diff_variable,
     lag_variable,
+    name_diff_variable,
     name_lag_variable,
 )
 
@@ -29,19 +31,28 @@ other_dvs = [
 all_dev = betw_cents + other_dvs
 reg_panel[all_dev] = reg_panel[all_dev].fillna(0)
 
-reg_combi = []
-total_lag = 7
+reg_panel = diff_variable(
+    data=reg_panel,
+    variable=all_dev,
+    entity_variable="Token",
+    time_variable="Date",
+    lag=1,
+)
+
+total_lag = 1
 lag_range = range(1, total_lag + 1)
 for lag in lag_range:
     reg_panel = lag_variable(
         reg_panel,
-        all_dev,
+        [name_diff_variable(v, lag=1) for v in all_dev],
         time_variable="Date",
         entity_variable="Token",
         lag=lag,
     )
+
+reg_combi = []
 for b in betw_cents:
-    dependent_variables = other_dvs + [b]
+    dependent_variables = [name_diff_variable(v, lag=1) for v in other_dvs + [b]]
     # fill the missing values with 0 for all dependent variables
     ivs = [
         name_lag_variable(dv, lag)

@@ -1,6 +1,7 @@
 # get the regression panel dataset from pickled file
 from itertools import product
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 import statsmodels.api as sm
@@ -190,7 +191,7 @@ def construct_regress_vars(
 def render_regress_table(
     reg_panel: pd.DataFrame,
     reg_combi: list[tuple[str, list[str]]],
-    lag_dv: str = "",
+    lag_dv: Optional[str] = None,
     **kargs,
     # method: str = "panel",
 ) -> pd.DataFrame:
