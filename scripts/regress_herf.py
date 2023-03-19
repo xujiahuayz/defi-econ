@@ -4,16 +4,13 @@ from pathlib import Path
 import pandas as pd
 
 from environ.constants import TABLE_PATH
-from environ.utils.variable_constructer import (
-    lag_variable,
-)
 from environ.tabulate.render_regression import (
     construct_regress_vars,
     render_regress_table,
     render_regress_table_latex,
 )
-
 from environ.utils.variable_constructer import (
+    lag_variable,
     name_log_return_vol_variable,
 )
 
@@ -69,7 +66,8 @@ result_full = render_regress_table(
     reg_combi=reg_combi,
     lag_dv=LAG_DV_NAME,
     method="ols",
-    standard_beta=True,
+    standard_beta=False,
+    robust=True,
 )
 result_full_latex = render_regress_table_latex(
     result_table=result_full, file_name="full_herf", method="ols"

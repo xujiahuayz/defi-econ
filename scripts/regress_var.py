@@ -9,10 +9,11 @@ from environ.tabulate.render_regression import (
     construct_regress_vars,
     render_regress_table,
     render_regress_table_latex,
-    render_regression_column,
 )
 from environ.utils.variable_constructer import (
+    diff_variable,
     lag_variable,
+    name_diff_variable,
     name_lag_variable,
 )
 
@@ -29,18 +30,29 @@ other_dvs = [
 all_dev = betw_cents + other_dvs
 reg_panel[all_dev] = reg_panel[all_dev].fillna(0)
 
-reg_combi = []
-total_lag = 2
+reg_panel = diff_variable(
+    data=reg_panel,
+    variable=all_dev,
+    entity_variable="Token",
+    time_variable="Date",
+    lag=1,
+)
+
+total_lag = 1
 lag_range = range(1, total_lag + 1)
 for lag in lag_range:
     reg_panel = lag_variable(
         reg_panel,
+        # [name_diff_variable(v, lag=1) for v in all_dev],
         all_dev,
         time_variable="Date",
         entity_variable="Token",
         lag=lag,
     )
+
+reg_combi = []
 for b in betw_cents:
+    # dependent_variables = [name_diff_variable(v, lag=1) for v in other_dvs + [b]]
     dependent_variables = other_dvs + [b]
     # fill the missing values with 0 for all dependent variables
     ivs = [
@@ -57,23 +69,16 @@ for b in betw_cents:
     )
 
 
-result_one_column = render_regression_column(
-    data=reg_panel,
-    dv=reg_combi[0][0],
-    iv=reg_combi[0][1],
-    method="panel",
-    standard_beta=False,
-)
+for k, q in {"full": "", "boom": "is_boom", "bust": "~is_boom"}.items():
+    reg_result = render_regress_table(
+        reg_panel=reg_panel.query(q) if q else reg_panel,
+        reg_combi=reg_combi,
+        method="panel",
+        standard_beta=False,
+        lag_dv="",
+        robust=True,
+    )
 
-
-result_full_interact = render_regress_table(
-    reg_panel=reg_panel,
-    reg_combi=reg_combi,
-    method="panel",
-    standard_beta=False,
-    lag_dv="",
-)
-
-result_full_latex_interact = render_regress_table_latex(
-    result_table=result_full_interact, file_name="full_dom_var"
-)
+    result_full_latex_interact = render_regress_table_latex(
+        result_table=reg_result, file_name=f"{k}_dom_var"
+    )

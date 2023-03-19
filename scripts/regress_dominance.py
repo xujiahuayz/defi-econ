@@ -15,13 +15,15 @@ from environ.utils.variable_constructer import (
     name_lag_variable,
 )
 
-reg_panel = pd.read_pickle(Path(TABLE_PATH) / "reg_panel.pkl")
+reg_panel = pd.read_pickle(TABLE_PATH / "reg_panel.pkl")
 
 
 dependent_variables = [
+    "avg_eigenvector_centrality",
+    "betweenness_centrality_volume",
+    "betweenness_centrality_count",
     "Volume_share",
-    # "volume_in_share",
-    # "volume_out_share",
+    "TVL_share",
 ]
 
 # fill the missing values with 0 for all dependent variables
@@ -30,8 +32,23 @@ for dv in dependent_variables:
 
 
 iv_chunk_list_unlagged = [
-    [["betweenness_centrality_count"], ["betweenness_centrality_volume"]],
-    [[], ["avg_eigenvector_centrality"]],
+    [["std", "mcap_share", "Supply_share"]],
+    [
+        # ["corr_gas_with_laggedreturn"],
+        ["corr_gas"]
+    ],
+    [
+        # ["Stable", "depegging_degree"],
+        # ["pegging_degree"],
+        # ["depeg_pers"],
+        ["stableshare"],
+    ],
+    [
+        [
+            "corr_eth"
+            #   , "corr_sp"
+        ]
+    ],
 ]
 
 LAG_DV_NAME = "$\it Dominance_{t-1}$"
@@ -83,10 +100,10 @@ for iv in iv_set:
 
 reg_combi_interact = construct_regress_vars(
     dependent_variables=dependent_variables,
-    iv_chunk_list=iv_chunk_list_unlagged,
+    iv_chunk_list=iv_chunk_list,
     # no need to lag the ivs as they are already lagged
     lag_iv=False,
-    with_lag_dv=False,
+    with_lag_dv=True,
     without_lag_dv=False,
 )
 
@@ -95,10 +112,11 @@ result_full_interact = render_regress_table(
     reg_panel=reg_panel,
     reg_combi=reg_combi_interact,
     lag_dv=LAG_DV_NAME,
-    method="ols",
+    method="panel",
     standard_beta=False,
+    robust=True,
 )
 
 result_full_latex_interact = render_regress_table_latex(
-    result_table=result_full_interact, file_name="full_vshare", method="ols"
+    result_table=result_full_interact, file_name="full_dom"
 )
