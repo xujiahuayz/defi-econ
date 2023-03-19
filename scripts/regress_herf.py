@@ -43,7 +43,7 @@ herf_panel = pd.read_pickle(TABLE_PATH / "herf_panel.pkl")
 herf_panel = lag_variable(
     herf_panel, dependent_variables + iv_chunk_list_unlagged[0][0], time_variable="Date"
 )
-dummy_vars = pd.get_dummies(herf_panel["Date"].dt.to_period("Y").astype(str))
+dummy_vars = pd.get_dummies(herf_panel["Date"].dt.to_period("M").astype(str))
 herf_panel = pd.concat([herf_panel, dummy_vars], axis=1)
 iv_chunk_list_unlagged.append([list(dummy_vars.columns)])
 
@@ -63,7 +63,7 @@ reg_combi = construct_regress_vars(
 herf_panel["is_boom"] = herf_panel["is_boom"].astype(int)
 # herf_panel["const"] = 1
 
-LAG_DV_NAME = "$\it HHI_{t-1}$"
+LAG_DV_NAME = "\it HHI_{t-1}"
 
 result_full = render_regress_table(
     reg_panel=herf_panel,
@@ -73,6 +73,16 @@ result_full = render_regress_table(
     standard_beta=False,
     robust=True,
 )
+
+# get the index of the row before nobs
+index_before_nobs = result_full.index[result_full.index.get_loc("nobs") - 1]
+new_index = "\text{year-month dummy}"
+result_full.rename(index={index_before_nobs: new_index}, inplace=True)
+# change the value of each cell in the row before nobs to "yes"
+result_full.loc[new_index, :] = "yes"
+# remove all the the rows where the row index is the year-month dummy
+result_full = result_full.loc[~result_full.index.str.contains(r"\d{4}-\d{2}")]
+
 result_full_latex = render_regress_table_latex(
     result_table=result_full, file_name="full_herf", method="ols"
 )

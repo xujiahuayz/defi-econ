@@ -18,8 +18,8 @@ REGRESSION_NAMING_DICT = {
     "r2": "$R^2$",
     "r2_within": "$R^2_{within}$",
     "nobs": "N",
-    "fe": "fixed effect",
-    "regressand": "Regressand",
+    "fe": "Fixed Effect",
+    "regressand": " ",
 }
 
 
@@ -289,7 +289,7 @@ def render_regress_table_latex(
 
     result_table_latex.rename(index=REGRESSION_NAMING_DICT, inplace=True)
 
-    iv_end = -3 if method == "panel" else -2
+    iv_end = -2  # if method == "ols" else -3
 
     # for each cell from row 2 to 4th last row, add \makecell{xx} to make the cell wrap
     for row in result_table_latex.index[1:iv_end]:
