@@ -25,7 +25,7 @@ betw_cents = [
 ]
 other_dvs = [
     "avg_eigenvector_centrality",
-    "stableshare",
+    # "stableshare",
 ]
 all_dev = betw_cents + other_dvs
 reg_panel[all_dev] = reg_panel[all_dev].fillna(0)
