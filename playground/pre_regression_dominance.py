@@ -57,8 +57,5 @@ reg_panel = _merge_fiat_underlying(
 # reg_panel = _merge_pegging(reg_panel, price_col_name="exchange_to_underlying")
 
 
-reg_panel = reg_panel.set_index(["Token", "Date"])
-
-
 # pickle the reg_panel
 reg_panel.to_pickle(TABLE_PATH / "reg_panel.pkl")

@@ -49,7 +49,7 @@ iv_chunk_list_unlagged = [
     ],
 ]
 
-LAG_DV_NAME = "$\it Dominance_{t-1}$"
+LAG_DV_NAME = "\it Dominance_{t-1}"
 
 
 iv_chunk_list = []
@@ -97,8 +97,7 @@ for iv in iv_set:
 
 # restrict to SAMPLE_PERIOD
 reg_panel = reg_panel.loc[
-    (reg_panel.index.get_level_values("Date") >= SAMPLE_PERIOD[0])
-    & (reg_panel.index.get_level_values("Date") <= SAMPLE_PERIOD[1])
+    (reg_panel["Date"] >= SAMPLE_PERIOD[0]) & (reg_panel["Date"] <= SAMPLE_PERIOD[1])
 ]
 
 # iv_chunk_list.append([["is_in_compound"]])
@@ -111,6 +110,7 @@ reg_combi_interact = construct_regress_vars(
     without_lag_dv=False,
 )
 
+reg_panel.set_index(["Token", "Date"], inplace=True)
 
 result_full_interact = render_regress_table(
     reg_panel=reg_panel,

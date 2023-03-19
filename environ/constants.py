@@ -203,6 +203,8 @@ ALL_NAMING_DICT = {
     "depeg_pers": "{\it DepegPersist}",
     "is_boom": "{\it IsBoom}",
     "is_in_compound": "{\it IsInPLF}",
+    "ever_in_compound": "{\it EverInPLF}",
+    "added_within_sample": "{\it AddedWithinSample}",
 }
 
 NAMING_DICT_OLD = {
