@@ -1,7 +1,7 @@
 # get the regression panel dataset from pickled file
 import pandas as pd
 
-from environ.constants import TABLE_PATH
+from environ.constants import SAMPLE_PERIOD, TABLE_PATH
 from environ.tabulate.render_regression import (
     construct_regress_vars,
     render_regress_table,
@@ -47,6 +47,9 @@ dummy_vars = pd.get_dummies(herf_panel["Date"].dt.to_period("Y").astype(str))
 herf_panel = pd.concat([herf_panel, dummy_vars], axis=1)
 iv_chunk_list_unlagged.append([list(dummy_vars.columns)])
 
+herf_panel = herf_panel.loc[
+    (herf_panel["Date"] >= SAMPLE_PERIOD[0]) & (herf_panel["Date"] <= SAMPLE_PERIOD[1])
+]
 reg_combi = construct_regress_vars(
     dependent_variables=dependent_variables,
     iv_chunk_list=iv_chunk_list_unlagged,

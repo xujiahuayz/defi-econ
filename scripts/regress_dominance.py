@@ -1,9 +1,7 @@
 # get the regression panel dataset from pickled file
-from pathlib import Path
-
 import pandas as pd
 
-from environ.constants import TABLE_PATH
+from environ.constants import SAMPLE_PERIOD, TABLE_PATH
 from environ.tabulate.render_regression import (
     construct_regress_vars,
     render_regress_table,
@@ -97,7 +95,11 @@ for iv in iv_set:
         reg_panel[lagged_var] * reg_panel["is_boom"]
     )
 
-
+# restrict to SAMPLE_PERIOD
+reg_panel = reg_panel.loc[
+    (reg_panel.index.get_level_values("Date") >= SAMPLE_PERIOD[0])
+    & (reg_panel.index.get_level_values("Date") <= SAMPLE_PERIOD[1])
+]
 reg_combi_interact = construct_regress_vars(
     dependent_variables=dependent_variables,
     iv_chunk_list=iv_chunk_list,

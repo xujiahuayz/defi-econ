@@ -12,8 +12,6 @@ herf_panel = pd.read_csv(TABLE_PATH / "series_herfindahl.csv", parse_dates=["Dat
 herf_panel = _merge_boom_bust(herf_panel)
 herf_panel = herf_panel.merge(market_data, on=["Date"], how="left")
 # only keep rows within SAMPLE_PERIOD
-herf_panel = herf_panel.loc[
-    (herf_panel["Date"] >= SAMPLE_PERIOD[0]) & (herf_panel["Date"] <= SAMPLE_PERIOD[1])
-]
+
 
 herf_panel.to_pickle(TABLE_PATH / "herf_panel.pkl")
