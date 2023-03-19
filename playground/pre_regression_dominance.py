@@ -3,18 +3,19 @@ run regression on the panel data
 """
 
 import re
+
 import pandas as pd
 
 from environ.constants import NAMING_DICT_OLD, TABLE_PATH
-from environ.tabulate.panel.panel_generator import _merge_boom_bust
 from environ.process.market.prepare_market_data import market_data
-from environ.utils.variable_constructer import (
-    name_log_return_variable,
-)
+from environ.tabulate.panel.fiat_stable_price import _merge_fiat_underlying
+from environ.tabulate.panel.panel_generator import _merge_boom_bust
+from environ.utils.variable_constructer import name_log_return_variable
 
 # read csv file as pd.DataFrame where Date column is parsed as datetime
 reg_panel = pd.read_csv(TABLE_PATH / "regression_panel.csv", parse_dates=["Date"])
-
+# renmove Unnamed0 column
+reg_panel = reg_panel.loc[:, ~reg_panel.columns.str.contains("^Unnamed")]
 
 # TODO: the below would not be necessary if the column names were not changed
 # in the first place - need to revert column names to original in respective scripts
@@ -49,17 +50,15 @@ reg_panel["corr_sp"] = reg_panel.groupby("Token")[
 
 # merge boom bust cycles
 reg_panel = _merge_boom_bust(reg_panel)
-# reg_panel = _merge_fiat_underlying(
-#     reg_panel, new_price_col_name="exchange_to_underlying"
-# )
+reg_panel = _merge_fiat_underlying(
+    reg_panel, new_price_col_name="exchange_to_underlying"
+)
 # reg_panel = _merge_depeg_persistancy(reg_panel, price_col_name="exchange_to_underlying")
 # reg_panel = _merge_pegging(reg_panel, price_col_name="exchange_to_underlying")
 
 
 reg_panel = reg_panel.set_index(["Token", "Date"])
 
-# renmove Unnamed0 column
-reg_panel = reg_panel.loc[:, ~reg_panel.columns.str.contains("^Unnamed")]
 
 # pickle the reg_panel
 reg_panel.to_pickle(TABLE_PATH / "reg_panel.pkl")

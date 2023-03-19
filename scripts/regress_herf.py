@@ -1,6 +1,4 @@
 # get the regression panel dataset from pickled file
-from pathlib import Path
-
 import pandas as pd
 
 from environ.constants import TABLE_PATH
@@ -33,11 +31,21 @@ iv_chunk_list_unlagged = [
             name_log_return_vol_variable(
                 "gas_price_usd", rolling_window_return=1, rolling_window_vol=30
             ),
-            "const",
+            # "const",
         ]
     ],
 ]
 
+
+# Get the regression panel dataset from pickled file
+herf_panel = pd.read_pickle(TABLE_PATH / "herf_panel.pkl")
+
+herf_panel = lag_variable(
+    herf_panel, dependent_variables + iv_chunk_list_unlagged[0][0], time_variable="Date"
+)
+dummy_vars = pd.get_dummies(herf_panel["Date"].dt.to_period("Y").astype(str))
+herf_panel = pd.concat([herf_panel, dummy_vars], axis=1)
+iv_chunk_list_unlagged.append([list(dummy_vars.columns)])
 
 reg_combi = construct_regress_vars(
     dependent_variables=dependent_variables,
@@ -47,17 +55,10 @@ reg_combi = construct_regress_vars(
     without_lag_dv=False,
 )
 
-# Get the regression panel dataset from pickled file
-herf_panel = pd.read_pickle(Path(TABLE_PATH) / "herf_panel.pkl")
-
-# Lag all variable except the Date and Token
-for variable in herf_panel.columns:
-    if variable not in ["is_boom", "boom", "bust", "Date", "const"]:
-        herf_panel = lag_variable(herf_panel, variable, time_variable="Date")
 
 # make is_boom numeric
 herf_panel["is_boom"] = herf_panel["is_boom"].astype(int)
-herf_panel["const"] = 1
+# herf_panel["const"] = 1
 
 LAG_DV_NAME = "$\it HHI_{t-1}$"
 
