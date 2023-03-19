@@ -202,6 +202,7 @@ ALL_NAMING_DICT = {
     "S&P_log_return_vol_1_30": "{\it \sigma}^{USD}_{SP}",
     "depeg_pers": "{\it DepegPersist}",
     "is_boom": "{\it IsBoom}",
+    "is_in_compound": "{\it IsInPLF}",
 }
 
 NAMING_DICT_OLD = {

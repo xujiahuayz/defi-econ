@@ -59,7 +59,7 @@ for ivs_chunk in iv_chunk_list_unlagged:
     for ivs in ivs_chunk:
         this_ivs = []
         for v in ivs:
-            if v not in ["is_boom", "Stable"]:
+            if v not in ["is_boom", "Stable", "is_in_compound"]:
                 lagged_var = (
                     v if v == "corr_gas_with_laggedreturn" else name_lag_variable(v)
                 )
@@ -79,7 +79,7 @@ variables = [
     for ivs_chunk in iv_chunk_list_unlagged
     for ivs in ivs_chunk
     for v in ivs
-    if v not in ["is_boom", "Stable", "corr_gas_with_laggedreturn"]
+    if v not in ["is_boom", "Stable", "is_in_compound"]
 ]
 variables.extend(dependent_variables)
 reg_panel = lag_variable(
@@ -100,6 +100,8 @@ reg_panel = reg_panel.loc[
     (reg_panel.index.get_level_values("Date") >= SAMPLE_PERIOD[0])
     & (reg_panel.index.get_level_values("Date") <= SAMPLE_PERIOD[1])
 ]
+
+# iv_chunk_list.append([["is_in_compound"]])
 reg_combi_interact = construct_regress_vars(
     dependent_variables=dependent_variables,
     iv_chunk_list=iv_chunk_list,
