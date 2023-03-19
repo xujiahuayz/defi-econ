@@ -1,15 +1,18 @@
 """
 Script to render the table of summary statistics.
 """
+import warnings
 from pathlib import Path
 import pandas as pd
-
 from environ.constants import ALL_NAMING_DICT, TABLE_PATH
-from environ.utils.variable_constructer import lag_variable, name_lag_variable
+
+warnings.filterwarnings("ignore")
 
 
-def render_summary_table(
-    reg_panel: pd.DataFrame, sum_column: list[str] = list(), all_columns: bool = False
+def _render_summary_table(
+    reg_panel: pd.DataFrame,
+    sum_column: list[str] = ["is_boom", "mcap_share"],
+    all_columns: bool = False,
 ) -> pd.DataFrame:
     """
     Function to render the summary table.
@@ -23,52 +26,58 @@ def render_summary_table(
         pd.DataFrame: The summary table.
     """
 
-    # initiate the summary table
-    sum_tab = pd.DataFrame()
-
     # whether to include all columns
     if all_columns is True:
-        sum_tab = reg_panel.describe().T
+        sum_tab = reg_panel.describe()
 
     # otherwise, only include the specified columns
     else:
-        sum_tab = reg_panel[sum_column].describe().T
+        sum_tab = reg_panel[sum_column].describe()
 
     return sum_tab
 
 
-# def render_summary_table_latex(
-#     sum_tab: pd.DataFrame, file_name: str = "summary_table"
-# ) -> pd.DataFrame:
-#     """
-#     Function to render the summatr table in latex.
+def render_summary_table_latex(file_name: str = "test", **kwargs) -> None:
+    """
+    Function to render the summatr table in latex.
 
-#     Args:
-#         sum_tab (pd.DataFrame): The summary table.
-#         file_name (str): The file name of the summary table in latex.
+    Args:
+        sum_tab (pd.DataFrame): The summary table.
+        file_name (str): The file name of the summary table in latex.
+    Returns:
+        pd.DataFrame: The summary table in latex.
+    """
 
-#     Returns:
-#         pd.DataFrame: The summary table in latex.
-#     """
+    # generate the summary table in latex
+    sum_tab = _render_summary_table(**kwargs)
 
-#     # generate the latex table for sum_tab
-#     sum_tab_latex = sum_tab.to_latex(
-#         float_format="{:,.2f}".format,
-#         column_format="l" + "c" * (len(sum_tab.columns) - 1),
-#         escape=False,
-#     )
+    # rename the columns
+    sum_tab.rename(columns=ALL_NAMING_DICT, inplace=True)
 
-#     # write the latex table to file
+    # transpose the summary table
+    sum_tab = sum_tab.T
+
+    # save the summary statistics as a csv file
+    sum_tab.to_csv(rf"{TABLE_PATH}/summary_statistics_{file_name}.csv")
+
+    # generate the latex table for sum_tab
+    sum_tab_latex = sum_tab.to_latex()
+
+    # save the summary statistics as a latex file
+    with open(
+        rf"{TABLE_PATH}/summary_statistics_{file_name}.tex", "w", encoding="utf-8"
+    ) as to_file:
+        to_file.write(sum_tab_latex)
 
 
 if __name__ == "__main__":
     # get the regressuib panel dataset from pickle file
-    reg_panel = pd.read_pickle(Path(TABLE_PATH) / "reg_panel.pkl")
+    regression_panel = pd.read_pickle(Path(TABLE_PATH) / "reg_panel.pkl")
 
     # generate the summary table
-    sum_tab = render_summary_table(
-        reg_panel=reg_panel, sum_column=list(), all_columns=True
+    render_summary_table_latex(
+        file_name="test",
+        reg_panel=regression_panel,
+        sum_column=None,
+        all_columns=True,
     )
-
-    # print the summary table
-    print(sum_tab)

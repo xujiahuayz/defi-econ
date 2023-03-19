@@ -58,6 +58,8 @@ reg_panel = _merge_boom_bust(reg_panel)
 
 reg_panel = reg_panel.set_index(["Token", "Date"])
 
+# renmove Unnamed0 column
+reg_panel = reg_panel.loc[:, ~reg_panel.columns.str.contains("^Unnamed")]
 
 # pickle the reg_panel
 reg_panel.to_pickle(TABLE_PATH / "reg_panel.pkl")
