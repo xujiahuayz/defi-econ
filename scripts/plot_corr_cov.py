@@ -12,42 +12,23 @@ from environ.utils.variable_constructer import lag_variable
 
 if __name__ == "__main__":
     # get the regressuib panel dataset from pickle file
-    regression_panel = pd.read_pickle(TABLE_PATH / "reg_panel.pkl")
+    regression_panel = pd.read_pickle(Path(TABLE_PATH) / "reg_panel.pkl")
 
     # columns to be included in the correlation table
     corr_columns = [
         "Volume_share",
-        "volume_in_share",
-        "volume_out_share",
-        "borrow_rate",
-        "supply_rates",
+        "avg_eigenvector_centrality",
         "TVL_share",
-        "Inflow_centrality",
-        "Outflow_centrality",
         "betweenness_centrality_count",
         "betweenness_centrality_volume",
-        "log_return",
-        "corr_gas",
-        "corr_eth",
-        "corr_sp",
-        "std",
-        "gas_price_usd",
-        "Nonstable",
-        "IsWETH",
-        # "exceedance",
-        # "Gas_fee_volatility",
-        "beta",
-        "corr_sentiment",
-        "average_return",
-        # "mcap_share",
-        "dollar_exchange_rate",
+        "stableshare",
     ]
 
     # set the lag number
     LAG_NUM = 28
 
-    # whether to plot the auto lagged correlation table or normal correlation table
-    AUTO_LAG = False
+    # figure type
+    FIGURE_TYPE = "corr"
 
     # file name
     FILE_NAME = "test"
@@ -62,15 +43,17 @@ if __name__ == "__main__":
     )
 
     # render the correlation table
-    corr_table, cov_table = render_corr_cov_tab(
-        data=regression_panel, sum_column=corr_columns, auto_lag=AUTO_LAG, lag=LAG_NUM
+    corr_cov_table = render_corr_cov_tab(
+        data=regression_panel,
+        sum_column=corr_columns,
+        lag=LAG_NUM,
+        fig_type=FIGURE_TYPE,
     )
 
     # render the correlation table figure
     render_corr_cov_figure(
-        corr_tab=corr_table,
-        cov_tab=cov_table,
+        corr_cov_tab=corr_cov_table,
         file_name=FILE_NAME,
-        auto_lag=AUTO_LAG,
         lag=LAG_NUM,
+        fig_type=FIGURE_TYPE,
     )
