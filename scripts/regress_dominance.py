@@ -1,9 +1,7 @@
 # get the regression panel dataset from pickled file
-from pathlib import Path
-
 import pandas as pd
 
-from environ.constants import TABLE_PATH
+from environ.constants import SAMPLE_PERIOD, TABLE_PATH
 from environ.tabulate.render_regression import (
     construct_regress_vars,
     render_regress_table,
@@ -51,7 +49,7 @@ iv_chunk_list_unlagged = [
     ],
 ]
 
-LAG_DV_NAME = "$\it Dominance_{t-1}$"
+LAG_DV_NAME = "\it Dominance_{t-1}"
 
 
 iv_chunk_list = []
@@ -61,7 +59,7 @@ for ivs_chunk in iv_chunk_list_unlagged:
     for ivs in ivs_chunk:
         this_ivs = []
         for v in ivs:
-            if v not in ["is_boom", "Stable"]:
+            if v not in ["is_boom", "Stable", "is_in_compound"]:
                 lagged_var = (
                     v if v == "corr_gas_with_laggedreturn" else name_lag_variable(v)
                 )
@@ -81,7 +79,7 @@ variables = [
     for ivs_chunk in iv_chunk_list_unlagged
     for ivs in ivs_chunk
     for v in ivs
-    if v not in ["is_boom", "Stable", "corr_gas_with_laggedreturn"]
+    if v not in ["is_boom", "Stable", "is_in_compound"]
 ]
 variables.extend(dependent_variables)
 reg_panel = lag_variable(
@@ -97,7 +95,12 @@ for iv in iv_set:
         reg_panel[lagged_var] * reg_panel["is_boom"]
     )
 
+# restrict to SAMPLE_PERIOD
+reg_panel = reg_panel.loc[
+    (reg_panel["Date"] >= SAMPLE_PERIOD[0]) & (reg_panel["Date"] <= SAMPLE_PERIOD[1])
+]
 
+# iv_chunk_list.append([["is_in_compound"]])
 reg_combi_interact = construct_regress_vars(
     dependent_variables=dependent_variables,
     iv_chunk_list=iv_chunk_list,
@@ -107,6 +110,7 @@ reg_combi_interact = construct_regress_vars(
     without_lag_dv=False,
 )
 
+reg_panel.set_index(["Token", "Date"], inplace=True)
 
 result_full_interact = render_regress_table(
     reg_panel=reg_panel,

@@ -15,7 +15,7 @@
         "-synctex=1",
         "-interaction=nonstopmode",
         "-file-line-error",
-        "-max-print-line=120",
+        // "-max-print-line=120",
         "%DOC%"
       ]
     }

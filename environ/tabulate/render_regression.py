@@ -1,6 +1,5 @@
 # get the regression panel dataset from pickled file
 from itertools import product
-from pathlib import Path
 from typing import Literal, Optional
 
 import pandas as pd
@@ -19,8 +18,8 @@ REGRESSION_NAMING_DICT = {
     "r2": "$R^2$",
     "r2_within": "$R^2_{within}$",
     "nobs": "N",
-    "fe": "fixed effect",
-    "regressand": "Regressand",
+    "fe": "Fixed Effect",
+    "regressand": " ",
 }
 
 
@@ -174,8 +173,7 @@ def construct_regress_vars(
             [
                 [
                     name_lag_variable(v)
-                    if v not in ["Stable", "is_boom", "const"]
-                    and v in list(ALL_NAMING_DICT.keys())
+                    if v not in ["Stable", "is_boom", "const"] and v in ALL_NAMING_DICT
                     else v
                     for v in iv
                 ]
@@ -249,7 +247,6 @@ def render_regress_table(
         all_ivs.extend([x for x in ivs if x not in all_ivs])
 
     # reorder rows in result_table, include only rows in index already
-
     rows = [
         x
         for x in (
@@ -282,9 +279,7 @@ def render_regress_table_latex(
     # map index with map_variable_name_latex, for index from line 2 to 4th last row
     result_table_latex = result_table.copy()
     result_table_latex.index = result_table_latex.index.map(
-        lambda x: x
-        if x in REGRESSION_NAMING_DICT.keys()
-        else map_variable_name_latex(x)
+        lambda x: x if x in REGRESSION_NAMING_DICT else map_variable_name_latex(x)
     )
 
     # rename 'regressand' row
@@ -294,7 +289,7 @@ def render_regress_table_latex(
 
     result_table_latex.rename(index=REGRESSION_NAMING_DICT, inplace=True)
 
-    iv_end = -3 if method == "panel" else -2
+    iv_end = -2  # if method == "ols" else -3
 
     # for each cell from row 2 to 4th last row, add \makecell{xx} to make the cell wrap
     for row in result_table_latex.index[1:iv_end]:
@@ -308,7 +303,7 @@ def render_regress_table_latex(
         index={original_index: f"\\midrule {original_index}"}
     )
     result_table_latex.to_latex(
-        Path(TABLE_PATH) / f"regression_table_{file_name}.tex", escape=False
+        TABLE_PATH / f"regression_table_{file_name}.tex", escape=False
     )
     return result_table_latex
 
@@ -316,7 +311,7 @@ def render_regress_table_latex(
 if __name__ == "__main__":
 
     # Get the regression panel dataset from pickled file
-    reg_panel = pd.read_pickle(Path(TABLE_PATH) / "reg_panel.pkl")
+    reg_panel = pd.read_pickle(TABLE_PATH / "reg_panel.pkl")
 
     dvs = ["Volume_share", "avg_eigenvector_centrality"]
     ivs = [[["corr_eth"]], [["Stable"], ["std", "Stable"]]]
