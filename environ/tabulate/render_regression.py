@@ -309,7 +309,6 @@ def render_regress_table_latex(
 
 
 if __name__ == "__main__":
-
     # Get the regression panel dataset from pickled file
     reg_panel = pd.read_pickle(TABLE_PATH / "reg_panel.pkl")
 

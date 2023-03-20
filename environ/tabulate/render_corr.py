@@ -44,7 +44,7 @@ COLOR_DICT = {
 GnRd = colors.LinearSegmentedColormap("GnRd", COLOR_DICT)
 
 
-def render_corr_cov(
+def render_corr_cov_tab(
     data: pd.DataFrame,
     sum_column: list[str] = [
         "Volume_share",
@@ -53,7 +53,7 @@ def render_corr_cov(
     ],
     auto_lag: bool = True,
     lag: int = 7,
-) -> None:
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Function to render the correlation table.
 
@@ -61,6 +61,8 @@ def render_corr_cov(
         data (pd.DataFrame): The panel data.
         sum_column (list[str]): The columns to be included in the correlation table.
         all_columns (bool): Whether to include all columns.
+        auto_lag (bool): Whether to automatically lag the variables.
+        lag (int): The lag of the variables.
 
     Returns:
         pd.DataFrame: The correlation table.
@@ -91,6 +93,25 @@ def render_corr_cov(
     for col in cov_tab.columns:
         cov_tab.rename(columns={col: map_variable_name_latex(col)}, inplace=True)
 
+    return corr_tab, cov_tab
+
+
+def render_corr_cov_figure(
+    corr_tab: pd.DataFrame,
+    cov_tab: pd.DataFrame,
+    file_name: str = "test",
+    auto_lag: bool = True,
+    lag: int = 7,
+) -> None:
+    """
+    Function to render the correlation table figure.
+
+    Args:
+        file_name (str): The file name of the figure.
+        corr_tab (pd.DataFrame): The correlation table.
+        cov_tab (pd.DataFrame): The covariance table.
+    """
+
     # plot the correlation table
     sns.heatmap(
         corr_tab,
@@ -108,6 +129,14 @@ def render_corr_cov(
 
     # tight layout
     plt.tight_layout()
+
+    # save the covariance matrix
+    plt.savefig(
+        rf"{FIGURE_PATH}/correlation_matrix_{file_name}_{lag}_lag.pdf"
+        if auto_lag
+        else rf"{FIGURE_PATH}/covariance_matrix_{file_name}.pdf"
+    )
+    plt.clf()
 
     # plot the heatmap for the covariance matrix
     sns.heatmap(
@@ -128,7 +157,11 @@ def render_corr_cov(
     plt.tight_layout()
 
     # save the covariance matrix
-    plt.savefig(rf"{FIGURE_PATH}/covariance_matrix_{file_name}_{lag_num}_lag.pdf")
+    plt.savefig(
+        rf"{FIGURE_PATH}/covariance_matrix_{file_name}_{lag}_lag.pdf"
+        if auto_lag
+        else rf"{FIGURE_PATH}/covariance_matrix_{file_name}.pdf"
+    )
     plt.clf()
 
 
@@ -155,6 +188,15 @@ if __name__ == "__main__":
     )
 
     # render the correlation table
-    render_corr_cov(
+    corr_table, cov_table = render_corr_cov_tab(
         data=regression_panel, sum_column=corr_columns, auto_lag=True, lag=7
+    )
+
+    # render the correlation table figure
+    render_corr_cov_figure(
+        corr_tab=corr_table,
+        cov_tab=cov_table,
+        file_name="test",
+        auto_lag=True,
+        lag=7,
     )
