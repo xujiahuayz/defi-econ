@@ -19,7 +19,7 @@ REGRESSION_NAMING_DICT = {
     "r2_within": "$R^2_{within}$",
     "nobs": "N",
     "fe": "Fixed Effect",
-    "regressand": " ",
+    "regressand": "Regresand",
 }
 
 
@@ -302,6 +302,7 @@ def render_regress_table_latex(
     result_table_latex = result_table_latex.rename(
         index={original_index: f"\\midrule {original_index}"}
     )
+
     result_table_latex.to_latex(
         TABLE_PATH / f"regression_table_{file_name}.tex", escape=False
     )

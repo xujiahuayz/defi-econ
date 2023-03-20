@@ -202,9 +202,8 @@ ALL_NAMING_DICT = {
     "S&P_log_return_vol_1_30": "{\it \sigma}^{USD}_{SP}",
     "depeg_pers": "{\it DepegPersist}",
     "is_boom": "{\it IsBoom}",
-    "is_in_compound": "{\it IsInPLF}",
-    "ever_in_compound": "{\it EverInPLF}",
-    "added_within_sample": "{\it AddedWithinSample}",
+    "after_treated_date": "{\it AfterTreatedDate}",
+    "is_treated_token": "{\it IsTreatedToken}",
 }
 
 NAMING_DICT_OLD = {
