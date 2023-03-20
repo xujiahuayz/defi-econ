@@ -12,18 +12,9 @@ from environ.utils.variable_constructer import lag_variable
 
 if __name__ == "__main__":
     # get the regressuib panel dataset from pickle file
-    regression_panel = pd.read_pickle(Path(TABLE_PATH) / "reg_panel.pkl")
+    regression_panel = pd.read_pickle(TABLE_PATH / "reg_panel.pkl")
 
     # columns to be included in the correlation table
-    corr_columns = [
-        "Volume_share",
-        "avg_eigenvector_centrality",
-        "TVL_share",
-        "betweenness_centrality_count",
-        "betweenness_centrality_volume",
-        "stableshare",
-    ]
-
     corr_columns = [
         "Volume_share",
         "volume_in_share",

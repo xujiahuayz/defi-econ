@@ -3,6 +3,7 @@ Script to render the table of correlation heatmap.
 """
 
 from pathlib import Path
+from typing import Optional
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -50,9 +51,8 @@ def render_corr_cov_tab(
         "Volume_share",
         "Inflow_centrality",
         "betweenness_centrality_count",
-    ],
-    auto_lag: bool = True,
-    lag: int = 7,
+    ]
+    lag: Optional[int] = 7,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Function to render the correlation table.
@@ -132,8 +132,8 @@ def render_corr_cov_figure(
     corr_tab: pd.DataFrame,
     cov_tab: pd.DataFrame,
     file_name: str = "test",
-    auto_lag: bool = True,
-    lag: int = 7,
+    # auto_lag: bool = True,
+    lag: Optional[int] = None,
 ) -> None:
     """
     Function to render the correlation table figure.
@@ -153,20 +153,18 @@ def render_corr_cov_figure(
         cmap=GnRd,
         vmin=-1,
         vmax=1,
-        annot_kws={"size": 6} if auto_lag else {"size": 4},
+        annot_kws={"size": 6 if lag else 4},
     )
 
     # font size smaller
-    plt.rcParams.update({"font.size": 6} if auto_lag else {"font.size": 4})
+    plt.rcParams.update({"font.size": 6 if lag else 4})
 
     # tight layout
     plt.tight_layout()
-
+    plt.show()
     # save the covariance matrix
     plt.savefig(
-        rf"{FIGURE_PATH}/correlation_matrix_{file_name}_{lag}_lag.pdf"
-        if auto_lag
-        else rf"{FIGURE_PATH}/correlation_matrix_{file_name}.pdf"
+        FIGURE_PATH / f'correlation_matrix_{file_name}{f"_{lag}" if lag else ""}.pdf'
     )
     plt.clf()
 
@@ -190,7 +188,7 @@ def render_corr_cov_figure(
 
     # save the covariance matrix
     plt.savefig(
-        rf"{FIGURE_PATH}/covariance_matrix_{file_name}_{lag}_lag.pdf"
+        FIGURE_PATH / f"covariance_matrix_{file_name}_{lag}_lag.pdf"
         if auto_lag
         else rf"{FIGURE_PATH}/covariance_matrix_{file_name}.pdf"
     )
