@@ -44,7 +44,7 @@ COLOR_DICT = {
 GnRd = colors.LinearSegmentedColormap("GnRd", COLOR_DICT)
 
 
-def render_corr_cov(
+def render_corr_cov_tab(
     data: pd.DataFrame,
     sum_column: list[str] = [
         "Volume_share",
@@ -53,7 +53,7 @@ def render_corr_cov(
     ],
     auto_lag: bool = True,
     lag: int = 7,
-) -> None:
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Function to render the correlation table.
 
@@ -61,6 +61,8 @@ def render_corr_cov(
         data (pd.DataFrame): The panel data.
         sum_column (list[str]): The columns to be included in the correlation table.
         all_columns (bool): Whether to include all columns.
+        auto_lag (bool): Whether to automatically lag the variables.
+        lag (int): The lag of the variables.
 
     Returns:
         pd.DataFrame: The correlation table.
@@ -68,67 +70,130 @@ def render_corr_cov(
 
     # whether auto lag is enabled
     if auto_lag is True:
-        sum_column = sum_column + [
+        combi_column = sum_column + [
             name_lag_variable(variable=col, lag=lag)
-            for col in corr_columns
+            for col in sum_column
             if col not in ["Stable", "is_boom"]
         ]
+    else:
+        combi_column = sum_column
 
     # keep only the specified columns
-    data = data[sum_column]
+    data = data[combi_column]
 
     # create the correlation table
-    corr_tab = data.corr().round(4)
+    corr_tab = data.corr().round(2)
+
+    # if lag is enabled, remove the lagged variables from the rows
+    # and remove the unlagged variables from the columns
+    if auto_lag is True:
+        corr_tab = corr_tab.drop(
+            [name_lag_variable(variable=col, lag=lag) for col in sum_column],
+            axis=0,
+        )
+        corr_tab = corr_tab.drop(
+            [col for col in sum_column if col not in ["Stable", "is_boom"]], axis=1
+        )
 
     # iterate through the columns to map the variable names to latex
     for col in corr_tab.columns:
         corr_tab.rename(columns={col: map_variable_name_latex(col)}, inplace=True)
 
+    # iterate through the rows to map the variable names to latex
+    for row in corr_tab.index:
+        corr_tab.rename(index={row: map_variable_name_latex(row)}, inplace=True)
+
     # create the covariance table
-    cov_tab = data.cov().round(4)
+    cov_tab = data.cov().round(2)
+
+    # if lag is enabled, remove the lagged variables from the rows
+    # and remove the unlagged variables from the columns
+    if auto_lag is True:
+        cov_tab = cov_tab.drop(
+            [name_lag_variable(variable=col, lag=lag) for col in sum_column],
+            axis=0,
+        )
+        cov_tab = cov_tab.drop(
+            [col for col in sum_column if col not in ["Stable", "is_boom"]], axis=1
+        )
 
     # iterate through the columns to map the variable names to latex
     for col in cov_tab.columns:
         cov_tab.rename(columns={col: map_variable_name_latex(col)}, inplace=True)
 
+    # iterate through the rows to map the variable names to latex
+    for row in cov_tab.index:
+        cov_tab.rename(index={row: map_variable_name_latex(row)}, inplace=True)
+
+    return corr_tab, cov_tab
+
+
+def render_corr_cov_figure(
+    corr_tab: pd.DataFrame,
+    cov_tab: pd.DataFrame,
+    file_name: str = "test",
+    auto_lag: bool = True,
+    lag: int = 7,
+) -> None:
+    """
+    Function to render the correlation table figure.
+
+    Args:
+        file_name (str): The file name of the figure.
+        corr_tab (pd.DataFrame): The correlation table.
+        cov_tab (pd.DataFrame): The covariance table.
+    """
+
     # plot the correlation table
     sns.heatmap(
         corr_tab,
         xticklabels=corr_tab.columns,
-        yticklabels=corr_tab.columns,
+        yticklabels=corr_tab.index,
         annot=True,
         cmap=GnRd,
         vmin=-1,
         vmax=1,
-        annot_kws={"size": 4},
+        annot_kws={"size": 6} if auto_lag else {"size": 4},
     )
 
     # font size smaller
-    plt.rcParams.update({"font.size": 4})
-
-    # tight layout
-    plt.tight_layout()
-
-    # plot the heatmap for the covariance matrix
-    sns.heatmap(
-        cov_tab,
-        xticklabels=cov_tab.columns,
-        yticklabels=cov_tab.columns,
-        annot=True,
-        cmap=GnRd,
-        vmin=-1,
-        vmax=1,
-        annot_kws={"size": 4},
-    )
-
-    # font size smaller
-    plt.rcParams.update({"font.size": 4})
+    plt.rcParams.update({"font.size": 6} if auto_lag else {"font.size": 4})
 
     # tight layout
     plt.tight_layout()
 
     # save the covariance matrix
-    plt.savefig(rf"{FIGURE_PATH}/covariance_matrix_{file_name}_{lag_num}_lag.pdf")
+    plt.savefig(
+        rf"{FIGURE_PATH}/correlation_matrix_{file_name}_{lag}_lag.pdf"
+        if auto_lag
+        else rf"{FIGURE_PATH}/correlation_matrix_{file_name}.pdf"
+    )
+    plt.clf()
+
+    # plot the heatmap for the covariance matrix
+    sns.heatmap(
+        cov_tab,
+        xticklabels=cov_tab.columns,
+        yticklabels=cov_tab.index,
+        annot=True,
+        cmap=GnRd,
+        vmin=-1,
+        vmax=1,
+        annot_kws={"size": 6} if auto_lag else {"size": 4},
+    )
+
+    # font size smaller
+    plt.rcParams.update({"font.size": 6} if auto_lag else {"font.size": 4})
+
+    # tight layout
+    plt.tight_layout()
+
+    # save the covariance matrix
+    plt.savefig(
+        rf"{FIGURE_PATH}/covariance_matrix_{file_name}_{lag}_lag.pdf"
+        if auto_lag
+        else rf"{FIGURE_PATH}/covariance_matrix_{file_name}.pdf"
+    )
     plt.clf()
 
 
@@ -138,23 +203,42 @@ if __name__ == "__main__":
 
     # columns to be included in the correlation table
     corr_columns = [
+        "Volume_share",
+        "avg_eigenvector_centrality",
+        "TVL_share",
         "betweenness_centrality_count",
         "betweenness_centrality_volume",
-        "Inflow_centrality",
-        "Outflow_centrality",
-        "Volume_share",
+        "stableshare",
     ]
+
+    # set the lag number
+    LAG_NUM = 28
+
+    # whether to plot the auto lagged correlation table
+    AUTO_LAG = True
+
+    # file name
+    FILE_NAME = "test"
 
     # lag the variables
     regression_panel = lag_variable(
         data=regression_panel,
         variable=corr_columns,
-        lag=7,
+        lag=LAG_NUM,
         time_variable="Date",
         entity_variable="Token",
     )
 
     # render the correlation table
-    render_corr_cov(
-        data=regression_panel, sum_column=corr_columns, auto_lag=True, lag=7
+    corr_table, cov_table = render_corr_cov_tab(
+        data=regression_panel, sum_column=corr_columns, auto_lag=AUTO_LAG, lag=LAG_NUM
+    )
+
+    # render the correlation table figure
+    render_corr_cov_figure(
+        corr_tab=corr_table,
+        cov_tab=cov_table,
+        file_name=FILE_NAME,
+        auto_lag=AUTO_LAG,
+        lag=LAG_NUM,
     )
