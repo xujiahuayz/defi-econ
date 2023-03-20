@@ -10,7 +10,7 @@ warnings.filterwarnings("ignore")
 
 
 def _render_summary_table(
-    reg_panel: pd.DataFrame,
+    data: pd.DataFrame,
     sum_column: list[str] = ["is_boom", "mcap_share"],
     all_columns: bool = False,
 ) -> pd.DataFrame:
@@ -18,7 +18,7 @@ def _render_summary_table(
     Function to render the summary table.
 
     Args:
-        reg_panel (pd.DataFrame): The panel data.
+        data (pd.DataFrame): The panel data.
         sum_column (list[str]): The columns to be included in the summary table.
         all_columns (bool): Whether to include all columns.
 
@@ -28,11 +28,11 @@ def _render_summary_table(
 
     # whether to include all columns
     if all_columns is True:
-        sum_tab = reg_panel.describe()
+        sum_tab = data.describe()
 
     # otherwise, only include the specified columns
     else:
-        sum_tab = reg_panel[sum_column].describe()
+        sum_tab = data[sum_column].describe()
 
     return sum_tab
 
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     # generate the summary table
     render_summary_table_latex(
         file_name="test",
-        reg_panel=regression_panel,
+        data=regression_panel,
         sum_column=None,
         all_columns=True,
     )
