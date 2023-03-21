@@ -1,7 +1,6 @@
 """
 Script to render the table of correlation heatmap.
 """
-from pathlib import Path
 from typing import Literal, Optional
 
 import matplotlib.pyplot as plt
@@ -51,7 +50,6 @@ def render_corr_cov_tab(
     sum_column: list[str] = [
         "Volume_share",
         "Inflow_centrality",
-        "betweenness_centrality_count",
     ],
     lag: Optional[int] = None,
     fig_type: Literal["corr", "cov"] = "corr",
@@ -110,8 +108,8 @@ def render_corr_cov_tab(
 
 def render_corr_cov_figure(
     corr_cov_tab: pd.DataFrame,
-    file_name: str = "_test",
-) -> None:
+    file_name: str,
+):
     """
     Function to render the correlation table figure.
 
@@ -147,12 +145,14 @@ def render_corr_cov_figure(
     plt.savefig(FIGURE_PATH / f"{file_name}.pdf")
     plt.show()
     # close and clear everything
-    plt.close("all")
+    plt.close()
+
+    return hm
 
 
 if __name__ == "__main__":
     # get the regressuib panel dataset from pickle file
-    regression_panel = pd.read_pickle(Path(TABLE_PATH) / "reg_panel.pkl")
+    regression_panel = pd.read_pickle(TABLE_PATH / "reg_panel.pkl")
 
     # columns to be included in the correlation table
     corr_columns = [
