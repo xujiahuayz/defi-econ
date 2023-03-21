@@ -17,6 +17,7 @@ corr_columns = [
     "avg_eigenvector_centrality",
     "betweenness_centrality_count",
     "betweenness_centrality_volume",
+    "stableshare",
     "mcap_share",
     "Supply_share",
     "std",

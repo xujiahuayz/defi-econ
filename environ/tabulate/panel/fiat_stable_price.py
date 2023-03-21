@@ -4,7 +4,7 @@ merge fiat price dataframe with reg_panel
 
 import pandas as pd
 from environ.process.market.fiat_price import process_fiat_price
-from environ.constants import STABLE_DICT, FIAT_LIST
+from environ.constants import TOKEN_PLOT_DICT, FIAT_LIST
 
 
 def price_underlying(
@@ -18,7 +18,7 @@ def price_underlying(
     if token_df["Stable"].iloc[0] == 1:
         # stablecoin
         # get the underlying fiat
-        underlying = STABLE_DICT[token_df["Token"].iloc[0]]["underlying"]
+        underlying = TOKEN_PLOT_DICT[token_df["Token"].iloc[0]]["underlying"]
         if underlying != "USD":
             # calculate exchange rate
             token_df[new_price_col_name] = (

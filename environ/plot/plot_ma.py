@@ -5,17 +5,8 @@ plot moving average of time series
 import matplotlib.pyplot as plt
 import matplotlib.dates as md
 import pandas as pd
+from environ.constants import SAMPLE_PERIOD, ALL_TOKEN_DICT
 from environ.process.market.boom_bust import BOOM_BUST
-
-COLOR_DICT = {
-    "WETH": "blue",
-    "WBTC": "orange",
-    "MATIC": "green",
-    "USDC": "red",
-    "USDT": "purple",
-    "DAI": "brown",
-    "FEI": "pink",
-}
 
 TOKEN_LIST = ["WETH", "WBTC", "MATIC", "USDC", "USDT", "DAI", "FEI"]
 
@@ -29,31 +20,40 @@ def preprocess_ma(
     # rename the value_colume to "value"
     df = df.rename(columns={value_colume: "value"})
     # select only the tokens in TOKEN_LIST
-    df = df[df["token"].isin(TOKEN_LIST)]
+    df = df[df["Token"].isin(TOKEN_LIST)]
     # convert time from timestamp to datetime
-    df["Date"] = pd.to_datetime(df["Date"])
-    # df["time"] = df["Date"].apply(md.date2num)
-
-    # convert time from datetime to timestamp
-    df["time"] = df["Date"].apply(lambda x: int(x.timestamp()))
-
+    # df["Date"] = pd.to_datetime(df["time"], unit="s")
+    df["time"] = df["Date"].apply(md.date2num)
     # sort the dataframe by date
     df = df.sort_values(by="time").reset_index(drop=True)
 
     # calculate moving average for each token
-    for token in set(df["token"]):
-        df[f"{token}_ma"] = df[df["token"] == token]["value"].rolling(ma_window).mean()
+    for token in set(df["Token"]):
+        df[f"{token}_ma"] = df[df["Token"] == token]["value"].rolling(ma_window).mean()
 
     return df
 
 
-def plot_time_series(df: pd.DataFrame, boom_bust: list[dict] = BOOM_BUST) -> None:
+def plot_time_series(
+    df: pd.DataFrame,
+    boom_bust: list[dict] = BOOM_BUST,
+    x_limit: list[str] = SAMPLE_PERIOD,
+) -> None:
     """
     plot the time series
     """
+    # sort df by time
+    df = df.sort_values(by="time").reset_index(drop=True)
     # plot the time series
-    for token in set(df["token"]):
-        plt.plot(df["time"], df["value"], color=COLOR_DICT[token], label=token)
+    for token in set(df["Token"]):
+        # plot with color and line style according to ALL_TOKEN_DICT
+        plt.plot(
+            df[df["Token"] == token]["time"],
+            df[df["Token"] == token]["value"],
+            color=ALL_TOKEN_DICT[token]["color"],
+            linestyle=ALL_TOKEN_DICT[token]["line_type"],
+            label=token,
+        )
 
     # plot boom bust cycles
     for cycle in boom_bust:
@@ -63,12 +63,18 @@ def plot_time_series(df: pd.DataFrame, boom_bust: list[dict] = BOOM_BUST) -> Non
             alpha=0.2,
             color="red" if cycle["main_trend"] == "bust" else "green",
         )
+    # set x limit
+    plt.xlim(md.date2num(x_limit))
 
     # convert time to date
     date_format = md.DateFormatter("%Y-%m-%d")
     plt.gca().xaxis.set_major_formatter(date_format)
 
-    plt.legend(loc="upper left")
+    # rotate x axis label by 45 degree
+    plt.xticks(rotation=45)
+
+    # move legend to outside the plot, upper left
+    plt.legend(bbox_to_anchor=(1.01, 1), loc="upper left")
     plt.show()
 
 
@@ -130,7 +136,7 @@ if __name__ == "__main__":
                 1453593600,
                 1453680000,
             ],
-            "token": [
+            "Token": [
                 "WETH",
                 "WETH",
                 "WETH",
@@ -187,7 +193,7 @@ if __name__ == "__main__":
         }
     )
     # convert date to date
-    # df["Date"] = pd.to_datetime(df["Date"])
+    df["Date"] = pd.to_datetime(df["Date"])
 
     # preprocess the dataframe
     df = preprocess_ma(df)
