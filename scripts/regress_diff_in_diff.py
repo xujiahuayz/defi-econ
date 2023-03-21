@@ -11,8 +11,6 @@ from environ.utils.variable_constructer import name_interaction_variable
 
 reg_panel = pd.read_pickle(TABLE_PATH / "reg_panel.pkl")
 
-# convert COMPOUND_DEPLOYMENT_DATE to dataframe and convert 'Date' column to datetime
-
 compound_date = [
     {
         "Token": v["Token"] if v["Token"] != "ETH" else "WETH",
@@ -20,7 +18,7 @@ compound_date = [
     }
     for v in COMPOUND_DEPLOYMENT_DATE
 ]
-# compound_date_df = pd.DataFrame(compound_date)
+
 # add a column to indicate whether the token was added to compound within the sample period
 all_added_dates = set(
     # take only the date in '2019-05-07 01:20:54' without time
@@ -62,7 +60,7 @@ diff_in_diff_df = diff_in_diff_df.assign(
     after_treated_date=0, is_treated_token=0
 ).fillna(0)
 
-for window in [14, 30, 60]:
+for window in [14]:
 
     did_reg_panel_full = pd.DataFrame()
     for treated_dates in set(all_added_dates):
