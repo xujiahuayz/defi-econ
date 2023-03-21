@@ -263,7 +263,7 @@ NAMING_DIC_PROPERTIES_OF_DOMINANCE = {
     "corr_sp": "${\it CorrSP}$",
     "corr_eth": "${\it CorrETH}$",
     "log_return": "${R}^{\it USD}$",
-    # "mcap": "${\it \ln MCap}^{USD}$",
+    "mcap": "${\it \ln MCap}^{USD}$",
     "itlnMCapUSD": "${\it \ln MCap}^{USD}$",
     "Nonstable": "${\i Nonstable}$",
     "Stable": "${\i Stable}$",

@@ -53,7 +53,7 @@ def render_corr_cov_tab(
         "Inflow_centrality",
         "betweenness_centrality_count",
     ],
-    lag: Optional[int] = 7,
+    lag: Optional[int] = None,
     fig_type: Literal["corr", "cov"] = "corr",
 ) -> pd.DataFrame:
     """
@@ -105,22 +105,12 @@ def render_corr_cov_tab(
         else corr_cov_tab
     )
 
-    # iterate through the columns to map the variable names to latex
-    for col in corr_cov_tab.columns:
-        corr_cov_tab.rename(columns={col: map_variable_name_latex(col)}, inplace=True)
-
-    # iterate through the rows to map the variable names to latex
-    for row in corr_cov_tab.index:
-        corr_cov_tab.rename(index={row: map_variable_name_latex(row)}, inplace=True)
-
     return corr_cov_tab
 
 
 def render_corr_cov_figure(
     corr_cov_tab: pd.DataFrame,
     file_name: str = "_test",
-    lag: Optional[int] = None,
-    fig_type: Literal["corr", "cov"] = "corr",
 ) -> None:
     """
     Function to render the correlation table figure.
@@ -132,33 +122,30 @@ def render_corr_cov_figure(
         fig_type(str): The type of figure to be rendered.
     """
 
+    corr_cov_tab.columns = corr_cov_tab.columns.map(map_variable_name_latex)
+    corr_cov_tab.index = corr_cov_tab.index.map(map_variable_name_latex)
+
     # plot the correlation table
     sns.heatmap(
         corr_cov_tab,
-        xticklabels=corr_cov_tab.columns,
-        yticklabels=corr_cov_tab.index,
         annot=True,
         cmap=GnRd,
         vmin=-1,
         vmax=1,
-        annot_kws={"size": 6 if lag else 2},
+        annot_kws={"size": 6},
         fmt=".3f",
     )
 
     # font size smaller
-    plt.rcParams.update({"font.size": 6 if lag else 2})
+    plt.rcParams.update({"font.size": 6})
 
     # tight layout
     plt.tight_layout()
-
     # save the covariance matrix
-    plt.savefig(
-        FIGURE_PATH / f'correlation_matrix{file_name}{f"_{lag}" if lag else ""}.pdf'
-        if fig_type == "corr"
-        else FIGURE_PATH
-        / f'covariance_matrix_{file_name}{f"_{lag}" if lag else ""}.pdf',
-    )
-    plt.clf()
+    plt.savefig(FIGURE_PATH / f"{file_name}.pdf")
+    plt.show()
+
+    plt.close()
 
 
 if __name__ == "__main__":
@@ -205,6 +192,4 @@ if __name__ == "__main__":
     render_corr_cov_figure(
         corr_cov_tab=corr_cov_table,
         file_name=FILE_NAME,
-        lag=LAG_NUM,
-        fig_type=FIGURE_TYPE,
     )
