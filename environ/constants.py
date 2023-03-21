@@ -10,9 +10,14 @@ SAMPLE_PERIOD = [
     "2023-01-31",
 ]
 
+KEY_TOKEN_LIST = ["WETH", "WBTC", "MATIC", "USDC", "USDT", "DAI", "FEI"]
+
 FIGURE_PATH: Path = Path(PROJECT_ROOT) / "figures"
 TABLE_PATH: Path = Path(PROJECT_ROOT) / "tables"
 GLOBAL_DATA_PATH: Path = Path(PROJECT_ROOT) / "data" / "data_global"
+BETWEENNESS_DATA_PATH: Path = Path(PROJECT_ROOT) / "data" / "data_betweenness"
+NETWORK_DATA_PATH: Path = Path(PROJECT_ROOT) / "data" / "data_network"
+PLOT_DATA_PATH: Path = Path(PROJECT_ROOT) / "data" / "data_plot"
 CACHE_PATH: Path = Path(PROJECT_ROOT) / ".cache"
 
 # Compound pool deployment time
