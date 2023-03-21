@@ -115,9 +115,9 @@ def prepare_stable_share() -> None:
         prop={"size": 40},
     )
 
-    # # enlarge the font of ticker
-    # plt.xticks(fontsize=20)
-    # plt.yticks(fontsize=40)
+    # enlarge the font of ticker
+    plt.xticks(fontsize=20)
+    plt.yticks(fontsize=20)
 
     # legend on the right side
     plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
@@ -252,8 +252,8 @@ def prepare_stable_depeg() -> None:
     )
 
     # enlarge the font of ticker
-    # plt.xticks(fontsize=40)
-    # plt.yticks(fontsize=40)
+    plt.xticks(fontsize=40)
+    plt.yticks(fontsize=40)
 
     # legend on the right side
     plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
