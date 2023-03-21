@@ -121,12 +121,14 @@ def render_corr_cov_figure(
         lag (int): The lag of the variables.
         fig_type(str): The type of figure to be rendered.
     """
+    # create a new dataframe with desired column names using map_variable_name_latex
+    corr_cov_tab = corr_cov_tab.copy()
 
     corr_cov_tab.columns = corr_cov_tab.columns.map(map_variable_name_latex)
     corr_cov_tab.index = corr_cov_tab.index.map(map_variable_name_latex)
 
     # plot the correlation table
-    sns.heatmap(
+    hm = sns.heatmap(
         corr_cov_tab,
         annot=True,
         cmap=GnRd,
@@ -135,17 +137,17 @@ def render_corr_cov_figure(
         annot_kws={"size": 6},
         fmt=".3f",
     )
-
-    # font size smaller
-    plt.rcParams.update({"font.size": 6})
+    # set the x and y labels size
+    hm.set_xticklabels(hm.get_xticklabels(), fontsize=8)
+    hm.set_yticklabels(hm.get_yticklabels(), fontsize=8)
 
     # tight layout
     plt.tight_layout()
     # save the covariance matrix
     plt.savefig(FIGURE_PATH / f"{file_name}.pdf")
     plt.show()
-
-    plt.close()
+    # close and clear everything
+    plt.close("all")
 
 
 if __name__ == "__main__":

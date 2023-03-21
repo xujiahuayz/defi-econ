@@ -53,15 +53,11 @@ def plot_time_series(df: pd.DataFrame, boom_bust: list[dict] = BOOM_BUST) -> Non
 
     # plot boom bust cycles
     for cycle in boom_bust:
-        if cycle["main_trend"] == "boom":
-            color = "green"
-        else:
-            color = "red"
         plt.axvspan(
             cycle["start"],
             cycle["end"],
             alpha=0.2,
-            color=color,
+            color="red" if cycle["main_trend"] == "bust" else "green",
         )
 
     # convert time to date
