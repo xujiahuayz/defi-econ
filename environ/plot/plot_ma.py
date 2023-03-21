@@ -31,8 +31,12 @@ def preprocess_ma(
     # select only the tokens in TOKEN_LIST
     df = df[df["token"].isin(TOKEN_LIST)]
     # convert time from timestamp to datetime
-    df["Date"] = pd.to_datetime(df["time"], unit="s")
-    df["time"] = df["Date"].apply(md.date2num)
+    df["Date"] = pd.to_datetime(df["Date"])
+    # df["time"] = df["Date"].apply(md.date2num)
+
+    # convert time from datetime to timestamp
+    df["time"] = df["Date"].apply(lambda x: int(x.timestamp()))
+
     # sort the dataframe by date
     df = df.sort_values(by="time").reset_index(drop=True)
 

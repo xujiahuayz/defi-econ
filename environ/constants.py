@@ -20,6 +20,121 @@ NETWORK_DATA_PATH: Path = Path(PROJECT_ROOT) / "data" / "data_network"
 PLOT_DATA_PATH: Path = Path(PROJECT_ROOT) / "data" / "data_plot"
 CACHE_PATH: Path = Path(PROJECT_ROOT) / ".cache"
 
+# Aave pool deployment time
+AAVE_DEPLOYMENT_DATE = [
+    {
+        "Token": "ETH",
+        "poolAddress": "0x030ba81f1c18d280636f32af80b9aad02cf0854e",
+        "Date": "2020-11-30 22:20:30",
+    },
+    {
+        "Token": "USDC",
+        "poolAddress": "0xbcca60bb61934080951369a648fb03df4f96263c",
+        "Date": "2020-12-01 14:23:56",
+    },
+    {
+        "Token": "USDT",
+        "poolAddress": "0x3ed3b47dd13ec9a98b44e6204a523e766b225811",
+        "Date": "2020-11-30 22:20:30",
+    },
+    {
+        "Token": "WBTC",
+        "poolAddress": "0x9ff58f4ffb29fa2266ab25e75e2a8b3503311656",
+        "Date": "2020-11-30 22:20:30",
+    },
+    {
+        "Token": "DAI",
+        "poolAddress": "0x028171bca77440897b824ca71d1c56cac55b68a3",
+        "Date": "2020-12-01 14:22:02",
+    },
+    {
+        "Token": "UNI",
+        "poolAddress": "0xb9d7cb55f463405cdfbe4e90a6d2df01c2b92bf1",
+        "Date": "2020-11-30 22:20:58",
+    },
+    {
+        "Token": "LINK",
+        "poolAddress": "0xa06bc25b5805d5f8d82847d191cb4af5a3e873e0",
+        "Date": "2020-12-01 14:23:08",
+    },
+    {
+        "Token": "FRAX",
+        "poolAddress": "0xd4937682df3c8aef4fe912a96a74121c0829e664",
+        "Date": "2021-09-11 23:42:46",
+    },
+    {
+        "Token": "GUSD",
+        "poolAddress": "0xd37ee7e4f452c6638c96536e68090de8cbcdb583",
+        "Date": "2021-01-02 19:16:42",
+    },
+    {
+        "Token": "LUSD",
+        "poolAddress": "0xce1871f791548600cb59efbeffc9c38719142079",
+        "Date": "2022-08-29 19:06:59",
+    },
+    {
+        "Token": "sUSD",
+        "poolAddress": "0x6c5024cd4f8a59110119c56f8933403a539555eb",
+        "Date": "2020-12-01 14:23:43",
+    },
+    {
+        "Token": "TUSD",
+        "poolAddress": "0x101cc05f4a51c0319f570d5e146a8c625198e636",
+        "Date": "2020-12-01 14:23:56",
+    },
+    {
+        "Token": "USDP",
+        "poolAddress": "0x2e8f4bdbe3d47d7d7de490437aea9915d930f1a3",
+        "Date": "2021-07-25 12:17:36",
+    },
+    {
+        "Token": "1INCH",
+        "poolAddress": "0xb29130cbcc3f791f077eade0266168e808e5151e",
+        "Date": "2022-07-30 17:30:33",
+    },
+    {
+        "Token": "AAVE",
+        "poolAddress": "0xffc97d72e13e01096502cb8eb52dee56f74dad7b",
+        "Date": "2020-12-01 14:22:02",
+    },
+    {
+        "Token": "CRV",
+        "poolAddress": "0x8dae6cb04688c62d939ed9b68d32bc62e49970b1",
+        "Date": "2020-12-27 21:46:55",
+    },
+    {
+        "Token": "DPI",
+        "poolAddress": "0x6f634c6135d2ebd550000ac92f494f9cb8183dae",
+        "Date": "2021-08-21 17:42:40",
+    },
+    {
+        "Token": "ENS",
+        "poolAddress": "0x9a14e23a58edf4efdcb360f68cd1b95ce2081a2f",
+        "Date": "2022-03-07 06:02:56",
+    },
+    {
+        "Token": "MKR",
+        "poolAddress": "0xc713e5e149d5d0715dcd1c156a020976e7e56b88",
+        "Date": "2020-12-01 14:23:43",
+    },
+    {
+        "Token": "SNX",
+        "poolAddress": "0x35f6b052c598d933d69a4eec4d04c73a191fe6c2",
+        "Date": "2020-12-01 14:23:43",
+    },
+    {
+        "Token": "stETH",
+        "poolAddress": "0x1982b2f5814301d4e9a8b0201555376e62f82428",
+        "Date": "2022-02-27 16:22:12",
+    },
+    {
+        "Token": "WETH",
+        "poolAddress": "0x030ba81f1c18d280636f32af80b9aad02cf0854e",
+        "Date": "2020-11-30 22:20:30",
+    },
+]
+
+
 # Compound pool deployment time
 COMPOUND_DEPLOYMENT_DATE = [
     {
