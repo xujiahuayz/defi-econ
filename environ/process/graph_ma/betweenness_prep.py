@@ -52,9 +52,6 @@ def betweenness_prep(
     # rename the node column to Token and Date to time
     frame = frame.rename(columns={"node": "token"})
 
-    # convert the time column to unix time using md
-    frame["time"] = frame["Date"].apply(md.date2num)
-
     # save the dataframe to csv in table path
     frame.to_csv(Path(PLOT_DATA_PATH) / f"{graph_type}_{source}.csv", index=False)
 

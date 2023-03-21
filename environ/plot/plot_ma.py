@@ -79,7 +79,6 @@ def plot_time_series(
 
 
 if __name__ == "__main__":
-
     # create dummy dataframe with Date, token, and value, where date is between 2021-01-01 and 2022-01-01
     df = pd.DataFrame(
         {
