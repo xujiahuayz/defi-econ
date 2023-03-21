@@ -70,9 +70,8 @@ def render_corr_cov_tab(
     """
 
     # whether auto lag is enabled
-    combi_column = (
-        sum_column
-        + [
+    combi_column = sum_column + (
+        [
             name_lag_variable(variable=col, lag=lag)
             for col in sum_column
             if col not in ["Stable", "is_boom"]
@@ -89,12 +88,21 @@ def render_corr_cov_tab(
 
     # if lag is enabled, remove the lagged variables from the rows
     # and remove the unlagged variables from the columns
-    corr_cov_tab = corr_cov_tab.drop(
-        [name_lag_variable(variable=col, lag=lag) for col in sum_column],
-        axis=0,
+    corr_cov_tab = (
+        corr_cov_tab.drop(
+            [name_lag_variable(variable=col, lag=lag) for col in sum_column],
+            axis=0,
+        )
+        if lag
+        else corr_cov_tab
     )
-    corr_cov_tab = corr_cov_tab.drop(
-        [col for col in sum_column if col not in ["Stable", "is_boom"]], axis=1
+
+    corr_cov_tab = (
+        corr_cov_tab.drop(
+            [col for col in sum_column if col not in ["Stable", "is_boom"]], axis=1
+        )
+        if lag
+        else corr_cov_tab
     )
 
     # iterate through the columns to map the variable names to latex
@@ -110,7 +118,7 @@ def render_corr_cov_tab(
 
 def render_corr_cov_figure(
     corr_cov_tab: pd.DataFrame,
-    file_name: str = "test",
+    file_name: str = "_test",
     lag: Optional[int] = None,
     fig_type: Literal["corr", "cov"] = "corr",
 ) -> None:
@@ -133,19 +141,19 @@ def render_corr_cov_figure(
         cmap=GnRd,
         vmin=-1,
         vmax=1,
-        annot_kws={"size": 6 if lag else 4},
+        annot_kws={"size": 6 if lag else 2},
         fmt=".3f",
     )
 
     # font size smaller
-    plt.rcParams.update({"font.size": 6 if lag else 4})
+    plt.rcParams.update({"font.size": 6 if lag else 2})
 
     # tight layout
     plt.tight_layout()
-    plt.show()
+
     # save the covariance matrix
     plt.savefig(
-        FIGURE_PATH / f'correlation_matrix_{file_name}{f"_{lag}" if lag else ""}.pdf'
+        FIGURE_PATH / f'correlation_matrix{file_name}{f"_{lag}" if lag else ""}.pdf'
         if fig_type == "corr"
         else FIGURE_PATH
         / f'covariance_matrix_{file_name}{f"_{lag}" if lag else ""}.pdf',

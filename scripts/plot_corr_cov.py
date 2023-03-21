@@ -17,29 +17,53 @@ if __name__ == "__main__":
     # columns to be included in the correlation table
     corr_columns = [
         "Volume_share",
-        "avg_eigenvector_centrality",
+        "volume_in_share",
+        "volume_out_share",
+        "borrow_rate",
+        "supply_rates",
+        "Borrow_share",
+        "Supply_share",
         "TVL_share",
+        "Inflow_centrality",
+        "Outflow_centrality",
         "betweenness_centrality_count",
         "betweenness_centrality_volume",
-        "stableshare",
+        "log_return",
+        "corr_gas",
+        "corr_eth",
+        "corr_sp",
+        "std",
+        "gas_price_usd",
+        "Nonstable",
+        "IsWETH",
+        "gas_price_usd_log_return_vol_1_30",
+        "beta",
+        "corr_sentiment",
+        "average_return",
+        "itlnMCapUSD",
+        "dollar_exchange_rate",
     ]
 
-    # set the lag number
-    LAG_NUM = 28
+    # set the lag number, None for no lag
+    LAG_NUM = None
 
     # figure type
     FIGURE_TYPE = "corr"
 
     # file name
-    FILE_NAME = "test"
+    FILE_NAME = ""
 
     # lag the variables
-    regression_panel = lag_variable(
-        data=regression_panel,
-        variable=corr_columns,
-        lag=LAG_NUM,
-        time_variable="Date",
-        entity_variable="Token",
+    regression_panel = (
+        lag_variable(
+            data=regression_panel,
+            variable=corr_columns,
+            lag=LAG_NUM,
+            time_variable="Date",
+            entity_variable="Token",
+        )
+        if LAG_NUM
+        else regression_panel
     )
 
     # render the correlation table
