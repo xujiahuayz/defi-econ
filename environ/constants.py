@@ -112,10 +112,15 @@ COMPOUND_DEPLOYMENT_DATE = [
         "poolAddress": "0xface851a4921ce59e912d19329929ce6da6eb0c7",
         "Date": "2021-04-21 21:38:22",
     },
+    # {
+    #     "Token": "WBTC2",
+    #     "poolAddress": "0xccF4429DB6322D5C611ee964527D42E5d685DD6a",
+    #     "Date": "2021-03-14 07:44:47",
+    # },
     {
-        "Token": "WBTC2",
-        "poolAddress": "0xccF4429DB6322D5C611ee964527D42E5d685DD6a",
-        "Date": "2021-03-14 07:44:47",
+        "Token": "WBTC",
+        "poolAddress": "0xc11b1268c1a384e55c48c2391d8d480264a3a7f4",
+        "Date": "2019-07-16 19:47:37",
     },
 ]
 
