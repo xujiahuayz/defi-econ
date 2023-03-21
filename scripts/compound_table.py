@@ -19,5 +19,4 @@ with pd.option_context("max_colwidth", 1000):
         TABLE_PATH / "compound_table.tex",
         escape=False,
         index=False,
-        column_format="l p{15cm} l",
     )
