@@ -192,6 +192,7 @@ ALL_NAMING_DICT = {
     "pegging_degree_downpeg": "{\it PeggingDegree}^{Downpeg}",
     "depegging_degree_uppeg": "{\it DepeggingDegree}^{Uppeg}",
     "depegging_degree_downpeg": "{\it DepeggingDegree}^{Downpeg}",
+    "itlnMCapUSD": "{\it \ln MCap}^{USD}",
     "mcap_share": "{\it MCapShare}",
     "corr_sentiment": "{\it CorrSent}",
     "herfindahl_volume": "{\it HHIVolume}",
