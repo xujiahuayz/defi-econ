@@ -2,34 +2,43 @@
 Script to render the moving averages of the variables
 """
 
-from pathlib import Path
-import glob
 import pandas as pd
-import matplotlib.pyplot as plt
-from environ.constants import TABLE_PATH, PLOT_DATA_PATH, KEY_TOKEN_LIST
+from environ.constants import NETWORK_DATA_PATH, PLOT_DATA_PATH
 from environ.plot.plot_ma import preprocess_ma, plot_time_series
 
 # from environ.plot.plot_ma import preprocess_ma, plot_ma, plot_time_series
 
 
 if __name__ == """__main__""":
-    # read the csv file
-    df = pd.read_csv(rf"{PLOT_DATA_PATH}/betweenness_centrality_count_v2.csv")
+    # Iterate through all the csv files in the table path
+    for graph_type in [
+        "betweenness_centrality_count",
+        "betweenness_centrality_volume",
+    ]:
+        for source in ["v2", "v3", "v2v3"]:
+            # read the csv file
+            df = pd.read_csv(rf"{PLOT_DATA_PATH}/{graph_type}_{source}.csv")
 
-    # # Date to datetime
-    # df["Date"] = pd.to_datetime(df["Date"])
+            # preprocess the data
+            df = preprocess_ma(df=df, value_colume=graph_type)
 
-    # # plot the betweenness_centrality_count for USDT using matplotlib
-    # df_usdt = df[df["token"] == "WETH"]
-    # plt.plot(df_usdt["Date"], df_usdt["betweenness_centrality_count"])
-    # plt.gcf().autofmt_xdate()
-    # plt.show()
+            # plot the moving average
+            plot_time_series(df, file_name=f"{graph_type}_{source}")
 
-    # preprocess the data
-    df = preprocess_ma(df=df, value_colume="betweenness_centrality_count")
+    for graph_type in [
+        "volume_share",
+        "volume_in_share",
+        "volume_out_share",
+        "tvl_share",
+        "eigen_in",
+        "eigen_out",
+    ]:
+        for source in ["v2", "v3", "merged"]:
+            # read the csv file
+            df = pd.read_csv(rf"{PLOT_DATA_PATH}/{graph_type}_{source}.csv")
 
-    # save the dataframe to csv in test path
-    df.to_csv("test/test.csv", index=False)
+            # preprocess the data
+            df = preprocess_ma(df=df, value_colume=graph_type)
 
-    # plot the moving average
-    plot_time_series(df)
+            # plot the moving average
+            plot_time_series(df, file_name=f"{graph_type}_{source}")

@@ -5,7 +5,7 @@ plot moving average of time series
 import matplotlib.pyplot as plt
 import matplotlib.dates as md
 import pandas as pd
-from environ.constants import SAMPLE_PERIOD, ALL_TOKEN_DICT
+from environ.constants import SAMPLE_PERIOD, ALL_TOKEN_DICT, FIGURE_PATH
 from environ.process.market.boom_bust import BOOM_BUST
 
 TOKEN_LIST = ["WETH", "WBTC", "MATIC", "USDC", "USDT", "DAI", "FEI"]
@@ -22,7 +22,7 @@ def preprocess_ma(
     # select only the tokens in TOKEN_LIST
     df = df[df["Token"].isin(TOKEN_LIST)]
     # convert time from timestamp to datetime
-    # df["Date"] = pd.to_datetime(df["time"], unit="s")
+    df["Date"] = pd.to_datetime(df["Date"])
     df["time"] = df["Date"].apply(md.date2num)
     # sort the dataframe by date
     df = df.sort_values(by="time").reset_index(drop=True)
@@ -36,6 +36,7 @@ def preprocess_ma(
 
 def plot_time_series(
     df: pd.DataFrame,
+    file_name: str,
     boom_bust: list[dict] = BOOM_BUST,
     x_limit: list[str] = SAMPLE_PERIOD,
 ) -> None:
@@ -49,7 +50,7 @@ def plot_time_series(
         # plot with color and line style according to ALL_TOKEN_DICT
         plt.plot(
             df[df["Token"] == token]["time"],
-            df[df["Token"] == token]["value"],
+            df[df["Token"] == token][f"{token}_ma"],
             color=ALL_TOKEN_DICT[token]["color"],
             linestyle=ALL_TOKEN_DICT[token]["line_type"],
             label=token,
@@ -75,7 +76,12 @@ def plot_time_series(
 
     # move legend to outside the plot, upper left
     plt.legend(bbox_to_anchor=(1.01, 1), loc="upper left")
-    plt.show()
+
+    # save the plot to the figure path
+    plt.savefig(f"{FIGURE_PATH}/{file_name}.pdf", bbox_inches="tight")
+
+    # close the plot
+    plt.close()
 
 
 if __name__ == "__main__":

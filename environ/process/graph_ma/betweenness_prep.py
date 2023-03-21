@@ -6,7 +6,6 @@ import glob
 from pathlib import Path
 from typing import Literal
 
-import matplotlib.dates as md
 import pandas as pd
 
 from environ.constants import BETWEENNESS_DATA_PATH, KEY_TOKEN_LIST, PLOT_DATA_PATH
@@ -50,7 +49,7 @@ def betweenness_prep(
     frame = frame.sort_values(by=["node", "Date"])
 
     # rename the node column to Token and Date to time
-    frame = frame.rename(columns={"node": "token"})
+    frame = frame.rename(columns={"node": "Token"})
 
     # save the dataframe to csv in table path
     frame.to_csv(Path(PLOT_DATA_PATH) / f"{graph_type}_{source}.csv", index=False)
