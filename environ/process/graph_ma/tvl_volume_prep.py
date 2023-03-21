@@ -39,11 +39,18 @@ def tvl_volume_prep(
     frame = pd.concat(list_df, axis=0, ignore_index=True)
 
     if graph_type == "tvl_share":
-        token_col_name = "token"
-        y_col_name = "total_tvl"
+        # rename the total_tvl to tvl_share
+        frame = frame.rename(columns={"total_tvl": graph_type})
+
+        # rename the token column to Token
+        frame = frame.rename(columns={"token": "Token"})
+
     else:
-        token_col_name = "Token"
-        y_col_name = "Volume"
+        # rename the Volume column to graph_type
+        frame = frame.rename(columns={"Volume": graph_type})
+
+    token_col_name = "Token"
+    y_col_name = graph_type
 
     # only keep WETH, WBTC, MATIC, USDC, USDT, DAI, FEI
     frame = frame[frame[token_col_name].isin(KEY_TOKEN_LIST)]

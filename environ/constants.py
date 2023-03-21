@@ -269,11 +269,11 @@ STABLE_DICT = {
 TOKEN_PLOT_DICT = {
     "WETH": {"color": "blue", "line_type": "solid"},
     "WBTC": {"color": "red", "line_type": "dashdot"},
-    # "USDC": {"color": "green", "line_type": "dashed"},
-    # "DAI": {"color": "orange", "line_type": "dotted"},
-    # "USDT": {"color": "purple", "line_type": "solid"},
+    "USDC": {"color": "green", "line_type": "dashed"},
+    "DAI": {"color": "orange", "line_type": "dotted"},
+    "USDT": {"color": "purple", "line_type": "solid"},
     "MATIC": {"color": "brown", "line_type": "dashdot"},
-    # "FEI": {"color": "pink", "line_type": "dashed"},
+    "FEI": {"color": "pink", "line_type": "dashed"},
 }
 
 # combine stable_dict and token_plot_dict to get color and line_type for all tokens
