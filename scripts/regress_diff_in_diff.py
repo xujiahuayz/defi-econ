@@ -1,5 +1,4 @@
 # get the regression panel dataset from pickled file
-import numpy as np
 import pandas as pd
 
 from environ.constants import COMPOUND_DEPLOYMENT_DATE, SAMPLE_PERIOD, TABLE_PATH
@@ -8,35 +7,24 @@ from environ.tabulate.render_regression import (
     render_regress_table,
     render_regress_table_latex,
 )
-from environ.utils.variable_constructer import (
-    lag_variable,
-    name_interaction_variable,
-    name_lag_variable,
-)
+from environ.utils.variable_constructer import name_interaction_variable
 
 reg_panel = pd.read_pickle(TABLE_PATH / "reg_panel.pkl")
-# convert COMPOUND_DEPLOYMENT_DATE to dataframe and convert 'Date' column to datetime
-compound_tokens = pd.DataFrame(COMPOUND_DEPLOYMENT_DATE)[["Token", "Date"]]
-compound_tokens["join_compound_date"] = pd.to_datetime(compound_tokens["Date"])
-# change ETH under Token to WETH
-compound_tokens.loc[compound_tokens["Token"] == "ETH", "Token"] = "WETH"
-# add a column to indicate whether the token was added to compound within the sample period
-compound_tokens["added_within_sample"] = [
-    1 if v else np.nan
-    for v in compound_tokens["join_compound_date"] >= SAMPLE_PERIOD[0]
+
+compound_date = [
+    {
+        "Token": v["Token"] if v["Token"] != "ETH" else "WETH",
+        "join_compound_day": pd.to_datetime(v["Date"].split(" ")[0]),
+    }
+    for v in COMPOUND_DEPLOYMENT_DATE
 ]
 
-# merge compound_tokens with reg_panel
-reg_panel = reg_panel.merge(
-    compound_tokens[["Token", "join_compound_date", "added_within_sample"]],
-    on=["Token"],
-    how="left",
+# add a column to indicate whether the token was added to compound within the sample period
+all_added_dates = set(
+    # take only the date in '2019-05-07 01:20:54' without time
+    v["join_compound_day"]
+    for v in compound_date
 )
-
-reg_panel["is_in_compound"] = reg_panel["Date"] >= reg_panel["join_compound_date"]
-
-reg_panel["const"] = 1
-reg_panel["is_in_compound"] = reg_panel["is_in_compound"].astype(int)
 
 dependent_variables = [
     "avg_eigenvector_centrality",
@@ -46,33 +34,19 @@ dependent_variables = [
     "TVL_share",
 ]
 
-# fill the missing values with 0 for all dependent variables
-for dv in dependent_variables:
-    reg_panel[dv] = reg_panel[dv].fillna(0)
-
-reg_panel[name_interaction_variable("is_in_compound", "added_within_sample")] = (
-    reg_panel["is_in_compound"] * reg_panel["added_within_sample"]
-)
 
 iv_chunk_list_unlagged = [
     [
         [
             # "const",
-            "is_in_compound",
-            "added_within_sample",
-            # name_interaction_variable("is_in_compound", "added_within_sample"),
+            "is_treated_token",
+            "after_treated_date",
+            name_interaction_variable("is_treated_token", "after_treated_date"),
         ]
     ]
 ]
 
-
-# restrict to SAMPLE_PERIOD
-reg_panel = reg_panel.loc[
-    (reg_panel["Date"] >= SAMPLE_PERIOD[0]) & (reg_panel["Date"] <= SAMPLE_PERIOD[1])
-]
-
-# iv_chunk_list.append([["is_in_compound"]])
-reg_combi_interact = construct_regress_vars(
+reg_combi = construct_regress_vars(
     dependent_variables=dependent_variables,
     iv_chunk_list=iv_chunk_list_unlagged,
     lag_iv=False,
@@ -80,15 +54,64 @@ reg_combi_interact = construct_regress_vars(
     without_lag_dv=False,
 )
 
+diff_in_diff_df = reg_panel[["Token", "Date"] + dependent_variables]
+# do the same as above but without SettingWithCopyWarning
+diff_in_diff_df = diff_in_diff_df.assign(
+    after_treated_date=0, is_treated_token=0
+).fillna(0)
 
-result_full_interact = render_regress_table(
-    reg_panel=reg_panel,
-    reg_combi=reg_combi_interact,
-    method="ols",
-    standard_beta=False,
-    robust=False,
-)
+for window in [14]:
 
-result_full_latex_interact = render_regress_table_latex(
-    result_table=result_full_interact, file_name="diff_in_diff"
-)
+    did_reg_panel_full = pd.DataFrame()
+    for treated_dates in set(all_added_dates):
+        # obs_start_date should be 30 days before treated_dates
+        obs_start_date = treated_dates - pd.Timedelta(days=window)
+        obs_end_date = treated_dates + pd.Timedelta(days=window)
+
+        if obs_start_date >= pd.to_datetime(SAMPLE_PERIOD[0]):
+            did_reg_panel = diff_in_diff_df.loc[
+                (diff_in_diff_df["Date"] >= obs_start_date)
+                & (diff_in_diff_df["Date"] <= obs_end_date)
+            ]
+            # find out tokens that were added to compound on treated_dates
+            treated_tokens = []
+            omitted_tokens = []
+            for v in compound_date:
+                if v["join_compound_day"] == treated_dates:
+                    treated_tokens.append(v["Token"])
+                elif v["join_compound_day"] < obs_end_date:
+                    omitted_tokens.append(v["Token"])
+            # remove omitted tokens did_reg_panel
+            did_reg_panel = did_reg_panel.loc[
+                ~did_reg_panel["Token"].isin(omitted_tokens)
+            ]
+            # set 'is_treated_token' to 1 for treated tokens
+            did_reg_panel.loc[
+                did_reg_panel["Token"].isin(treated_tokens), "is_treated_token"
+            ] = 1
+            # set 'after_treated_date' to 1 for dates after treated_dates
+            did_reg_panel.loc[
+                did_reg_panel["Date"] >= treated_dates, "after_treated_date"
+            ] = 1
+
+            did_reg_panel_full = did_reg_panel_full.append(did_reg_panel)
+
+    did_reg_panel_full[
+        name_interaction_variable("is_treated_token", "after_treated_date")
+    ] = (
+        did_reg_panel_full["is_treated_token"]
+        * did_reg_panel_full["after_treated_date"]
+    )
+
+    did_result = render_regress_table(
+        reg_panel=did_reg_panel_full,
+        reg_combi=reg_combi,
+        method="ols",
+        standard_beta=False,
+        robust=False,
+    )
+
+    did_result_latex = render_regress_table_latex(
+        result_table=did_result,
+        file_name=f"DID_{window}",
+    )
