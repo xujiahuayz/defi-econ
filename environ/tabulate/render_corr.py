@@ -1,7 +1,6 @@
 """
 Script to render the table of correlation heatmap.
 """
-from pathlib import Path
 from typing import Literal, Optional
 
 import matplotlib.pyplot as plt
@@ -51,7 +50,6 @@ def render_corr_cov_tab(
     sum_column: list[str] = [
         "Volume_share",
         "Inflow_centrality",
-        "betweenness_centrality_count",
     ],
     lag: Optional[int] = None,
     fig_type: Literal["corr", "cov"] = "corr",
@@ -110,8 +108,8 @@ def render_corr_cov_tab(
 
 def render_corr_cov_figure(
     corr_cov_tab: pd.DataFrame,
-    file_name: str = "_test",
-) -> None:
+    file_name: str,
+):
     """
     Function to render the correlation table figure.
 
@@ -121,12 +119,14 @@ def render_corr_cov_figure(
         lag (int): The lag of the variables.
         fig_type(str): The type of figure to be rendered.
     """
+    # create a new dataframe with desired column names using map_variable_name_latex
+    corr_cov_tab = corr_cov_tab.copy()
 
     corr_cov_tab.columns = corr_cov_tab.columns.map(map_variable_name_latex)
     corr_cov_tab.index = corr_cov_tab.index.map(map_variable_name_latex)
 
     # plot the correlation table
-    sns.heatmap(
+    hm = sns.heatmap(
         corr_cov_tab,
         annot=True,
         cmap=GnRd,
@@ -135,22 +135,24 @@ def render_corr_cov_figure(
         annot_kws={"size": 6},
         fmt=".3f",
     )
-
-    # font size smaller
-    plt.rcParams.update({"font.size": 6})
+    # set the x and y labels size
+    hm.set_xticklabels(hm.get_xticklabels(), fontsize=8)
+    hm.set_yticklabels(hm.get_yticklabels(), fontsize=8)
 
     # tight layout
     plt.tight_layout()
     # save the covariance matrix
     plt.savefig(FIGURE_PATH / f"{file_name}.pdf")
     plt.show()
-
+    # close and clear everything
     plt.close()
+
+    return hm
 
 
 if __name__ == "__main__":
     # get the regressuib panel dataset from pickle file
-    regression_panel = pd.read_pickle(Path(TABLE_PATH) / "reg_panel.pkl")
+    regression_panel = pd.read_pickle(TABLE_PATH / "reg_panel.pkl")
 
     # columns to be included in the correlation table
     corr_columns = [
