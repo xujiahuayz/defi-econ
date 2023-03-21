@@ -13,11 +13,8 @@ regression_panel = pd.read_pickle(TABLE_PATH / "reg_panel.pkl")
 # columns to be included in the correlation table
 corr_columns = [
     "Volume_share",
-    "volume_in_share",
-    "volume_out_share",
     "TVL_share",
-    "Inflow_centrality",
-    "Outflow_centrality",
+    "avg_eigenvector_centrality",
     "betweenness_centrality_count",
     "betweenness_centrality_volume",
     "mcap_share",
