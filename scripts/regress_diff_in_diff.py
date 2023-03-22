@@ -1,7 +1,12 @@
 # get the regression panel dataset from pickled file
 import pandas as pd
 
-from environ.constants import COMPOUND_DEPLOYMENT_DATE, SAMPLE_PERIOD, TABLE_PATH
+from environ.constants import (
+    COMPOUND_DEPLOYMENT_DATE,
+    SAMPLE_PERIOD,
+    TABLE_PATH,
+    DEPENDENT_VARIABLES,
+)
 from environ.tabulate.render_regression import (
     construct_regress_vars,
     render_regress_table,
@@ -10,6 +15,9 @@ from environ.tabulate.render_regression import (
 from environ.utils.variable_constructer import name_interaction_variable
 
 reg_panel = pd.read_pickle(TABLE_PATH / "reg_panel.pkl")
+reg_panel[DEPENDENT_VARIABLES] = reg_panel[DEPENDENT_VARIABLES].fillna(0)
+# for all value < 0 for DEPENDENT_VARIABLES, set to 0
+reg_panel[DEPENDENT_VARIABLES] = reg_panel[DEPENDENT_VARIABLES].clip(lower=0)
 
 compound_date = [
     {
@@ -26,35 +34,27 @@ all_added_dates = set(
     for v in compound_date
 )
 
-dependent_variables = [
-    "avg_eigenvector_centrality",
-    "betweenness_centrality_volume",
-    "betweenness_centrality_count",
-    "Volume_share",
-    "TVL_share",
-]
-
 
 iv_chunk_list_unlagged = [
     [
         [
             # "const",
-            "is_treated_token",
-            "after_treated_date",
+            # "is_treated_token",
+            # "after_treated_date",
             name_interaction_variable("is_treated_token", "after_treated_date"),
         ]
     ]
 ]
 
 reg_combi = construct_regress_vars(
-    dependent_variables=dependent_variables,
+    dependent_variables=DEPENDENT_VARIABLES,
     iv_chunk_list=iv_chunk_list_unlagged,
     lag_iv=False,
     with_lag_dv=False,
     without_lag_dv=False,
 )
 
-diff_in_diff_df = reg_panel[["Token", "Date"] + dependent_variables]
+diff_in_diff_df = reg_panel[["Token", "Date"] + DEPENDENT_VARIABLES]
 # do the same as above but without SettingWithCopyWarning
 diff_in_diff_df = diff_in_diff_df.assign(
     after_treated_date=0, is_treated_token=0
@@ -108,7 +108,7 @@ for window in [14, 30, 60]:
         reg_combi=reg_combi,
         method="ols",
         standard_beta=False,
-        robust=False,
+        robust=True,
     )
 
     did_result_latex = render_regress_table_latex(
