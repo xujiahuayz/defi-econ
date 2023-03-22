@@ -68,11 +68,31 @@ def plot_time_series(
     x_limit: list[str] = SAMPLE_PERIOD,
     token_col_name: str = "token",
     value_colume: str = "value",
+    event_date_list: list[str] = [
+        "2020-03-12",
+    ],
 ) -> None:
     """
     plot the time series
     """
     df["time"] = df["Date"].apply(md.date2num)
+
+    # plot boom bust cycles
+    for cycle in boom_bust:
+        plt.axvspan(
+            cycle["start"],
+            cycle["end"],
+            alpha=0.1,
+            color="red" if cycle["main_trend"] == "bust" else "green",
+        )
+
+    for event_date in event_date_list:
+        # Compound attack of 2020
+        # Introduction of Uniswap V3
+        # Luna crash
+        # FTX collapse
+        plt.axvline(x=pd.to_datetime(event_date), color="red", linewidth=2, alpha=0.5)
+
     # plot the time series
     for token in set(df[token_col_name]):
         token_df = df[df[token_col_name] == token]
@@ -85,21 +105,6 @@ def plot_time_series(
             label=token,
         )
 
-    for event_date in EVENT_DATE_LIST:
-        # Compound attack of 2020
-        # Introduction of Uniswap V3
-        # Luna crash
-        # FTX collapse
-        plt.axvline(x=pd.to_datetime(event_date), color="red", linewidth=2, alpha=0.5)
-
-    # plot boom bust cycles
-    for cycle in boom_bust:
-        plt.axvspan(
-            cycle["start"],
-            cycle["end"],
-            alpha=0.2,
-            color="red" if cycle["main_trend"] == "bust" else "green",
-        )
     # set x limit
     plt.xlim(md.date2num(x_limit))
 
@@ -130,6 +135,7 @@ def plot_ma_time_series(
     boom_bust: list[dict] = BOOM_BUST,
     x_limit: list[str] = SAMPLE_PERIOD,
     file_name: str = "volume_ma",
+    event_date_list: list[str] = ["2020-03-12"],
 ) -> None:
 
     df = file_to_df(file_folder)
@@ -146,6 +152,7 @@ def plot_ma_time_series(
         token_col_name=token_col_name,
         boom_bust=boom_bust,
         x_limit=x_limit,
+        event_date_list=event_date_list,
     )
 
 
@@ -159,6 +166,7 @@ if __name__ == "__main__":
         file_name="volume_ma",
         value_colume=name_ma_variable("Volume", 1),
         token_col_name="Token",
+        event_date_list=EVENT_DATE_LIST,
     )
 
     plot_ma_time_series(
@@ -169,4 +177,5 @@ if __name__ == "__main__":
         boom_bust=BOOM_BUST,
         x_limit=SAMPLE_PERIOD,
         file_name="volume_ma",
+        event_date_list=EVENT_DATE_LIST,
     )
