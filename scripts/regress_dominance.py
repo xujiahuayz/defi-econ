@@ -1,7 +1,7 @@
 # get the regression panel dataset from pickled file
 import pandas as pd
 
-from environ.constants import SAMPLE_PERIOD, TABLE_PATH
+from environ.constants import SAMPLE_PERIOD, TABLE_PATH, DEPENDENT_VARIABLES
 from environ.tabulate.render_regression import (
     construct_regress_vars,
     render_regress_table,
@@ -14,19 +14,7 @@ from environ.utils.variable_constructer import (
 )
 
 reg_panel = pd.read_pickle(TABLE_PATH / "reg_panel.pkl")
-
-
-dependent_variables = [
-    "avg_eigenvector_centrality",
-    "betweenness_centrality_volume",
-    "betweenness_centrality_count",
-    "Volume_share",
-    "TVL_share",
-]
-
-# fill the missing values with 0 for all dependent variables
-for dv in dependent_variables:
-    reg_panel[dv] = reg_panel[dv].fillna(0)
+reg_panel[DEPENDENT_VARIABLES] = reg_panel[DEPENDENT_VARIABLES].fillna(0)
 
 
 iv_chunk_list_unlagged = [
@@ -81,10 +69,10 @@ variables = [
     for v in ivs
     if v not in ["is_boom", "Stable", "is_in_compound"]
 ]
-variables.extend(dependent_variables)
+variables.extend(DEPENDENT_VARIABLES)
 reg_panel = lag_variable_columns(
     data=reg_panel,
-    variable=dependent_variables + list(iv_set),
+    variable=DEPENDENT_VARIABLES + list(iv_set),
     time_variable="Date",
     entity_variable="Token",
     lag=1,
@@ -102,7 +90,7 @@ reg_panel = reg_panel.loc[
 
 # iv_chunk_list.append([["is_in_compound"]])
 reg_combi_interact = construct_regress_vars(
-    dependent_variables=dependent_variables,
+    dependent_variables=DEPENDENT_VARIABLES,
     iv_chunk_list=iv_chunk_list,
     # no need to lag the ivs as they are already lagged
     lag_iv=False,

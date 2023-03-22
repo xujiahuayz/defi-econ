@@ -22,6 +22,15 @@ NETWORK_DATA_PATH: Path = Path(PROJECT_ROOT) / "data" / "data_network"
 PLOT_DATA_PATH: Path = Path(PROJECT_ROOT) / "data" / "data_plot"
 CACHE_PATH: Path = Path(PROJECT_ROOT) / ".cache"
 
+
+DEPENDENT_VARIABLES = [
+    "avg_eigenvector_centrality",
+    "betweenness_centrality_volume",
+    "betweenness_centrality_count",
+    "Volume_share",
+    "TVL_share",
+]
+
 # Aave pool deployment time
 AAVE_DEPLOYMENT_DATE = [
     {
