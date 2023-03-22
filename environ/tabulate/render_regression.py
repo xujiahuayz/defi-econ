@@ -1,10 +1,11 @@
 # get the regression panel dataset from pickled file
 from itertools import product
-from typing import Optional
+from typing import Optional, Union
 
 import pandas as pd
 import statsmodels.api as sm
 from linearmodels.panel import PanelOLS
+
 
 from environ.constants import ALL_NAMING_DICT, TABLE_PATH
 from environ.utils.caching import cache
@@ -41,7 +42,7 @@ def regress(
     dv: str = "Volume_share",
     iv: list[str] = ["is_boom", "mcap_share"],
     robust: bool = False,
-    panel_index_columns: Optional[list[str]] = None,
+    panel_index_columns: Optional[tuple[list[str], list[bool]]] = None,
 ):
     """
     Run the fixed-effect regression.
@@ -53,10 +54,7 @@ def regress(
     """
     # if method not in ["ols", "panel"], raise f"method {method} must be either 'ols' or 'panel'"
     if panel_index_columns:
-        assert (
-            len(panel_index_columns) == 2
-        ), "index_columns must have two columns for panel regression"
-        data = data.reset_index().set_index(panel_index_columns)
+        data = data.reset_index().set_index(panel_index_columns[0])
 
     # Define the dependent variable
     dependent_var = data[dv]
@@ -71,14 +69,15 @@ def regress(
         dependent_var: pd.Series,
         independent_var: pd.DataFrame,
         robust: bool,
-        panel_index_columns: Optional[list[str]] = None,
+        panel_index_columns: Optional[tuple[list[str], list[bool]]] = None,
     ):
 
         if panel_index_columns:
             model = PanelOLS(
                 dependent_var,
                 independent_var,
-                entity_effects=fix_effect(iv),
+                entity_effects=panel_index_columns[1][0],
+                time_effects=panel_index_columns[1][1],
                 drop_absorbed=True,
                 check_rank=False,
             )
@@ -107,7 +106,7 @@ def render_regression_column(
     dv: str,
     iv: list[str],
     standard_beta: bool = False,
-    panel_index_columns: Optional[list[str]] = None,
+    panel_index_columns: Optional[tuple[list[str], list[bool]]] = None,
     **kwargs,
 ) -> pd.Series:
     """
@@ -344,13 +343,13 @@ if __name__ == "__main__":
         data=reg_panel,
         dv=reg_combi[0][0],
         iv=reg_combi[0][1],
-        panel_index_columns=["Token", "Date"],
+        panel_index_columns=(["Token", "Date"], [True, False]),
         standard_beta=True,
     )
     result_full = render_regress_table(
         reg_panel=reg_panel,
         reg_combi=reg_combi,
-        panel_index_columns=["Token", "Date"],
+        panel_index_columns=(["Token", "Date"], [True, False]),
         standard_beta=True,
     )
     result_in_latex = render_regress_table_latex(

@@ -37,7 +37,7 @@ iv_chunk_list_unlagged = [
         [
             # "const",
             # "is_treated_token",
-            "after_treated_date",
+            # "after_treated_date",
             name_interaction_variable("is_treated_token", "after_treated_date"),
         ]
     ]
@@ -108,7 +108,7 @@ for window in [14, 30, 60]:
         reg_panel=did_reg_panel_full,
         reg_combi=reg_combi,
         standard_beta=False,
-        panel_index_columns=["Token", "Date"],
+        panel_index_columns=(["Token", "Date"], [True, True]),
         robust=True,
     )
 
