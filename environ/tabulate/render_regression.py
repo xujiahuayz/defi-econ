@@ -9,7 +9,7 @@ from linearmodels.panel import PanelOLS
 from environ.constants import ALL_NAMING_DICT, TABLE_PATH
 from environ.utils.caching import cache
 from environ.utils.variable_constructer import (
-    lag_variable,
+    lag_variable_columns,
     map_variable_name_latex,
     name_lag_variable,
 )
@@ -324,7 +324,7 @@ if __name__ == "__main__":
     )
 
     ivs_unique = list(set([w for y in ivs for x in y for w in x]))
-    reg_panel = lag_variable(reg_panel, dvs + ivs_unique, "Date", "Token")
+    reg_panel = lag_variable_columns(reg_panel, dvs + ivs_unique, "Date", "Token")
 
     result_full = render_regress_table(
         reg_panel=reg_panel,

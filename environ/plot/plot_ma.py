@@ -2,34 +2,60 @@
 plot moving average of time series
 """
 
-import matplotlib.pyplot as plt
-import matplotlib.dates as md
-import pandas as pd
-from environ.constants import SAMPLE_PERIOD, ALL_TOKEN_DICT, FIGURE_PATH
-from environ.process.market.boom_bust import BOOM_BUST
+import glob
+from pathlib import Path
 
-TOKEN_LIST = ["WETH", "WBTC", "MATIC", "USDC", "USDT", "DAI", "FEI"]
+import matplotlib.dates as md
+import matplotlib.pyplot as plt
+import pandas as pd
+
+from environ.constants import (
+    ALL_TOKEN_DICT,
+    FIGURE_PATH,
+    KEY_TOKEN_LIST,
+    NETWORK_DATA_PATH,
+    SAMPLE_PERIOD,
+)
+from environ.process.market.boom_bust import BOOM_BUST
+from environ.utils.variable_constructer import ma_variable_columns, name_ma_variable
+
+
+def file_to_df(
+    file_folder: Path = NETWORK_DATA_PATH / "merged" / "volume_share",
+) -> pd.DataFrame:
+
+    frame = pd.DataFrame()
+    for filename in glob.glob(str(file_folder) + "/*.csv"):
+        date = filename.split("_")[-1].split(".")[0]
+        df_vol_tvl = pd.read_csv(filename, header=0, index_col=0)
+        df_vol_tvl["Date"] = date
+        frame = pd.concat([frame, df_vol_tvl], ignore_index=True)
+    return frame
 
 
 def preprocess_ma(
-    df: pd.DataFrame, value_colume: str = "value", ma_window: int = 30
+    df: pd.DataFrame,
+    ma_window: int = 30,
+    value_colume: str = "value",
+    token_col_name: str = "token",
 ) -> pd.DataFrame:
     """
     preprocess the dataframe for moving average
     """
-    # rename the value_colume to "value"
-    df = df.rename(columns={value_colume: "value"})
+
     # select only the tokens in TOKEN_LIST
-    df = df[df["Token"].isin(TOKEN_LIST)]
+    df = df[df[token_col_name].isin(KEY_TOKEN_LIST)][
+        [token_col_name, value_colume, "Date"]
+    ]
     # convert time from timestamp to datetime
     df["Date"] = pd.to_datetime(df["Date"])
-    df["time"] = df["Date"].apply(md.date2num)
-    # sort the dataframe by date
-    df = df.sort_values(by="time").reset_index(drop=True)
-
-    # calculate moving average for each token
-    for token in set(df["Token"]):
-        df[f"{token}_ma"] = df[df["Token"] == token]["value"].rolling(ma_window).mean()
+    df = ma_variable_columns(
+        data=df,
+        variable=value_colume,
+        time_variable="Date",
+        entity_variable=token_col_name,
+        rolling_window_ma=ma_window,
+    )
 
     return df
 
@@ -39,18 +65,20 @@ def plot_time_series(
     file_name: str,
     boom_bust: list[dict] = BOOM_BUST,
     x_limit: list[str] = SAMPLE_PERIOD,
+    token_col_name: str = "token",
+    value_colume: str = "value",
 ) -> None:
     """
     plot the time series
     """
-    # sort df by time
-    df = df.sort_values(by="time").reset_index(drop=True)
+    df["time"] = df["Date"].apply(md.date2num)
     # plot the time series
-    for token in set(df["Token"]):
+    for token in set(df[token_col_name]):
+        token_df = df[df[token_col_name] == token]
         # plot with color and line style according to ALL_TOKEN_DICT
         plt.plot(
-            df[df["Token"] == token]["time"],
-            df[df["Token"] == token][f"{token}_ma"],
+            token_df["time"],
+            token_df[value_colume],
             color=ALL_TOKEN_DICT[token]["color"],
             linestyle=ALL_TOKEN_DICT[token]["line_type"],
             label=token,
@@ -78,130 +106,59 @@ def plot_time_series(
     plt.legend(bbox_to_anchor=(1.01, 1), loc="upper left")
 
     # save the plot to the figure path
-    plt.savefig(f"{FIGURE_PATH}/{file_name}.pdf", bbox_inches="tight")
+    plt.savefig(FIGURE_PATH / f"{file_name}.pdf", bbox_inches="tight")
+
+    plt.show()
 
     # close the plot
     plt.close()
 
 
-if __name__ == "__main__":
-    # create dummy dataframe with Date, token, and value, where date is between 2021-01-01 and 2022-01-01
-    df = pd.DataFrame(
-        {
-            "Date": [
-                "2021-01-01",
-                "2021-01-02",
-                "2021-01-03",
-                "2021-01-04",
-                "2021-01-05",
-                "2021-01-06",
-                "2021-01-07",
-                "2021-01-08",
-                "2021-01-09",
-                "2021-01-10",
-                "2021-01-11",
-                "2021-01-12",
-                "2021-01-13",
-                "2021-01-14",
-                "2021-01-15",
-                "2021-01-16",
-                "2021-01-17",
-                "2021-01-18",
-                "2021-01-19",
-                "2021-01-20",
-                "2021-01-21",
-                "2021-01-22",
-                "2021-01-23",
-                "2021-01-24",
-                "2021-01-25",
-            ],
-            "time": [
-                1451606400,
-                1451692800,
-                1451779200,
-                1451865600,
-                1451952000,
-                1452038400,
-                1452124800,
-                1452211200,
-                1452297600,
-                1452384000,
-                1452470400,
-                1452556800,
-                1452643200,
-                1452729600,
-                1452816000,
-                1452902400,
-                1452988800,
-                1453075200,
-                1453161600,
-                1453248000,
-                1453334400,
-                1453420800,
-                1453507200,
-                1453593600,
-                1453680000,
-            ],
-            "Token": [
-                "WETH",
-                "WETH",
-                "WETH",
-                "WETH",
-                "WETH",
-                "WETH",
-                "WETH",
-                "WBTC",
-                "WBTC",
-                "WBTC",
-                "WBTC",
-                "WBTC",
-                "WBTC",
-                "WBTC",
-                "WBTC",
-                "WBTC",
-                "WBTC",
-                "WBTC",
-                "WBTC",
-                "WBTC",
-                "WBTC",
-                "WBTC",
-                "WBTC",
-                "WBTC",
-                "WBTC",
-            ],
-            "value": [
-                1,
-                2,
-                3,
-                4,
-                5,
-                6,
-                7,
-                1,
-                2,
-                3,
-                4,
-                5,
-                6,
-                7,
-                8,
-                9,
-                10,
-                11,
-                12,
-                13,
-                14,
-                15,
-                16,
-                17,
-                18,
-            ],
-        }
-    )
-    # convert date to date
-    df["Date"] = pd.to_datetime(df["Date"])
+def plot_ma_time_series(
+    file_folder: Path = NETWORK_DATA_PATH / "merged" / "volume_share",
+    ma_window: int = 30,
+    value_colume: str = "value",
+    token_col_name: str = "token",
+    boom_bust: list[dict] = BOOM_BUST,
+    x_limit: list[str] = SAMPLE_PERIOD,
+    file_name: str = "volume_ma",
+) -> None:
 
-    # preprocess the dataframe
-    df = preprocess_ma(df)
-    # plot the time series
-    plot_time_series(df)
+    df = file_to_df(file_folder)
+    df_prepared = preprocess_ma(
+        df,
+        value_colume=value_colume,
+        token_col_name=token_col_name,
+        ma_window=ma_window,
+    )
+    plot_time_series(
+        df_prepared,
+        file_name=file_name,
+        value_colume=name_ma_variable(value_colume, ma_window),
+        token_col_name=token_col_name,
+        boom_bust=boom_bust,
+        x_limit=x_limit,
+    )
+
+
+if __name__ == "__main__":
+    df = file_to_df()
+    df_prepared = preprocess_ma(
+        df, value_colume="Volume", token_col_name="Token", ma_window=1
+    )
+    plot_time_series(
+        df_prepared,
+        file_name="volume_ma",
+        value_colume=name_ma_variable("Volume", 1),
+        token_col_name="Token",
+    )
+
+    plot_ma_time_series(
+        file_folder=NETWORK_DATA_PATH / "merged" / "volume_share",
+        ma_window=30,
+        value_colume="Volume",
+        token_col_name="Token",
+        boom_bust=BOOM_BUST,
+        x_limit=SAMPLE_PERIOD,
+        file_name="volume_ma",
+    )

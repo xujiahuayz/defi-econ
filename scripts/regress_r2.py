@@ -10,7 +10,7 @@ from environ.tabulate.render_regression import (
     render_regress_table_latex,
 )
 from environ.utils.variable_constructer import (
-    lag_variable,
+    lag_variable_columns,
     name_interaction_variable,
     name_lag_variable,
 )

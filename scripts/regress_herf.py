@@ -8,7 +8,7 @@ from environ.tabulate.render_regression import (
     render_regress_table_latex,
 )
 from environ.utils.variable_constructer import (
-    lag_variable,
+    lag_variable_columns,
     name_log_return_vol_variable,
 )
 
@@ -40,7 +40,7 @@ iv_chunk_list_unlagged = [
 # Get the regression panel dataset from pickled file
 herf_panel = pd.read_pickle(TABLE_PATH / "herf_panel.pkl")
 
-herf_panel = lag_variable(
+herf_panel = lag_variable_columns(
     herf_panel, dependent_variables + iv_chunk_list_unlagged[0][0], time_variable="Date"
 )
 dummy_vars = pd.get_dummies(herf_panel["Date"].dt.to_period("M").astype(str))

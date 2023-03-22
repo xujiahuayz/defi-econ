@@ -8,7 +8,7 @@ from environ.tabulate.render_regression import (
     render_regress_table_latex,
 )
 from environ.utils.variable_constructer import (
-    lag_variable,
+    lag_variable_columns,
     name_interaction_variable,
     name_lag_variable,
 )
@@ -82,7 +82,7 @@ variables = [
     if v not in ["is_boom", "Stable", "is_in_compound"]
 ]
 variables.extend(dependent_variables)
-reg_panel = lag_variable(
+reg_panel = lag_variable_columns(
     data=reg_panel,
     variable=dependent_variables + list(iv_set),
     time_variable="Date",

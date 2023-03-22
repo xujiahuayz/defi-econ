@@ -11,8 +11,8 @@ from environ.tabulate.render_regression import (
     render_regress_table_latex,
 )
 from environ.utils.variable_constructer import (
-    diff_variable,
-    lag_variable,
+    diff_variable_columns,
+    lag_variable_columns,
     name_diff_variable,
     name_lag_variable,
 )
@@ -30,7 +30,7 @@ other_dvs = [
 all_dev = betw_cents + other_dvs
 reg_panel[all_dev] = reg_panel[all_dev].fillna(0)
 
-reg_panel = diff_variable(
+reg_panel = diff_variable_columns(
     data=reg_panel,
     variable=all_dev,
     entity_variable="Token",
@@ -41,7 +41,7 @@ reg_panel = diff_variable(
 total_lag = 1
 lag_range = range(1, total_lag + 1)
 for lag in lag_range:
-    reg_panel = lag_variable(
+    reg_panel = lag_variable_columns(
         reg_panel,
         # [name_diff_variable(v, lag=1) for v in all_dev],
         all_dev,

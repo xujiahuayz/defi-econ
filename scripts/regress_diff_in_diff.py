@@ -60,7 +60,7 @@ diff_in_diff_df = diff_in_diff_df.assign(
     after_treated_date=0, is_treated_token=0
 ).fillna(0)
 
-for window in [14]:
+for window in [14, 30, 60]:
 
     did_reg_panel_full = pd.DataFrame()
     for treated_dates in set(all_added_dates):

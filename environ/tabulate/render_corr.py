@@ -10,7 +10,7 @@ from matplotlib import colors
 
 from environ.constants import FIGURE_PATH, TABLE_PATH
 from environ.utils.variable_constructer import (
-    lag_variable,
+    lag_variable_columns,
     map_variable_name_latex,
     name_lag_variable,
 )
@@ -174,7 +174,7 @@ if __name__ == "__main__":
     FILE_NAME = "test"
 
     # lag the variables
-    regression_panel = lag_variable(
+    regression_panel = lag_variable_columns(
         data=regression_panel,
         variable=corr_columns,
         lag=LAG_NUM,
