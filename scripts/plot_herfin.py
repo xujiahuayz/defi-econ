@@ -23,4 +23,4 @@ plt.legend(
 # rotate x axis label by 45 degree
 plt.xticks(rotation=45)
 
-plt.savefig(FIGURE_PATH / "herf_panel_many.pdf")
+plt.savefig(FIGURE_PATH / "herfindahl_many.pdf")
