@@ -20,21 +20,9 @@ REGRESSION_NAMING_DICT = {
     "r2_within": "$R^2_{within}$",
     "nobs": "N",
     "fe": "Fixed Effect",
+    "te": "Time Effect",
     "regressand": "Dependent Var",
 }
-
-
-def fix_effect(iv: list[str]) -> bool:
-    """
-    Check whether the fixed-effect regression should be run.
-
-    Args:
-        iv (list[str]): The independent variables.
-
-    Returns:
-        bool: Whether the fixed-effect regression should be run.
-    """
-    return False if "Stable" in iv else True
 
 
 def regress(
@@ -151,7 +139,8 @@ def render_regression_column(
         result_column[i] = rf"{line1} \\ {line2}"
 
     if panel_index_columns:
-        result_column["fe"] = "yes" if fix_effect(iv) else "no"
+        result_column["fe"] = "yes" if panel_index_columns[1][0] else "no"
+        result_column["te"] = "yes" if panel_index_columns[1][1] else "no"
     # number of observations with thousands separator and without decimal places
     result_column["nobs"] = f"{regression_result.nobs:,.0f}"
     result_column["r2"] = f"{regression_result.rsquared:.3f}"
@@ -268,6 +257,7 @@ def render_regress_table(
             + all_ivs
             + [
                 "fe",
+                "te",
                 "nobs",
                 "r2",
             ]

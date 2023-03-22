@@ -99,7 +99,7 @@ result_full_interact = render_regress_table(
     reg_panel=reg_panel,
     reg_combi=reg_combi_interact,
     lag_dv=LAG_DV_NAME,
-    panel_index_columns=["Token", "Date"],
+    panel_index_columns=(["Token", "Date"], [True, False]),
     standard_beta=False,
     robust=True,
 )

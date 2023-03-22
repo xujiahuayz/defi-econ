@@ -79,10 +79,6 @@ for window in [14, 30, 60]:
                 elif v["join_compound_day"] < obs_start_date:
                     additional_token.append(v["Token"])
 
-            print(
-                window,
-                f"==== treated_tokens: {treated_tokens}, additional_token: {additional_token}",
-            )
             did_reg_panel = did_reg_panel.loc[
                 did_reg_panel["Token"].isin(additional_token + treated_tokens)
             ]
