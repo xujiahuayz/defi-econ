@@ -6,7 +6,6 @@ import pandas as pd
 import numpy as np
 import glob
 from tqdm import tqdm
-import matplotlib.pyplot as plt
 from environ.constants import (
     NETWORK_DATA_PATH,
     BETWEENNESS_DATA_PATH,
@@ -14,7 +13,6 @@ from environ.constants import (
     SAMPLE_PERIOD,
     TABLE_PATH,
     FIGURE_PATH,
-    ALL_NAMING_DICT,
 )
 
 
@@ -402,50 +400,6 @@ def _merge_gas(herfindahl: pd.DataFrame) -> pd.DataFrame:
     return herfindahl
 
 
-def _merge_boom_bust(herfindahl: pd.DataFrame) -> pd.DataFrame:
-    """
-    Function to merge the boom and bust dummy.
-    """
-
-    # sort the dataframe by date
-    herfindahl = herfindahl.sort_values(by="Date", ascending=True)
-
-    # convert the date column to unix
-    herfindahl["time"] = herfindahl["Date"].apply(lambda x: x.timestamp())
-
-    # create a copy of the herfindahl dataframe
-    boom_bust_df = herfindahl.copy()
-
-    # only keep the column of S&P and time
-    boom_bust_df = boom_bust_df[["time", "price"]]
-
-    # dropna
-    boom_bust_df = boom_bust_df.dropna()
-
-    # computation
-    BOOM_BUST = boom_bust(boom_bust_df)
-
-    herfindahl["boom"] = 0
-    herfindahl["bust"] = 0
-
-    for boom in BOOM_BUST["boom"]:
-        herfindahl.loc[
-            (herfindahl["time"] >= boom[0]) & (herfindahl["time"] <= boom[1]),
-            "boom",
-        ] = 1
-
-    for bust in BOOM_BUST["bust"]:
-        herfindahl.loc[
-            (herfindahl["time"] >= bust[0]) & (herfindahl["time"] <= bust[1]),
-            "bust",
-        ] = 1
-
-    # drop the column of time and price and index
-    herfindahl = herfindahl.drop(columns=["time", "price"])
-
-    return herfindahl
-
-
 def generate_series_herfin() -> pd.DataFrame:
     """
     Function to generate the series of herfindahl index.
@@ -459,35 +413,6 @@ def generate_series_herfin() -> pd.DataFrame:
     herfindahl = _merge_total_market_trading_volume(herfindahl)
     herfindahl = _merge_sp(herfindahl)
     herfindahl = _merge_gas(herfindahl)
-    # herfindahl = _merge_boom_bust(herfindahl)
-
-    # large plot
-    plt.figure(figsize=(20, 10))
-
-    # plot the all kinds of herfindahl index
-    plt.plot(herfindahl["Date"], herfindahl["herfindahl_volume"])
-    # plt.plot(herfindahl["Date"], herfindahl["herfindahl_inflow_centrality"])
-    # plt.plot(herfindahl["Date"], herfindahl["herfindahl_outflow_centrality"])
-    plt.plot(herfindahl["Date"], herfindahl["herfindahl_betweenness_centrality_count"])
-    plt.plot(herfindahl["Date"], herfindahl["herfindahl_betweenness_centrality_volume"])
-    plt.plot(herfindahl["Date"], herfindahl["herfindahl_tvl"])
-    plt.xlabel("Date")
-    plt.ylabel("Herfindahl Index")
-    plt.title("Herfindahl Index")
-
-    # add legend using ALL_NAMING_DICT and move legend outside the plot
-    # upper right
-    plt.legend(
-        ["HHIVolume", "HHIEigenCentIn", "HHIEigenCentOut", "HHITVL"],
-        loc="upper left",
-        bbox_to_anchor=(1.01, 1),
-    )
-
-    # rotate x axis label by 45 degree
-    plt.xticks(rotation=45)
-
-    # save the figure to figure/herfindahl_many.pdf
-    plt.savefig(rf"{FIGURE_PATH}/herfindahl_many.pdf")
 
     # save the dataframe to table
     herfindahl.to_csv(rf"{TABLE_PATH}/series_herfindahl.csv", index=False)

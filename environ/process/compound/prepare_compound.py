@@ -10,6 +10,7 @@ from environ.utils.config_parser import Config
 # Initiating the config
 config = Config()
 
+# TODO: use the compound dictionary from constants.py
 # set the constants
 compound_assets = {
     "ETH": "0x4ddc2d193948926d02f9b1fe9e1daa0718270ed5",
