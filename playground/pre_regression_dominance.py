@@ -6,11 +6,13 @@ import re
 
 import pandas as pd
 
-from environ.constants import NAMING_DICT_OLD, TABLE_PATH
+from environ.constants import DEPENDENT_VARIABLES, NAMING_DICT_OLD, TABLE_PATH
 from environ.process.market.prepare_market_data import market_data
 from environ.tabulate.panel.fiat_stable_price import _merge_fiat_underlying
 from environ.tabulate.panel.panel_generator import _merge_boom_bust
-from environ.utils.variable_constructer import name_log_return_variable
+from environ.utils.variable_constructer import (
+    name_log_return_variable,
+)
 
 # read csv file as pd.DataFrame where Date column is parsed as datetime
 reg_panel = pd.read_csv(TABLE_PATH / "regression_panel.csv", parse_dates=["Date"])
@@ -30,10 +32,6 @@ reg_panel.rename(columns=NAMING_DICT_reverted, inplace=True)
 # merge market data
 reg_panel = reg_panel.merge(market_data, on=["Date"], how="left")
 # calculate rolling 30-day correlation between daily returns Token and daily gas_price return per Token level
-
-# gas_price_old = reg_panel[["Date", "GasPrice"]].drop_duplicates(subset=["Date"])
-
-
 reg_panel["corr_gas"] = reg_panel.groupby("Token")[
     name_log_return_variable("gas_price_usd", 1)
 ].transform(lambda x: x.rolling(30).corr(reg_panel["dollar_exchange_rate"]))
@@ -55,7 +53,9 @@ reg_panel = _merge_fiat_underlying(
 )
 # reg_panel = _merge_depeg_persistancy(reg_panel, price_col_name="exchange_to_underlying")
 # reg_panel = _merge_pegging(reg_panel, price_col_name="exchange_to_underlying")
-
-
+reg_panel[DEPENDENT_VARIABLES] = reg_panel[DEPENDENT_VARIABLES].fillna(0)
+# for all value < 0 for DEPENDENT_VARIABLES, set to 0
+# TODO: check why this is necessary -- why some eigenvector centrality values are negative?
+reg_panel[DEPENDENT_VARIABLES] = reg_panel[DEPENDENT_VARIABLES].clip(lower=0)
 # pickle the reg_panel
 reg_panel.to_pickle(TABLE_PATH / "reg_panel.pkl")

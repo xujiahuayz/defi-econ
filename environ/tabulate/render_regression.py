@@ -1,6 +1,6 @@
 # get the regression panel dataset from pickled file
 from itertools import product
-from typing import Literal, Optional
+from typing import Optional
 
 import pandas as pd
 import statsmodels.api as sm
@@ -19,7 +19,7 @@ REGRESSION_NAMING_DICT = {
     "r2_within": "$R^2_{within}$",
     "nobs": "N",
     "fe": "Fixed Effect",
-    "regressand": "Regresand",
+    "regressand": "Dependent Var",
 }
 
 
@@ -40,8 +40,8 @@ def regress(
     data: pd.DataFrame,
     dv: str = "Volume_share",
     iv: list[str] = ["is_boom", "mcap_share"],
-    method: Literal["panel", "ols"] = "panel",
     robust: bool = False,
+    panel_index_columns: Optional[list[str]] = None,
 ):
     """
     Run the fixed-effect regression.
@@ -52,8 +52,11 @@ def regress(
         iv (list[str], optional): The independent variables. Defaults to ["is_boom", "mcap_share"].
     """
     # if method not in ["ols", "panel"], raise f"method {method} must be either 'ols' or 'panel'"
-    if method not in ["ols", "panel"]:
-        raise ValueError(f"method {method} must be either 'ols' or 'panel'")
+    if panel_index_columns:
+        assert (
+            len(panel_index_columns) == 2
+        ), "index_columns must have two columns for panel regression"
+        data = data.reset_index().set_index(panel_index_columns)
 
     # Define the dependent variable
     dependent_var = data[dv]
@@ -67,11 +70,11 @@ def regress(
     def regression(
         dependent_var: pd.Series,
         independent_var: pd.DataFrame,
-        method: str,
         robust: bool,
+        panel_index_columns: Optional[list[str]] = None,
     ):
-        # TODO: check robustness of the regression
-        if method == "panel":
+
+        if panel_index_columns:
             model = PanelOLS(
                 dependent_var,
                 independent_var,
@@ -91,15 +94,20 @@ def regress(
                 model_fit = model.fit()
         return model_fit
 
-    return regression(dependent_var, independent_var, method, robust)
+    return regression(
+        dependent_var,
+        independent_var,
+        robust=robust,
+        panel_index_columns=panel_index_columns,
+    )
 
 
 def render_regression_column(
     data: pd.DataFrame,
     dv: str,
     iv: list[str],
-    method: Literal["panel", "ols"] = "panel",
     standard_beta: bool = False,
+    panel_index_columns: Optional[list[str]] = None,
     **kwargs,
 ) -> pd.Series:
     """
@@ -115,7 +123,9 @@ def render_regression_column(
     Returns:
         pd.Series: The regression column.
     """
-    regression_result = regress(data=data, dv=dv, iv=iv, method=method, **kwargs)
+    regression_result = regress(
+        data=data, dv=dv, iv=iv, panel_index_columns=panel_index_columns, **kwargs
+    )
 
     # merge three pd.Series: regression_result.params, regression_result.std_errors, regression_result.pvalues into one dataframe
     result_column = pd.Series({"regressand": dv})
@@ -124,7 +134,9 @@ def render_regression_column(
         line2_items = data[iv].std() / data[dv].std()
     else:
         line2_items = (
-            regression_result.std_errors if method == "panel" else regression_result.bse
+            regression_result.std_errors
+            if panel_index_columns
+            else regression_result.bse
         )
 
     for i, v in regression_result.params.items():
@@ -139,7 +151,7 @@ def render_regression_column(
 
         result_column[i] = rf"{line1} \\ {line2}"
 
-    if method == "panel":
+    if panel_index_columns:
         result_column["fe"] = "yes" if fix_effect(iv) else "no"
     # number of observations with thousands separator and without decimal places
     result_column["nobs"] = f"{regression_result.nobs:,.0f}"
@@ -270,7 +282,7 @@ def render_regress_table(
 def render_regress_table_latex(
     result_table: pd.DataFrame,
     file_name: str = "test",
-    method: Literal["panel", "ols"] = "panel",
+    # method: Literal["panel", "ols"] = "panel",
 ) -> pd.DataFrame:
     """
     Render the regression table in latex.
@@ -324,22 +336,23 @@ if __name__ == "__main__":
     )
 
     ivs_unique = list(set([w for y in ivs for x in y for w in x]))
+
     reg_panel = lag_variable_columns(reg_panel, dvs + ivs_unique, "Date", "Token")
 
-    result_full = render_regress_table(
-        reg_panel=reg_panel,
-        reg_combi=reg_combi,
-        method="panel",
-        standard_beta=True,
-    )
-    result_in_latex = render_regress_table_latex(
-        result_table=result_full, file_name="test"
-    )
     # test one column
     result_one_column = render_regression_column(
         data=reg_panel,
         dv=reg_combi[0][0],
         iv=reg_combi[0][1],
-        method="panel",
+        panel_index_columns=["Token", "Date"],
         standard_beta=True,
+    )
+    result_full = render_regress_table(
+        reg_panel=reg_panel,
+        reg_combi=reg_combi,
+        panel_index_columns=["Token", "Date"],
+        standard_beta=True,
+    )
+    result_in_latex = render_regress_table_latex(
+        result_table=result_full, file_name="test"
     )

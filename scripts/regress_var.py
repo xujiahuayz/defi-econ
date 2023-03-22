@@ -68,12 +68,11 @@ for b in betw_cents:
         )
     )
 
-
 for k, q in {"full": "", "boom": "is_boom", "bust": "~is_boom"}.items():
     reg_result = render_regress_table(
-        reg_panel=reg_panel.query(q) if q else reg_panel,
+        reg_panel=reg_panel[reg_panel["is_boom"] == (q == "boom")] if q else reg_panel,
         reg_combi=reg_combi,
-        method="panel",
+        panel_index_columns=["Token", "Date"],
         standard_beta=False,
         lag_dv="",
         robust=True,

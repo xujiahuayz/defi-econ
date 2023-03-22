@@ -14,8 +14,6 @@ from environ.utils.variable_constructer import (
 )
 
 reg_panel = pd.read_pickle(TABLE_PATH / "reg_panel.pkl")
-reg_panel[DEPENDENT_VARIABLES] = reg_panel[DEPENDENT_VARIABLES].fillna(0)
-
 
 iv_chunk_list_unlagged = [
     [["std", "mcap_share", "Supply_share"]],
@@ -38,7 +36,6 @@ iv_chunk_list_unlagged = [
 ]
 
 LAG_DV_NAME = "\it Dominance_{t-1}"
-
 
 iv_chunk_list = []
 iv_set = set()
@@ -98,13 +95,11 @@ reg_combi_interact = construct_regress_vars(
     without_lag_dv=False,
 )
 
-reg_panel.set_index(["Token", "Date"], inplace=True)
-
 result_full_interact = render_regress_table(
     reg_panel=reg_panel,
     reg_combi=reg_combi_interact,
     lag_dv=LAG_DV_NAME,
-    method="panel",
+    panel_index_columns=["Token", "Date"],
     standard_beta=False,
     robust=True,
 )

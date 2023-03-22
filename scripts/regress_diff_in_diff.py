@@ -15,9 +15,6 @@ from environ.tabulate.render_regression import (
 from environ.utils.variable_constructer import name_interaction_variable
 
 reg_panel = pd.read_pickle(TABLE_PATH / "reg_panel.pkl")
-reg_panel[DEPENDENT_VARIABLES] = reg_panel[DEPENDENT_VARIABLES].fillna(0)
-# for all value < 0 for DEPENDENT_VARIABLES, set to 0
-reg_panel[DEPENDENT_VARIABLES] = reg_panel[DEPENDENT_VARIABLES].clip(lower=0)
 
 compound_date = [
     {
@@ -39,8 +36,8 @@ iv_chunk_list_unlagged = [
     [
         [
             # "const",
-            # "is_treated_token",
-            # "after_treated_date",
+            "is_treated_token",
+            "after_treated_date",
             name_interaction_variable("is_treated_token", "after_treated_date"),
         ]
     ]
@@ -106,7 +103,6 @@ for window in [14, 30, 60]:
     did_result = render_regress_table(
         reg_panel=did_reg_panel_full,
         reg_combi=reg_combi,
-        method="ols",
         standard_beta=False,
         robust=True,
     )

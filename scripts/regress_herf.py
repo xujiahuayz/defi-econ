@@ -69,7 +69,6 @@ result_full = render_regress_table(
     reg_panel=herf_panel,
     reg_combi=reg_combi,
     lag_dv=LAG_DV_NAME,
-    method="ols",
     standard_beta=False,
     robust=True,
 )
@@ -84,5 +83,5 @@ result_full.loc[new_index, :] = "yes"
 result_full = result_full.loc[~result_full.index.str.contains(r"\d{4}-\d{2}")]
 
 result_full_latex = render_regress_table_latex(
-    result_table=result_full, file_name="full_herf", method="ols"
+    result_table=result_full, file_name="full_herf"
 )
