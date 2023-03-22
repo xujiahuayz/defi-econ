@@ -8,7 +8,12 @@ import glob
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 from environ.utils.config_parser import Config
-from environ.utils.boom_calculator import boom_bust
+
+# from environ.utils.boom_calculator import boom_bust
+
+from environ.constants import (
+    ALL_NAMING_DICT,
+)
 
 # Initialize config
 config = Config()
@@ -20,6 +25,7 @@ GLOBAL_DATA_PATH = config["dev"]["config"]["data"]["GLOBAL_DATA_PATH"]
 START_DATE = config["dev"]["config"]["coingecko"]["START_DATE"]
 END_DATE = config["dev"]["config"]["coingecko"]["END_DATE"]
 TABLE_PATH = config["dev"]["config"]["result"]["TABLE_PATH"]
+FIGURE_PATH = config["dev"]["config"]["result"]["FIGURE_PATH"]
 
 
 def _merge_herfindahl_liquidity(herfindahl: pd.DataFrame) -> pd.DataFrame:
@@ -458,29 +464,35 @@ def generate_series_herfin() -> pd.DataFrame:
     herfindahl = _merge_total_market_trading_volume(herfindahl)
     herfindahl = _merge_sp(herfindahl)
     herfindahl = _merge_gas(herfindahl)
-    herfindahl = _merge_boom_bust(herfindahl)
+    # herfindahl = _merge_boom_bust(herfindahl)
 
-    # # plot the all kinds of herfindahl index
-    # plt.plot(herfindahl["Date"], herfindahl["herfindahl_volume"])
-    # # plt.plot(herfindahl["Date"], herfindahl["herfindahl_inflow_centrality"])
-    # # plt.plot(herfindahl["Date"], herfindahl["herfindahl_outflow_centrality"])
-    # plt.plot(herfindahl["Date"], herfindahl["herfindahl_betweenness_centrality_count"])
-    # plt.plot(herfindahl["Date"], herfindahl["herfindahl_betweenness_centrality_volume"])
-    # plt.plot(herfindahl["Date"], herfindahl["herfindahl_tvl"])
-    # plt.xlabel("Date")
-    # plt.ylabel("Herfindahl Index")
-    # plt.title("Herfindahl Index")
-    # plt.legend(
-    #     [
-    #         "herfindahl_volume",
-    #         # "herfindahl_inflow_centrality",
-    #         # "herfindahl_outflow_centrality",
-    #         "herfindahl_betweenness_centrality_count",
-    #         "herfindahl_betweenness_centrality_volume",
-    #         "herfindahl_tvl",
-    #     ]
-    # )
-    # plt.show()
+    # large plot
+    plt.figure(figsize=(20, 10))
+
+    # plot the all kinds of herfindahl index
+    plt.plot(herfindahl["Date"], herfindahl["herfindahl_volume"])
+    # plt.plot(herfindahl["Date"], herfindahl["herfindahl_inflow_centrality"])
+    # plt.plot(herfindahl["Date"], herfindahl["herfindahl_outflow_centrality"])
+    plt.plot(herfindahl["Date"], herfindahl["herfindahl_betweenness_centrality_count"])
+    plt.plot(herfindahl["Date"], herfindahl["herfindahl_betweenness_centrality_volume"])
+    plt.plot(herfindahl["Date"], herfindahl["herfindahl_tvl"])
+    plt.xlabel("Date")
+    plt.ylabel("Herfindahl Index")
+    plt.title("Herfindahl Index")
+
+    # add legend using ALL_NAMING_DICT and move legend outside the plot
+    # upper right
+    plt.legend(
+        ["HHIVolume", "HHIEigenCentIn", "HHIEigenCentOut", "HHITVL"],
+        loc="upper left",
+        bbox_to_anchor=(1.01, 1),
+    )
+
+    # rotate x axis label by 45 degree
+    plt.xticks(rotation=45)
+
+    # save the figure to figure/herfindahl_many.pdf
+    plt.savefig(rf"{FIGURE_PATH}/herfindahl_many.pdf")
 
     # save the dataframe to table
     herfindahl.to_csv(rf"{TABLE_PATH}/series_herfindahl.csv", index=False)
