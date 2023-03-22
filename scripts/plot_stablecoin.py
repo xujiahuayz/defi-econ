@@ -5,7 +5,7 @@ plot stablecoin price
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from environ.constants import FIGURE_PATH, TABLE_PATH, TOKEN_PLOT_DICT, SAMPLE_PERIOD
+from environ.constants import FIGURE_PATH, TABLE_PATH, STABLE_DICT, SAMPLE_PERIOD
 
 # read pickled reg_panel
 series_name = "exchange_to_underlying"
@@ -29,7 +29,7 @@ stablecoin_price.sort_values(by="Date", inplace=True)
 
 for token in stablecoin_price["Token"].unique():
     # get the color and line type for each token
-    spec = TOKEN_PLOT_DICT[token]
+    spec = STABLE_DICT[token]
     color = spec["color"]
     line_type = spec["line_type"]
     # plot the price
