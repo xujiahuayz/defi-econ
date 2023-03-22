@@ -10,8 +10,13 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from environ.constants import (
+    (
+   
     ALL_TOKEN_DICT,
+   
     FIGURE_PATH,
+    EVENT_DATE_LIST,
+),
     KEY_TOKEN_LIST,
     NETWORK_DATA_PATH,
     SAMPLE_PERIOD,
@@ -83,6 +88,13 @@ def plot_time_series(
             linestyle=ALL_TOKEN_DICT[token]["line_type"],
             label=token,
         )
+
+    for event_date in EVENT_DATE_LIST:
+        # Compound attack of 2020
+        # Introduction of Uniswap V3
+        # Luna crash
+        # FTX collapse
+        plt.axvline(x=pd.to_datetime(event_date), color="red", linewidth=2, alpha=0.5)
 
     # plot boom bust cycles
     for cycle in boom_bust:

@@ -12,6 +12,8 @@ SAMPLE_PERIOD = [
 
 KEY_TOKEN_LIST = ["WETH", "WBTC", "MATIC", "USDC", "USDT", "DAI", "FEI"]
 
+EVENT_DATE_LIST = ["2020-11-26", "2021-05-05", "2022-05-10", "2022-11-11"]
+
 FIGURE_PATH: Path = Path(PROJECT_ROOT) / "figures"
 TABLE_PATH: Path = Path(PROJECT_ROOT) / "tables"
 GLOBAL_DATA_PATH: Path = Path(PROJECT_ROOT) / "data" / "data_global"
