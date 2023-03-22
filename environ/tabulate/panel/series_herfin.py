@@ -7,25 +7,20 @@ import numpy as np
 import glob
 from tqdm import tqdm
 import matplotlib.pyplot as plt
-from environ.utils.config_parser import Config
-
-# from environ.utils.boom_calculator import boom_bust
-
 from environ.constants import (
+    NETWORK_DATA_PATH,
+    BETWEENNESS_DATA_PATH,
+    GLOBAL_DATA_PATH,
+    SAMPLE_PERIOD,
+    TABLE_PATH,
+    FIGURE_PATH,
     ALL_NAMING_DICT,
 )
 
-# Initialize config
-config = Config()
 
 # Initialize data path
-NETWORK_DATA_PATH = config["dev"]["config"]["data"]["NETWORK_DATA_PATH"]
-BETWEENNESS_DATA_PATH = config["dev"]["config"]["data"]["BETWEENNESS_DATA_PATH"]
-GLOBAL_DATA_PATH = config["dev"]["config"]["data"]["GLOBAL_DATA_PATH"]
-START_DATE = config["dev"]["config"]["coingecko"]["START_DATE"]
-END_DATE = config["dev"]["config"]["coingecko"]["END_DATE"]
-TABLE_PATH = config["dev"]["config"]["result"]["TABLE_PATH"]
-FIGURE_PATH = config["dev"]["config"]["result"]["FIGURE_PATH"]
+START_DATE = SAMPLE_PERIOD[0]
+END_DATE = SAMPLE_PERIOD[1]
 
 
 def _merge_herfindahl_liquidity(herfindahl: pd.DataFrame) -> pd.DataFrame:
@@ -35,8 +30,8 @@ def _merge_herfindahl_liquidity(herfindahl: pd.DataFrame) -> pd.DataFrame:
 
     # merge the herfindahl index for liquidity
     # get all csv files in data/data_network/merged/liquidity_share
-    path = rf"{NETWORK_DATA_PATH}/merged/tvl_share"  # use your path
-    all_files = glob.glob(path + "/*.csv")
+    path = NETWORK_DATA_PATH / "merged" / "tvl_share"  # use your path
+    all_files = glob.glob(str(path) + "/*.csv")
 
     # extract date from file name
     # combine data from all csv files into one dataframe, dropping row number of each csv file
