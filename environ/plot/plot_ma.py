@@ -10,13 +10,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from environ.constants import (
-    (
-   
     ALL_TOKEN_DICT,
-   
     FIGURE_PATH,
     EVENT_DATE_LIST,
-),
     KEY_TOKEN_LIST,
     NETWORK_DATA_PATH,
     SAMPLE_PERIOD,
