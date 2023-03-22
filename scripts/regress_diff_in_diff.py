@@ -36,7 +36,7 @@ iv_chunk_list_unlagged = [
     [
         [
             # "const",
-            "is_treated_token",
+            # "is_treated_token",
             "after_treated_date",
             name_interaction_variable("is_treated_token", "after_treated_date"),
         ]
@@ -72,15 +72,19 @@ for window in [14, 30, 60]:
             ]
             # find out tokens that were added to compound on treated_dates
             treated_tokens = []
-            omitted_tokens = []
+            additional_token = []
             for v in compound_date:
                 if v["join_compound_day"] == treated_dates:
                     treated_tokens.append(v["Token"])
-                elif v["join_compound_day"] < obs_end_date:
-                    omitted_tokens.append(v["Token"])
-            # remove omitted tokens did_reg_panel
+                elif v["join_compound_day"] < obs_start_date:
+                    additional_token.append(v["Token"])
+
+            print(
+                window,
+                f"==== treated_tokens: {treated_tokens}, additional_token: {additional_token}",
+            )
             did_reg_panel = did_reg_panel.loc[
-                ~did_reg_panel["Token"].isin(omitted_tokens)
+                did_reg_panel["Token"].isin(additional_token + treated_tokens)
             ]
             # set 'is_treated_token' to 1 for treated tokens
             did_reg_panel.loc[
@@ -104,6 +108,7 @@ for window in [14, 30, 60]:
         reg_panel=did_reg_panel_full,
         reg_combi=reg_combi,
         standard_beta=False,
+        panel_index_columns=["Token", "Date"],
         robust=True,
     )
 
