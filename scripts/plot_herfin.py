@@ -22,5 +22,6 @@ plt.legend(
 
 # rotate x axis label by 45 degree
 plt.xticks(rotation=45)
+plt.tight_layout()
 
 plt.savefig(FIGURE_PATH / "herfindahl_many.pdf")
