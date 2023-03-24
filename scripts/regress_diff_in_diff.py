@@ -1,7 +1,12 @@
 # get the regression panel dataset from pickled file
 import pandas as pd
 
-from environ.constants import COMPOUND_DEPLOYMENT_DATE, SAMPLE_PERIOD, TABLE_PATH
+from environ.constants import (
+    COMPOUND_DEPLOYMENT_DATE,
+    SAMPLE_PERIOD,
+    TABLE_PATH,
+    DEPENDENT_VARIABLES,
+)
 from environ.tabulate.render_regression import (
     construct_regress_vars,
     render_regress_table,
@@ -26,41 +31,33 @@ all_added_dates = set(
     for v in compound_date
 )
 
-dependent_variables = [
-    "avg_eigenvector_centrality",
-    "betweenness_centrality_volume",
-    "betweenness_centrality_count",
-    "Volume_share",
-    "TVL_share",
-]
-
 
 iv_chunk_list_unlagged = [
     [
         [
             # "const",
-            "is_treated_token",
-            "after_treated_date",
+            # "is_treated_token",
+            # "after_treated_date",
             name_interaction_variable("is_treated_token", "after_treated_date"),
         ]
     ]
 ]
 
 reg_combi = construct_regress_vars(
-    dependent_variables=dependent_variables,
+    dependent_variables=DEPENDENT_VARIABLES,
     iv_chunk_list=iv_chunk_list_unlagged,
     lag_iv=False,
     with_lag_dv=False,
     without_lag_dv=False,
 )
 
-diff_in_diff_df = reg_panel[["Token", "Date"] + dependent_variables]
+diff_in_diff_df = reg_panel[["Token", "Date"] + DEPENDENT_VARIABLES]
 # do the same as above but without SettingWithCopyWarning
 diff_in_diff_df = diff_in_diff_df.assign(
     after_treated_date=0, is_treated_token=0
 ).fillna(0)
 
-for window in [14]:
+for window in [14, 30, 60]:
 
     did_reg_panel_full = pd.DataFrame()
     for treated_dates in set(all_added_dates):
@@ -75,15 +72,15 @@ for window in [14]:
             ]
             # find out tokens that were added to compound on treated_dates
             treated_tokens = []
-            omitted_tokens = []
+            additional_token = []
             for v in compound_date:
                 if v["join_compound_day"] == treated_dates:
                     treated_tokens.append(v["Token"])
-                elif v["join_compound_day"] < obs_end_date:
-                    omitted_tokens.append(v["Token"])
-            # remove omitted tokens did_reg_panel
+                elif v["join_compound_day"] < obs_start_date:
+                    additional_token.append(v["Token"])
+
             did_reg_panel = did_reg_panel.loc[
-                ~did_reg_panel["Token"].isin(omitted_tokens)
+                did_reg_panel["Token"].isin(additional_token + treated_tokens)
             ]
             # set 'is_treated_token' to 1 for treated tokens
             did_reg_panel.loc[
@@ -106,9 +103,9 @@ for window in [14]:
     did_result = render_regress_table(
         reg_panel=did_reg_panel_full,
         reg_combi=reg_combi,
-        method="ols",
         standard_beta=False,
-        robust=False,
+        panel_index_columns=(["Token", "Date"], [True, True]),
+        robust=True,
     )
 
     did_result_latex = render_regress_table_latex(

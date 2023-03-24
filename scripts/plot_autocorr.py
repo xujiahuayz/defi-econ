@@ -8,7 +8,7 @@ import pandas as pd
 
 from environ.constants import TABLE_PATH
 from environ.tabulate.render_corr import render_corr_cov_figure, render_corr_cov_tab
-from environ.utils.variable_constructer import lag_variable
+from environ.utils.variable_constructer import lag_variable_columns
 
 regression_panel = pd.read_pickle(TABLE_PATH / "reg_panel.pkl")
 
@@ -30,7 +30,7 @@ for subsample in ["bust", "boom"]:
     reg_panel_sub.loc[
         reg_panel_sub["is_boom"] == (subsample == "bust"), corr_columns
     ] = np.nan
-    reg_panel_sub = lag_variable(
+    reg_panel_sub = lag_variable_columns(
         data=reg_panel_sub,
         variable=corr_columns,
         time_variable="Date",

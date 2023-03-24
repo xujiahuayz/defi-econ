@@ -38,6 +38,13 @@ def name_log_return_variable(variable: str, rolling_window_return: int) -> str:
     return f"{variable}_log_return_{rolling_window_return}"
 
 
+def name_ma_variable(variable: str, rolling_window_ma: int) -> str:
+    """
+    name the moving average variable
+    """
+    return f"{variable}_ma_{rolling_window_ma}"
+
+
 def name_log_return_vol_variable(
     variable: str, rolling_window_return: int, rolling_window_vol: int
 ) -> str:
@@ -113,7 +120,7 @@ def column_manipulator(
     return data
 
 
-def diff_variable(
+def diff_variable_columns(
     data: pd.DataFrame,
     variable: Union[str, Iterable[str]],
     time_variable: str = "Date",
@@ -134,7 +141,7 @@ def diff_variable(
     )
 
 
-def lag_variable(
+def lag_variable_columns(
     data: pd.DataFrame,
     variable: Union[str, Iterable[str]],
     time_variable: str = "Date",
@@ -150,6 +157,29 @@ def lag_variable(
         variable=variable,
         summary_func=lambda x: x.shift(lag),
         new_col_name_func=lambda x: name_lag_variable(x, lag=lag),
+        time_variable=time_variable,
+        entity_variable=entity_variable,
+    )
+
+
+def ma_variable_columns(
+    data: pd.DataFrame,
+    variable: Union[str, Iterable[str]],
+    time_variable: str = "Date",
+    entity_variable: Optional[str] = None,
+    rolling_window_ma: int = 1,
+) -> pd.DataFrame:
+    """
+    Calculate the moving average of the variable.
+    """
+
+    return column_manipulator(
+        data=data,
+        variable=variable,
+        summary_func=lambda x: x.rolling(rolling_window_ma).mean(),
+        new_col_name_func=lambda x: name_ma_variable(
+            x, rolling_window_ma=rolling_window_ma
+        ),
         time_variable=time_variable,
         entity_variable=entity_variable,
     )

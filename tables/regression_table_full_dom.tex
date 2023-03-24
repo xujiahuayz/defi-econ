@@ -2,7 +2,7 @@
 \toprule
 {} &                                       (1) &                                       (2) &                                       (3) &                                       (4) &                                       (5) \\
 \midrule
-                                        &                      ${\it AvgEigenCent}$ &                        ${\it BetwCent}^V$ &                        ${\it BetwCent}^C$ &                            ${\it VShare}$ &                    ${\it LiquidityShare}$ \\
+Dependent Var                           &                      ${\it AvgEigenCent}$ &                        ${\it BetwCent}^V$ &                        ${\it BetwCent}^C$ &                            ${\it VShare}$ &                    ${\it LiquidityShare}$ \\
 $\it Dominance_{t-1}$                   &   \makecell{$0.8349^{***}$ \\ ($0.0227$)} &   \makecell{$0.9507^{***}$ \\ ($0.0067$)} &   \makecell{$0.9515^{***}$ \\ ($0.0073$)} &   \makecell{$0.8831^{***}$ \\ ($0.0128$)} &   \makecell{$0.9222^{***}$ \\ ($0.0291$)} \\
 ${\it \sigma}^{USD}_{t-1}$              &   \makecell{$-0.0001^{**}$ \\ ($0.0000$)} &      \makecell{$0.0000^{}$ \\ ($0.0000$)} &      \makecell{$0.0000^{}$ \\ ($0.0000$)} &   \makecell{$-0.0000^{**}$ \\ ($0.0000$)} &   \makecell{$-0.0000^{**}$ \\ ($0.0000$)} \\
 ${\it \sigma}^{USD}_{t-1}:{\it IsBoom}$ &   \makecell{$0.0002^{***}$ \\ ($0.0001$)} &     \makecell{$-0.0000^{}$ \\ ($0.0000$)} &     \makecell{$-0.0000^{}$ \\ ($0.0000$)} &   \makecell{$0.0000^{***}$ \\ ($0.0000$)} &    \makecell{$0.0000^{**}$ \\ ($0.0000$)} \\
@@ -17,6 +17,7 @@ ${\it StableShare}_{t-1}:{\it IsBoom}$  &   \makecell{$-0.0105^{**}$ \\ ($0.0049
 ${\it CorETH}_{t-1}$                    &  \makecell{$-0.0004^{***}$ \\ ($0.0001$)} &    \makecell{$0.0001^{**}$ \\ ($0.0000$)} &      \makecell{$0.0000^{}$ \\ ($0.0000$)} &     \makecell{$-0.0000^{}$ \\ ($0.0000$)} &    \makecell{$-0.0001^{*}$ \\ ($0.0000$)} \\
 ${\it CorETH}_{t-1}:{\it IsBoom}$       &      \makecell{$0.0001^{}$ \\ ($0.0001$)} &  \makecell{$-0.0001^{***}$ \\ ($0.0000$)} &   \makecell{$-0.0001^{**}$ \\ ($0.0000$)} &      \makecell{$0.0000^{}$ \\ ($0.0001$)} &     \makecell{$-0.0000^{}$ \\ ($0.0000$)} \\
 Fixed Effect                            &                            \makecell{yes} &                            \makecell{yes} &                            \makecell{yes} &                            \makecell{yes} &                            \makecell{yes} \\
+Time Effect                             &                             \makecell{no} &                             \makecell{no} &                             \makecell{no} &                             \makecell{no} &                             \makecell{no} \\
 \midrule N                              &                                   273,331 &                                   273,331 &                                   273,331 &                                   273,331 &                                   273,331 \\
 $R^2$                                   &                                     0.750 &                                     0.952 &                                     0.944 &                                     0.854 &                                     0.906 \\
 \bottomrule

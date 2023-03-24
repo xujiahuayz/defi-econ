@@ -22,6 +22,15 @@ NETWORK_DATA_PATH: Path = Path(PROJECT_ROOT) / "data" / "data_network"
 PLOT_DATA_PATH: Path = Path(PROJECT_ROOT) / "data" / "data_plot"
 CACHE_PATH: Path = Path(PROJECT_ROOT) / ".cache"
 
+
+DEPENDENT_VARIABLES = [
+    "avg_eigenvector_centrality",
+    "betweenness_centrality_volume",
+    "betweenness_centrality_count",
+    "Volume_share",
+    "TVL_share",
+]
+
 # Aave pool deployment time
 AAVE_DEPLOYMENT_DATE = [
     {
@@ -331,12 +340,12 @@ ALL_NAMING_DICT = {
     "itlnMCapUSD": "{\it \ln MCap}^{USD}",
     "mcap_share": "{\it MCapShare}",
     "corr_sentiment": "{\it CorrSent}",
-    "herfindahl_volume": "{\it HHIVolume}",
+    "herfindahl_volume": "{\it HHI_{VolumeShare}}",
     "herfindahl_inflow_centrality": "{\it HHIEigenCent}^{In}",
     "herfindahl_outflow_centrality": "{\it HHIEigenCent}^{Out}",
-    "herfindahl_betweenness_centrality_count": "{\it HHIBetwCent}^C",
-    "herfindahl_betweenness_centrality_volume": "{\it HHIBetwCent}^V",
-    "herfindahl_tvl": "{\it HHITVL}",
+    "herfindahl_betweenness_centrality_count": "{\it HHI_{{BetwCent}^C}}",
+    "herfindahl_betweenness_centrality_volume": "{\it HHI_{{BetwCent}^V}}",
+    "herfindahl_tvl": "{\it HHI_{LiquidityShare}}",
     "total_volumes": "{\it MarketVolume}",
     "S&P": "{\it R}^{USD}_{SP}",
     # TODO: to be removed

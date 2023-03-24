@@ -10,7 +10,7 @@ from environ.tabulate.render_regression import (
     render_regress_table_latex,
 )
 from environ.utils.variable_constructer import (
-    lag_variable,
+    lag_variable_columns,
     name_interaction_variable,
     name_lag_variable,
 )
@@ -46,11 +46,10 @@ reg_combi_interact = construct_regress_vars(
 result_r2 = render_regress_table(
     reg_panel=reg_panel,
     reg_combi=reg_combi_interact,
-    method="ols",
     standard_beta=False,
     robust=False,
 )
 
 result_full_latex_interact = render_regress_table_latex(
-    result_table=result_r2, file_name="full_vshare", method="ols"
+    result_table=result_r2, file_name="full_vshare"
 )

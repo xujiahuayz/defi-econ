@@ -1,33 +1,19 @@
 # get the regression panel dataset from pickled file
 import pandas as pd
 
-from environ.constants import SAMPLE_PERIOD, TABLE_PATH
+from environ.constants import SAMPLE_PERIOD, TABLE_PATH, DEPENDENT_VARIABLES
 from environ.tabulate.render_regression import (
     construct_regress_vars,
     render_regress_table,
     render_regress_table_latex,
 )
 from environ.utils.variable_constructer import (
-    lag_variable,
+    lag_variable_columns,
     name_interaction_variable,
     name_lag_variable,
 )
 
 reg_panel = pd.read_pickle(TABLE_PATH / "reg_panel.pkl")
-
-
-dependent_variables = [
-    "avg_eigenvector_centrality",
-    "betweenness_centrality_volume",
-    "betweenness_centrality_count",
-    "Volume_share",
-    "TVL_share",
-]
-
-# fill the missing values with 0 for all dependent variables
-for dv in dependent_variables:
-    reg_panel[dv] = reg_panel[dv].fillna(0)
-
 
 iv_chunk_list_unlagged = [
     [["std", "mcap_share", "Supply_share"]],
@@ -50,7 +36,6 @@ iv_chunk_list_unlagged = [
 ]
 
 LAG_DV_NAME = "\it Dominance_{t-1}"
-
 
 iv_chunk_list = []
 iv_set = set()
@@ -81,10 +66,10 @@ variables = [
     for v in ivs
     if v not in ["is_boom", "Stable", "is_in_compound"]
 ]
-variables.extend(dependent_variables)
-reg_panel = lag_variable(
+variables.extend(DEPENDENT_VARIABLES)
+reg_panel = lag_variable_columns(
     data=reg_panel,
-    variable=dependent_variables + list(iv_set),
+    variable=DEPENDENT_VARIABLES + list(iv_set),
     time_variable="Date",
     entity_variable="Token",
     lag=1,
@@ -102,7 +87,7 @@ reg_panel = reg_panel.loc[
 
 # iv_chunk_list.append([["is_in_compound"]])
 reg_combi_interact = construct_regress_vars(
-    dependent_variables=dependent_variables,
+    dependent_variables=DEPENDENT_VARIABLES,
     iv_chunk_list=iv_chunk_list,
     # no need to lag the ivs as they are already lagged
     lag_iv=False,
@@ -110,13 +95,11 @@ reg_combi_interact = construct_regress_vars(
     without_lag_dv=False,
 )
 
-reg_panel.set_index(["Token", "Date"], inplace=True)
-
 result_full_interact = render_regress_table(
     reg_panel=reg_panel,
     reg_combi=reg_combi_interact,
     lag_dv=LAG_DV_NAME,
-    method="panel",
+    panel_index_columns=(["Token", "Date"], [True, False]),
     standard_beta=False,
     robust=True,
 )
