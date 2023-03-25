@@ -2,7 +2,6 @@
 Script to render the table of summary statistics.
 """
 from typing import Optional
-import warnings
 import pandas as pd
 from environ.constants import ALL_NAMING_DICT, TABLE_PATH
 
@@ -12,7 +11,6 @@ def render_summary_table_latex(
     sum_column: Optional[list[str]] = None,
     file_name: str = "test",
 ) -> pd.DataFrame:
-
     sum_tab = data[sum_column] if sum_column else data
     sum_tab = sum_tab.describe()
 
