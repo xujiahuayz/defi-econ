@@ -104,6 +104,11 @@ def get_eigencent_atomic(uni_ver: Literal["v2", "v3", "v2v3"] = "v2") -> None:
         # get the list of weights
         weight = swaps_tx_route[["volume_usd"]].values
 
+        # if there is no trading volume, skip the file
+        # for example, there is no trading volume for the introduction of v3
+        if weight.sum() == 0:
+            continue
+
         # compute the eigenvector centrality
         eigen_centrality_df = _compute_eigencent(edge, weight)
 
