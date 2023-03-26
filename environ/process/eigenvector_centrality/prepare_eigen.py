@@ -4,19 +4,70 @@ Script to generate the eigenvector centrality for atomic swaps.
 
 import glob
 import os
-from pathlib import Path
-from typing import Literal
-from tqdm import tqdm
-import networkx as nx
 import warnings
 
-import pandas as pd
+import networkx as nx
 import numpy as np
+import pandas as pd
+from tqdm import tqdm
 
-from environ.constants import BETWEENNESS_DATA_PATH, NETWORK_DATA_PATH
+from environ.constants import NETWORK_DATA_PATH, BETWEENNESS_DATA_PATH
 
 # Ignore warnings
 warnings.filterwarnings("ignore")
+
+
+def _load_in_data_lst(
+    file_root: str,
+    filter_name: str = "",
+) -> list:
+    """
+    Function to generate a list of dataframes from a given path
+    """
+
+    # get the list of files
+    path = file_root
+    file_lst = glob.glob(path + "/*.csv")
+
+    # isolate the file with specific version
+    file_name_lst = (
+        [file_name for file_name in file_lst if filter_name == file_name.split("_")[-2]]
+        if filter_name
+        else file_lst
+    )
+
+    return file_name_lst
+
+
+def _generate_node_edge(
+    file_name: str, edge_col: list[str], weight_col: list[str]
+) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Function to generate the node and edge arrays
+    """
+
+    # load the data
+    df_network = pd.read_csv(file_name)
+
+    # Exclude "LOOP" AND "SPOON", and "Error" in intermediary
+    df_network = df_network[
+        (df_network["label"] == "0") & (df_network["intermediary"] != "Error")
+    ].copy()
+
+    # # unwrap the dictionary {'symbol': 'DAI'} by extracting the
+    # # value after ': '' and before ''}' using split
+    # for col in edge_col:
+    #     df_network[col] = df_network[col].apply(
+    #         lambda x: x.split(": '")[1].split("'}")[0]
+    #     )
+
+    # get the edge list
+    edge = df_network[edge_col].to_numpy()
+
+    # get the weight list
+    weight = df_network[weight_col].to_numpy()
+
+    return edge, weight
 
 
 def _compute_eigencent(
@@ -63,66 +114,62 @@ def _compute_eigencent(
     return eigen_centrality_df
 
 
-def get_eigencent_atomic(uni_ver: Literal["v2", "v3", "v2v3"] = "v2") -> None:
+def eigencent_generator(
+    file_root: str = str(NETWORK_DATA_PATH / "v2" / "inout_flow"),
+    filter_name: str = "",
+    edge_col: list[str] = ["ultimate_source", "ultimate_target"],
+    weight_col: list[str] = ["volume_usd"],
+    save_root: str = str(NETWORK_DATA_PATH / "eigen_centrality"),
+) -> None:
     """
-    Calculate the eigenvector centrality for atomic swaps.
+    Aggreate function to generate the eigenvector centrality
     """
 
-    # Path to store the data
-    path = str(Path(NETWORK_DATA_PATH) / "atomic_swap")
+    # load the data
+    file_name_lst = _load_in_data_lst(file_root, filter_name=filter_name)
 
-    # If there is no data in data/data_network/atomic, create the folder
-    if not os.path.exists(path):
-        os.makedirs(path)
+    # check if the save folder exists
+    if not os.path.exists(save_root):
+        os.makedirs(save_root)
 
-    # get the list of files
-    path = str(Path(BETWEENNESS_DATA_PATH) / "swap_route")
-    file_lst = glob.glob(path + "/*.csv")
+    # loop through the data
+    for file_name in tqdm(file_name_lst, desc="Generating eigenvector centrality"):
+        # get the date
+        date = file_name.split("_")[-1].split(".")[0]
 
-    # isolate the file with specific version
-    file_name = [
-        file_name for file_name in file_lst if uni_ver == file_name.split("_")[-2]
-    ]
+        # generate the node and edge arrays
+        edge, weight = _generate_node_edge(file_name, edge_col, weight_col)
 
-    # iterate through the files
-    for file in tqdm(file_name):
-        # read the file
-        swaps_tx_route = pd.read_csv(file)
-
-        # isolate the date
-        date = file.split("_")[-1].split(".")[0]
-
-        # Exclude "LOOP", "SPOON", and "Error"
-        swaps_tx_route = swaps_tx_route[
-            (swaps_tx_route["label"] == "0")
-            & (swaps_tx_route["intermediary"] != "Error")
-        ].copy()
-
-        # get the list of edges
-        edge = swaps_tx_route[["ultimate_source", "ultimate_target"]].values
-
-        # get the list of weights
-        weight = swaps_tx_route[["volume_usd"]].values
-
-        # if there is no trading volume, skip the file
-        # for example, there is no trading volume for the introduction of v3
-        if weight.sum() == 0:
+        # if the weight is empty, skip
+        if not weight.any():
             continue
 
         # compute the eigenvector centrality
         eigen_centrality_df = _compute_eigencent(edge, weight)
 
-        # save the results
+        # save the data
         eigen_centrality_df.to_csv(
-            str(
-                Path(NETWORK_DATA_PATH)
-                / "atomic_swap"
-                / f"eigen_centrality_{uni_ver}_{date}.csv"
-            ),
+            save_root + f"/eigen_centrality_{filter_name}_{date}.csv",
             index=False,
         )
 
 
 if __name__ == "__main__":
-    for uniswap_version in ["v2", "v3", "v2v3"]:
-        get_eigencent_atomic(uniswap_version)
+    for version in ["v2", "v3", "merged"]:
+        eigencent_generator(
+            file_root=str(NETWORK_DATA_PATH / version / "inout_flow"),
+            edge_col=["Source", "Target"],
+            weight_col=["Volume"],
+            save_root=str(NETWORK_DATA_PATH / version / "eigen_centrality_pool"),
+        )
+
+    # for version in ["v3", "v2v3"]:
+    #     eigencent_generator(
+    #         file_root=str(BETWEENNESS_DATA_PATH / "swap_route"),
+    #         filter_name=version,
+    #         edge_col=["ultimate_source", "ultimate_target"],
+    #         weight_col=["volume_usd"],
+    #         save_root=str(NETWORK_DATA_PATH / version / "eigen_centrality_swap")
+    #         if version != "v2v3"
+    #         else str(NETWORK_DATA_PATH / "merged" / "eigen_centrality_swap"),
+    #     )
