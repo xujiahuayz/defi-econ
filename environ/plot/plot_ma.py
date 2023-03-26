@@ -22,13 +22,16 @@ from environ.utils.variable_constructer import ma_variable_columns, name_ma_vari
 
 
 def file_to_df(
-    file_folder: Path = NETWORK_DATA_PATH / "merged" / "volume_share",
+    file_folder: str,
 ) -> pd.DataFrame:
-
     frame = pd.DataFrame()
     for filename in glob.glob(str(file_folder) + "/*.csv"):
         date = filename.split("_")[-1].split(".")[0]
-        df_vol_tvl = pd.read_csv(filename, header=0, index_col=0)
+        df_vol_tvl = pd.read_csv(
+            filename,
+            header=0,
+            #   index_col=0
+        )
         df_vol_tvl["Date"] = date
         frame = pd.concat([frame, df_vol_tvl], ignore_index=True)
     return frame
@@ -128,7 +131,7 @@ def plot_time_series(
 
 
 def plot_ma_time_series(
-    file_folder: Path = NETWORK_DATA_PATH / "merged" / "volume_share",
+    file_folder: str,
     ma_window: int = 30,
     value_colume: str = "value",
     token_col_name: str = "token",
@@ -137,7 +140,6 @@ def plot_ma_time_series(
     file_name: str = "volume_ma",
     event_date_list: list[str] = ["2020-03-12"],
 ) -> None:
-
     df = file_to_df(file_folder)
     df_prepared = preprocess_ma(
         df,
