@@ -22,7 +22,7 @@ reg_panel = reg_panel.loc[:, ~reg_panel.columns.str.contains("^Unnamed")]
 # TODO: the below would not be necessary if the column names were not changed
 # in the first place - need to revert column names to original in respective scripts
 # remove non-alphanumeric characters from column names
-reg_panel.columns = reg_panel.columns.str.replace(r"\W", "")
+reg_panel.columns = reg_panel.columns.str.replace(r"\W", "", regex=True)
 NAMING_DICT_reverted = {re.sub(r"\W+", "", v): k for k, v in NAMING_DICT_OLD.items()}
 reg_panel.rename(columns=NAMING_DICT_reverted, inplace=True)
 
