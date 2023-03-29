@@ -16,6 +16,7 @@ EVENT_DATE_LIST = ["2020-11-26", "2021-05-05", "2022-05-10", "2022-11-11"]
 
 FIGURE_PATH: Path = Path(PROJECT_ROOT) / "figures"
 TABLE_PATH: Path = Path(PROJECT_ROOT) / "tables"
+DATA_PATH: Path = Path(PROJECT_ROOT) / "data"
 GLOBAL_DATA_PATH: Path = Path(PROJECT_ROOT) / "data" / "data_global"
 BETWEENNESS_DATA_PATH: Path = Path(PROJECT_ROOT) / "data" / "data_betweenness"
 NETWORK_DATA_PATH: Path = Path(PROJECT_ROOT) / "data" / "data_network"
@@ -24,11 +25,11 @@ CACHE_PATH: Path = Path(PROJECT_ROOT) / ".cache"
 
 
 DEPENDENT_VARIABLES = [
+    "eigen_full_swap",
     "avg_eigenvector_centrality",
     "betweenness_centrality_volume",
     "betweenness_centrality_count",
     "Volume_share",
-    "TVL_share",
 ]
 
 # Aave pool deployment time
@@ -295,6 +296,7 @@ ALL_TOKEN_DICT = {**STABLE_DICT, **TOKEN_PLOT_DICT}
 FIAT_LIST = list(set([v["underlying"] for v in STABLE_DICT.values()]))
 
 ALL_NAMING_DICT = {
+    "eigen_full_swap": "{\it EigenCent}^{Full}",
     "TVL_share": "{\it LiquidityShare}",
     "Inflow_centrality": "{\it EigenCent}^{In}",
     "Outflow_centrality": "{\it EigenCent}^{Out}",

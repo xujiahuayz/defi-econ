@@ -4,7 +4,11 @@ from patsy import dmatrices
 import statsmodels.formula.api as smf
 from linearmodels import PanelOLS
 
-from .dataprep import balancepanel, checkcollinear, checkfullrank
+from environ.process.paneleventstudy.dataprep import (
+    balancepanel,
+    checkcollinear,
+    checkfullrank,
+)
 
 
 def interactionweighted_eventstudy(
@@ -18,7 +22,7 @@ def interactionweighted_eventstudy(
     covariates: list[str],
     vcov_type: str = "robust",
     check_balance: bool = True,
-) -> pd.DataFrame:
+):
     """
     Estimates an interaction-weighted event study regression as in Sun and Abraham (2021)
 
@@ -86,6 +90,7 @@ def interactionweighted_eventstudy(
             dnc[cohort] == c, "cohort_ind"
         ] = 1  # dummy for if group belongs to cohort in question
         cs_eqn = "cohort_ind ~ " + "C(" + reltime + ")" + " - 1"  # no constant
+        # TODO: orignally used OLS - check
         cs_mod = smf.ols(cs_eqn, data=dnc)
         cs_res = cs_mod.fit(cov_type="HC3")  # robust standard errors
         cs_beta = pd.DataFrame(cs_res.params, columns=["shares"])
@@ -160,31 +165,39 @@ def interactionweighted_eventstudy(
     # Main design matrix
     y, X = dmatrices(eqn, d, return_type="dataframe")
 
-    # Check for full rank in X
-    list_X = list(X.columns)
-    drop_X = checkfullrank(data=X, rhs=list_X)  # exclude intercept from the check
-    for x in drop_X:
-        del X[x]
-    logging.info(
-        "The following columns were dropped due to linear dependence:\n"
-        + ", ".join(drop_X)
-    )
+    # TODO: temporarily commented out
+    # # Check for full rank in X
+    # list_X = list(X.columns)
+    # drop_X = checkfullrank(data=X, rhs=list_X)  # exclude intercept from the check
+    # for x in drop_X:
+    #     del X[x]
+    # logging.info(
+    #     "The following columns were dropped due to linear dependence:\n"
+    #     + ", ".join(drop_X)
+    # )
 
-    # Check for collinearity and duplicates in X
-    list_X = list(X.columns)
-    drop_X = checkcollinear(data=X, rhs=list_X)  # exclude intercept from the check
-    for x in drop_X:
-        del X
+    # # Check for collinearity and duplicates in X
+    # list_X = list(X.columns)
+    # drop_X = checkcollinear(data=X, rhs=list_X)  # exclude intercept from the check
+    # for x in drop_X:
+    #     del X
 
-    logging.info(
-        "The following columns were dropped due to collinearity or duplication:\n"
-        + ", ".join(drop_X)
-    )
+    # logging.info(
+    #     "The following columns were dropped due to collinearity or duplication:\n"
+    #     + ", ".join(drop_X)
+    # )
 
     # Estimate CATTs
     catt_mod = PanelOLS(
-        dependent=y, exog=X, entity_effects=True, time_effects=True, drop_absorbed=True
-    )  # Also prints out absorbed columns (collinear with time or entity effects)
+        dependent=y,
+        exog=X,
+        entity_effects=True,
+        time_effects=True,
+        drop_absorbed=True,
+        check_rank=False,
+    )
+
+    # Also prints out absorbed columns (collinear with time or entity effects)
     catt_res = catt_mod.fit(cov_type=vcov_type)
     catt_beta = pd.DataFrame(catt_res.params)  # all estimated coefficients
     catt_ci = pd.DataFrame(catt_res.conf_int())  # CIs of all estimated coefficients

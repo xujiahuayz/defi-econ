@@ -53,9 +53,5 @@ reg_panel = _merge_fiat_underlying(
 )
 # reg_panel = _merge_depeg_persistancy(reg_panel, price_col_name="exchange_to_underlying")
 # reg_panel = _merge_pegging(reg_panel, price_col_name="exchange_to_underlying")
-reg_panel[DEPENDENT_VARIABLES] = reg_panel[DEPENDENT_VARIABLES].fillna(0)
-# for all value < 0 for DEPENDENT_VARIABLES, set to 0
-# TODO: check why this is necessary -- why some eigenvector centrality values are negative?
-reg_panel[DEPENDENT_VARIABLES] = reg_panel[DEPENDENT_VARIABLES].clip(lower=0)
 # pickle the reg_panel
 reg_panel.to_pickle(TABLE_PATH / "reg_panel.pkl")

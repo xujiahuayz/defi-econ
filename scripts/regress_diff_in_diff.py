@@ -3,8 +3,8 @@ import pandas as pd
 
 from environ.constants import (
     COMPOUND_DEPLOYMENT_DATE,
+    DATA_PATH,
     SAMPLE_PERIOD,
-    TABLE_PATH,
     DEPENDENT_VARIABLES,
 )
 from environ.tabulate.render_regression import (
@@ -14,7 +14,9 @@ from environ.tabulate.render_regression import (
 )
 from environ.utils.variable_constructer import name_interaction_variable
 
-reg_panel = pd.read_pickle(TABLE_PATH / "reg_panel.pkl")
+
+reg_panel = pd.read_pickle(DATA_PATH / "processed" / "reg_panel_new.pkl")
+
 
 compound_date = [
     {
