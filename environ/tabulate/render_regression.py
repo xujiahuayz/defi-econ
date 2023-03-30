@@ -1,13 +1,12 @@
 # get the regression panel dataset from pickled file
 from itertools import product
-from typing import Optional, Union
+from pathlib import Path
 
 import pandas as pd
 import statsmodels.api as sm
 from linearmodels.panel import PanelOLS
 
-
-from environ.constants import ALL_NAMING_DICT, TABLE_PATH
+from environ.constants import ALL_NAMING_DICT, DATA_PATH, TEST_RESULT_PATH
 from environ.utils.caching import cache
 from environ.utils.variable_constructer import (
     lag_variable_columns,
@@ -30,7 +29,7 @@ def regress(
     dv: str = "Volume_share",
     iv: list[str] = ["is_boom", "mcap_share"],
     robust: bool = False,
-    panel_index_columns: Optional[tuple[list[str], list[bool]]] = None,
+    panel_index_columns: tuple[list[str], list[bool]] | None = None,
 ):
     """
     Run the fixed-effect regression.
@@ -57,7 +56,7 @@ def regress(
         dependent_var: pd.Series,
         independent_var: pd.DataFrame,
         robust: bool,
-        panel_index_columns: Optional[tuple[list[str], list[bool]]] = None,
+        panel_index_columns: tuple[list[str], list[bool]] | None = None,
     ):
 
         if panel_index_columns:
@@ -94,7 +93,7 @@ def render_regression_column(
     dv: str,
     iv: list[str],
     standard_beta: bool = False,
-    panel_index_columns: Optional[tuple[list[str], list[bool]]] = None,
+    panel_index_columns: tuple[list[str], list[bool]] | None = None,
     **kwargs,
 ) -> pd.Series:
     """
@@ -200,7 +199,7 @@ def construct_regress_vars(
 def render_regress_table(
     reg_panel: pd.DataFrame,
     reg_combi: list[tuple[str, list[str]]],
-    lag_dv: Optional[str] = None,
+    lag_dv: str | None = None,
     **kargs,
     # method: str = "panel",
 ) -> pd.DataFrame:
@@ -270,8 +269,7 @@ def render_regress_table(
 
 def render_regress_table_latex(
     result_table: pd.DataFrame,
-    file_name: str = "test",
-    # method: Literal["panel", "ols"] = "panel",
+    file_name: str | Path = "test",
 ) -> pd.DataFrame:
     """
     Render the regression table in latex.
@@ -304,15 +302,13 @@ def render_regress_table_latex(
         index={original_index: f"\\midrule {original_index}"}
     )
 
-    result_table_latex.to_latex(
-        TABLE_PATH / f"regression_table_{file_name}.tex", escape=False
-    )
+    result_table_latex.to_latex(f"{file_name}.tex", escape=False)
     return result_table_latex
 
 
 if __name__ == "__main__":
     # Get the regression panel dataset from pickled file
-    reg_panel = pd.read_pickle(TABLE_PATH / "reg_panel.pkl")
+    reg_panel = pd.read_pickle(DATA_PATH / "processed" / "reg_panel_new.pkl")
 
     dvs = ["Volume_share", "avg_eigenvector_centrality"]
     ivs = [[["corr_eth"]], [["Stable"], ["std", "Stable"]]]
@@ -343,5 +339,5 @@ if __name__ == "__main__":
         standard_beta=True,
     )
     result_in_latex = render_regress_table_latex(
-        result_table=result_full, file_name="test"
+        result_table=result_full, file_name=Path(TEST_RESULT_PATH) / "test"
     )

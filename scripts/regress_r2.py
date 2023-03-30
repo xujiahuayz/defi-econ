@@ -1,21 +1,16 @@
 # get the regression panel dataset from pickled file
-from pathlib import Path
 
 import pandas as pd
 
-from environ.constants import TABLE_PATH
+from environ.constants import DATA_PATH
 from environ.tabulate.render_regression import (
     construct_regress_vars,
     render_regress_table,
     render_regress_table_latex,
 )
-from environ.utils.variable_constructer import (
-    lag_variable_columns,
-    name_interaction_variable,
-    name_lag_variable,
-)
 
-reg_panel = pd.read_pickle(Path(TABLE_PATH) / "reg_panel.pkl")
+
+reg_panel = pd.read_pickle(DATA_PATH / "processed" / "reg_panel_new.pkl")
 
 
 dependent_variables = [
@@ -29,7 +24,7 @@ for dv in dependent_variables:
 
 iv_chunk_list_unlagged = [
     [["betweenness_centrality_count"], ["betweenness_centrality_volume"]],
-    [[], ["avg_eigenvector_centrality"]],
+    [[], ["eigen_full_swap"]],
 ]
 
 
