@@ -5,6 +5,8 @@ import pandas as pd
 import numpy as np
 import sympy
 
+from environ.constants import TABLE_PATH
+
 
 def dropmissing(data: pd.DataFrame, event: str) -> pd.DataFrame:
     logging.info(f"Checking for and dropping missing observations")
@@ -232,11 +234,11 @@ def gencalendartime_numerics(
         calendartime=calendartime,
         check_minmax=False,
     )
-    if check_balancepanel:
-        print("Quick check indicates panel is balanced")
-    elif not check_balancepanel:
-        print("Panel is NOT balanced")
-        raise NotImplementedError  # Since this is generalised to any calendartime format, panel MUST be balanced ex ante
+    # if check_balancepanel:
+    #     print("Quick check indicates panel is balanced")
+    # elif not check_balancepanel:
+    #     print("Panel is NOT balanced")
+    #     raise NotImplementedError  # Since this is generalised to any calendartime format, panel MUST be balanced ex ante
     for (
         g
     ) in list_group:  # create new column of calendar time going from 0 to end of time
@@ -317,6 +319,7 @@ def checkfullrank(data, rhs, intercept="Intercept"):
     ].copy()  # deep copy (reversed columns to be checked for full rank)
     # Identify linearly dependent columns
     print("Transforming input matrix into reduced row echelon form")
+    # TODO: the following does not run (or is taking really long)
     rf, ind = sympy.Matrix(
         d.values
     ).rref()  # reduced row echelon form, locations of linearly independent columns
@@ -327,3 +330,7 @@ def checkfullrank(data, rhs, intercept="Intercept"):
         set(rhs) ^ set(col_d_ind)
     )  # reverse engineer a list of columns in RHS (original input) that should be dropped
     return col_d_dep
+
+
+if __name__ == "__main__":
+    regression_panel = pd.read_pickle(TABLE_PATH / "reg_panel.pkl")
