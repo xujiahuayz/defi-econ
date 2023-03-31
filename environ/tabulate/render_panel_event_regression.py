@@ -2,7 +2,7 @@ import re
 
 import pandas as pd
 
-from environ.constants import DEPENDENT_VARIABLES, SAMPLE_PERIOD
+from environ.constants import DEPENDENT_VARIABLES
 from environ.tabulate.render_regression import (
     construct_regress_vars,
     render_regress_table,
@@ -22,7 +22,7 @@ def panel_event_regression(
     diff_in_diff_df[reltime_dummy] = diff_in_diff_df["lead_lag"].map(
         lambda x: (str(int(x // lead_lag_interval)) if -window <= x <= window else "NA")
         if lead_lag_interval
-        else (str(int(x >= 0)) if x >= 0 else "NA")
+        else (str(int(x >= 7)) if x >= 7 else "NA")
     )
 
     # add time_to_join as a categorical variable
@@ -38,7 +38,7 @@ def panel_event_regression(
     # split by FACTOR_PREFIX and convert the last element to int and then sort
     time_to_treat_cols = sorted(
         time_to_treat_cols,
-        key=lambda x: int(re.split(dummy_prefix_sep, x)[-1]),
+        key=lambda x: int(re.split(pattern=dummy_prefix_sep, string=x)[-1]),
     )
 
     reg_combi = construct_regress_vars(
@@ -56,10 +56,10 @@ def panel_event_regression(
     did_reg_panel_full = pd.DataFrame()
     for treated_date in all_added_dates:
         # obs_start_date should be 30 days before treated_dates
-        obs_start_date = treated_date - pd.Timedelta(days=window)
-        obs_end_date = treated_date + pd.Timedelta(days=window)
+        obs_start_date = treated_date - window
+        obs_end_date = treated_date + window
 
-        if obs_start_date >= pd.to_datetime(SAMPLE_PERIOD[0]):
+        if obs_start_date >= diff_in_diff_df["Date"].min():
 
             did_reg_panel = diff_in_diff_df.loc[
                 (diff_in_diff_df["Date"] >= obs_start_date)
@@ -70,9 +70,11 @@ def panel_event_regression(
 
             # select control group
             sum_dummies = (
-                (sum_dummies_grouped.prod() == 1)  # already treated
-                if control_with_treated
-                else (sum_dummies_grouped.sum() == 0)  # never treated
+                (sum_dummies_grouped.prod() == 1)
+                |  # already treated
+                # if control_with_treated
+                # else
+                (sum_dummies_grouped.sum() == 0)  # never treated
             )
 
             additional_tokens = set(sum_dummies[sum_dummies].index)
@@ -85,18 +87,18 @@ def panel_event_regression(
                     "Token",
                 ]
             )
-
-            did_reg_panel_full = did_reg_panel_full.append(
-                did_reg_panel.loc[
-                    did_reg_panel["Token"].isin(additional_tokens | treated_tokens)
-                ]
-            )
-
-    # restrict to SAMPE_PERIOD
-    did_reg_panel_full = did_reg_panel_full[
-        (did_reg_panel_full["Date"] >= SAMPLE_PERIOD[0])
-        & (did_reg_panel_full["Date"] <= SAMPLE_PERIOD[1])
-    ]
+            did_reg_panel = did_reg_panel.loc[
+                did_reg_panel["Token"].isin(additional_tokens | treated_tokens)
+            ]
+            # TODO: hanlde the below when a token is added exactly at the beginning of the window
+            # assert (
+            #     did_reg_panel.loc[~did_reg_panel["Token"].isin(treated_tokens), time_to_treat_cols].sum().sum()
+            #     == 0
+            # ), "untreated tokens should have 0 in time_to_treat_cols"
+            did_reg_panel.loc[
+                ~did_reg_panel["Token"].isin(treated_tokens), time_to_treat_cols
+            ] = 0
+            did_reg_panel_full = pd.concat([did_reg_panel_full, did_reg_panel], axis=0)
 
     did_result = render_regress_table(
         reg_panel=did_reg_panel_full,

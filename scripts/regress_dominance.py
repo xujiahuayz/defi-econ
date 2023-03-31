@@ -1,7 +1,7 @@
 # get the regression panel dataset from pickled file
 import pandas as pd
 
-from environ.constants import SAMPLE_PERIOD, DATA_PATH, DEPENDENT_VARIABLES
+from environ.constants import DATA_PATH, DEPENDENT_VARIABLES, SAMPLE_PERIOD, TABLE_PATH
 from environ.tabulate.render_regression import (
     construct_regress_vars,
     render_regress_table,
@@ -105,5 +105,5 @@ result_full_interact = render_regress_table(
 )
 
 result_full_latex_interact = render_regress_table_latex(
-    result_table=result_full_interact, file_name="full_dom"
+    result_table=result_full_interact, file_name=TABLE_PATH / "full_dom"
 )

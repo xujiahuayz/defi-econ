@@ -9,40 +9,51 @@ from environ.constants import (
     COMPOUND_DEPLOYMENT_DATE,
     DATA_PATH,
     DEPENDENT_VARIABLES,
+    SAMPLE_PERIOD,
+    TABLE_PATH,
 )
-
 from environ.tabulate.render_panel_event_regression import panel_event_regression
-from environ.tabulate.render_regression import (
-    render_regress_table_latex,
-)
-
-
-reg_panel = pd.read_pickle(DATA_PATH / "processed" / "reg_panel_new.pkl")
-
+from environ.tabulate.render_regression import render_regress_table_latex
 
 compound_date = pd.DataFrame(
     {
         "Token": v["Token"] if v["Token"] != "ETH" else "WETH",
-        "join_compound_day": pd.to_datetime(v["Date"].split(" ")[0]),
+        "join_compound_time": pd.to_datetime(v["Date"].split(" ")[0]),
     }
     for v in COMPOUND_DEPLOYMENT_DATE
 )
 
+compound_date["join_compound_time"] = compound_date["join_compound_time"].astype(
+    int
+) // (10**9 * 3600 * 24 * 1)
+
+
+reg_panel = pd.read_pickle(DATA_PATH / "processed" / "reg_panel_new.pkl")
+
+# restrict to SAMPE_PERIOD
+reg_panel = reg_panel[
+    (reg_panel["Date"] >= SAMPLE_PERIOD[0]) & (reg_panel["Date"] <= SAMPLE_PERIOD[1])
+]
+
+reg_panel["Date"] = reg_panel["Date"].astype(int) // (10**9 * 3600 * 24 * 1)
+# average by Date and Token
+reg_panel = reg_panel.groupby(["Date", "Token"]).mean().reset_index()
+
 reg_panel = reg_panel.merge(compound_date, on="Token", how="left")
+
 
 RELTIME_DUMMY = "rel_time"
 FACTOR_PREFIX = "_"
 
 all_added_dates = set(
     # take only the date in '2019-05-07 01:20:54' without time
-    compound_date["join_compound_day"]
+    compound_date["join_compound_time"]
 )
+
 
 diff_in_diff_df = reg_panel.loc[:, ["Token", "Date"] + DEPENDENT_VARIABLES]
 
-diff_in_diff_df["lead_lag"] = (
-    reg_panel["Date"] - reg_panel["join_compound_day"]
-).dt.days
+diff_in_diff_df["lead_lag"] = reg_panel["Date"] - reg_panel["join_compound_time"]
 
 diff_in_diff_df["has_been_treated"] = diff_in_diff_df["lead_lag"] >= 0
 
@@ -50,7 +61,7 @@ did_result = panel_event_regression(
     diff_in_diff_df=diff_in_diff_df,
     window=14,
     control_with_treated=True,
-    lead_lag_interval=1,
+    # lead_lag_interval=7,
     reltime_dummy=RELTIME_DUMMY,
     dummy_prefix_sep=FACTOR_PREFIX,
     standard_beta=False,
@@ -63,7 +74,7 @@ time_to_treat_cols = [k for k in did_result.index if RELTIME_DUMMY in k]
 
 did_result_latex = render_regress_table_latex(
     result_table=did_result,
-    file_name=f"DID_test",
+    file_name=TABLE_PATH / "did_event_stack.tex",
 )
 
 # get all the rows with index in time_to_treat_cols, ignore items in time_to_treat_cols that are not in the index
@@ -103,5 +114,7 @@ plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0.0)
 plt.axvline(x=0, color="black", linestyle="--")
 # plot horizontal line at 0
 plt.axhline(y=0, color="black", linestyle="--")
+# add x axis label
+plt.xlabel("Time to join Compound (weeks)")
 plt.show()
 plt.close()
