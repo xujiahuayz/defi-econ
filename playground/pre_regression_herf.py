@@ -1,6 +1,6 @@
 import pandas as pd
 
-from environ.constants import TABLE_PATH, SAMPLE_PERIOD
+from data.constants import TABLE_PATH, SAMPLE_PERIOD
 from environ.tabulate.panel.panel_generator import _merge_boom_bust
 from environ.process.market.prepare_market_data import market_data
 
