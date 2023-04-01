@@ -26,7 +26,7 @@ TEST_RESULT_PATH: Path = Path(PROJECT_ROOT) / "test_results"
 
 
 DEPENDENT_VARIABLES = [
-    "eigen_full_swap",
+    "eigen_centrality_undirected",
     "avg_eigenvector_centrality",
     "betweenness_centrality_volume",
     "betweenness_centrality_count",
@@ -292,7 +292,7 @@ ALL_TOKEN_DICT = {**STABLE_DICT, **TOKEN_PLOT_DICT}
 FIAT_LIST = list(set([v["underlying"] for v in STABLE_DICT.values()]))
 
 ALL_NAMING_DICT = {
-    "eigen_full_swap": "{\it EigenCent}^{Full}",
+    "eigen_centrality_undirected": "{\it EigenCent}^{Full}",
     "TVL_share": "{\it LiquidityShare}",
     "Inflow_centrality": "{\it EigenCent}^{In}",
     "Outflow_centrality": "{\it EigenCent}^{Out}",
@@ -353,6 +353,7 @@ ALL_NAMING_DICT = {
     "is_boom": "{\it IsBoom}",
     "after_treated_date": "{\it AfterTreatedDate}",
     "is_treated_token": "{\it IsTreatedToken}",
+    "avg_cluster": "${\it AvgClustCoef}$",
 }
 
 NAMING_DICT_OLD = {

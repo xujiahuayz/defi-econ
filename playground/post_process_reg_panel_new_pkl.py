@@ -8,16 +8,16 @@ from environ.constants import DATA_PATH, DEPENDENT_VARIABLES
 
 reg_panel = pd.read_pickle(DATA_PATH / "processed" / "reg_panel_new.pkl")
 
-EIGEN_FULL_SWAP = "eigen_full_swap"
+eigen_centrality_undirected = "eigen_centrality_undirected"
 
 var_without_na = [
     "Inflow_centrality_swap",
     "Outflow_centrality_swap",
-] + list(set(DEPENDENT_VARIABLES) - {EIGEN_FULL_SWAP})
+] + list(set(DEPENDENT_VARIABLES) - {eigen_centrality_undirected})
 reg_panel[var_without_na] = reg_panel[var_without_na].fillna(0)
 
-# take the average of Inflow_centrality and Outflow_centrality for eigen_full_swap
-reg_panel[EIGEN_FULL_SWAP] = (
+# take the average of Inflow_centrality and Outflow_centrality for eigen_centrality_undirected
+reg_panel[eigen_centrality_undirected] = (
     reg_panel["Inflow_centrality_swap"] + reg_panel["Outflow_centrality_swap"]
 ) / 2
 

@@ -14,8 +14,8 @@ reg_panel = pd.read_pickle(DATA_PATH / "processed" / "reg_panel_new.pkl")
 # fill na for Inflow_centrality_swap and Outflow_centrality_swap
 reg_panel["Inflow_centrality_swap"] = reg_panel["Inflow_centrality_swap"].fillna(0)
 reg_panel["Outflow_centrality_swap"] = reg_panel["Outflow_centrality_swap"].fillna(0)
-# take the average of Inflow_centrality and Outflow_centrality for eigen_full_swap
-reg_panel["eigen_full_swap"] = (
+# take the average of Inflow_centrality and Outflow_centrality for eigen_centrality_undirected
+reg_panel["eigen_centrality_undirected"] = (
     reg_panel["Inflow_centrality_swap"] + reg_panel["Outflow_centrality_swap"]
 ) / 2
 
@@ -24,7 +24,7 @@ reg_panel["eigen_full_swap"] = (
 corr_columns = [
     "Volume_share",
     "TVL_share",
-    "eigen_full_swap",
+    "eigen_centrality_undirected",
     "avg_eigenvector_centrality",
     "betweenness_centrality_count",
     "betweenness_centrality_volume",
