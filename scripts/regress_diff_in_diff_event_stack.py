@@ -1,14 +1,14 @@
 # get the regression panel dataset from pickled file
 import re
-import numpy as np
 
+import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 
 from environ.constants import (
+    AAVE_DEPLOYMENT_DATE,
     ALL_NAMING_DICT,
     COMPOUND_DEPLOYMENT_DATE,
-    AAVE_DEPLOYMENT_DATE,
     DATA_PATH,
     DEPENDENT_VARIABLES,
     SAMPLE_PERIOD,
@@ -40,7 +40,7 @@ plf_date = pd.DataFrame(
 )
 
 
-reg_panel = pd.read_pickle(DATA_PATH / "processed" / "reg_panel_new.pkl")
+reg_panel = pd.read_pickle(DATA_PATH / "processed" / "reg_panel_merged.pkl")
 
 # restrict to SAMPE_PERIOD
 reg_panel = reg_panel[
@@ -81,12 +81,12 @@ diff_in_diff_df["has_been_treated"] = diff_in_diff_df["lead_lag"] >= 0
 
 did_result = panel_event_regression(
     diff_in_diff_df=diff_in_diff_df,
-    window=7 * 3,
-    control_with_treated=True,
+    window=21,
+    control_with_treated=False,
     # lead_lag_interval=7,
     reltime_dummy=RELTIME_DUMMY,
     dummy_prefix_sep=FACTOR_PREFIX,
-    standard_beta=False,
+    standard_beta=True,
     panel_index_columns=(["Token", "Date"], [True, True]),
     robust=False,
     treatment_delay=0,
@@ -112,9 +112,11 @@ plot_df_co = (
     .apply(lambda x: x.str.split(r"[$^]").str[1])
     .astype(float)
 )
+
+
 plot_df_se = (
     plot_df[did_result.columns]
-    .applymap(lambda x: re.findall(r"\$\s*([\d.]+)\s*\$", x)[-1])
+    .applymap(lambda x: float(x.split("($")[1].split("$)")[0]))
     .astype(float)
 )
 

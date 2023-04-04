@@ -6,7 +6,7 @@ import pandas as pd
 
 from environ.constants import DATA_PATH, DEPENDENT_VARIABLES
 
-reg_panel = pd.read_pickle(DATA_PATH / "processed" / "reg_panel_new.pkl")
+reg_panel = pd.read_pickle(DATA_PATH / "processed" / "reg_panel_merged.pkl")
 
 eigen_centrality_undirected = "eigen_centrality_undirected"
 
@@ -26,4 +26,4 @@ reg_panel[eigen_centrality_undirected] = (
 reg_panel[DEPENDENT_VARIABLES] = reg_panel[DEPENDENT_VARIABLES].clip(lower=0)
 
 # repickle the reg_panel
-reg_panel.to_pickle(DATA_PATH / "processed" / "reg_panel_new.pkl")
+reg_panel.to_pickle(DATA_PATH / "processed" / "reg_panel_merged.pkl")
