@@ -21,13 +21,15 @@ from environ.tabulate.render_regression import render_regress_table_latex
 plf_list = AAVE_DEPLOYMENT_DATE + COMPOUND_DEPLOYMENT_DATE
 # change the format of each element in the list to {'DAI': ['2019-05-07 01:20:54', '2019-05-07 01:20:54']}
 
+INTERVAL_IN_SECONDS = 3600 * 24 * 1
+
 name_map = {"ETH": "WETH", "WBTC2": "WBTC"}
 plf_dict: dict[str, list] = {}
 for v in plf_list:
     # replace the token name 'ETH' with 'WETH' and WBTC2 with WBTC
     token = name_map.get(v["Token"], v["Token"])
     # convert date from string to timestamp
-    date = int(pd.to_datetime(v["Date"]).timestamp()) // (3600 * 24 * 1)
+    date = int(pd.to_datetime(v["Date"]).timestamp()) // INTERVAL_IN_SECONDS
     if token in plf_dict:
         plf_dict[token].append(date)
     else:
@@ -47,7 +49,7 @@ reg_panel = reg_panel[
     (reg_panel["Date"] >= SAMPLE_PERIOD[0]) & (reg_panel["Date"] <= SAMPLE_PERIOD[1])
 ]
 
-reg_panel["Date"] = reg_panel["Date"].astype(int) // (10**9 * 3600 * 24 * 1)
+reg_panel["Date"] = reg_panel["Date"].astype(int) // (10**9 * INTERVAL_IN_SECONDS)
 # average by Date and Token
 reg_panel = reg_panel.groupby(["Date", "Token"]).mean(numeric_only=True).reset_index()
 
@@ -81,13 +83,13 @@ diff_in_diff_df["has_been_treated"] = diff_in_diff_df["lead_lag"] >= 0
 
 did_result = panel_event_regression(
     diff_in_diff_df=diff_in_diff_df,
-    window=21,
-    control_with_treated=False,
-    # lead_lag_interval=7,
+    window=7 * 10,
+    control_with_treated=True,
+    lead_lag_interval=7,
     reltime_dummy=RELTIME_DUMMY,
     dummy_prefix_sep=FACTOR_PREFIX,
-    standard_beta=True,
-    panel_index_columns=(["Token", "Date"], [True, True]),
+    standard_beta=False,
+    panel_index_columns=(["Token", "Date"], [True, False]),
     robust=False,
     treatment_delay=0,
 )
