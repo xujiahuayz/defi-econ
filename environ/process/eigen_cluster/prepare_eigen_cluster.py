@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from data.constants import NETWORK_DATA_PATH, BETWEENNESS_DATA_PATH
+from environ.constants import NETWORK_DATA_PATH, BETWEENNESS_DATA_PATH
 
 # Ignore warnings
 warnings.filterwarnings("ignore")
@@ -39,28 +39,18 @@ def _load_in_data_lst(
 
     return file_name_lst
 
-
-def _generate_node_edge(
-    file_name: str,
+def _preprocessing(
+    df_network: pd.DataFrame,
     edge_col: list[str],
     weight_col: list[str],
-    exclude_special_route: bool = True,
     dict2str: bool = False,
+    exclude_special_route: bool = True,
     aggreate_weight: bool = False,
     convert_undirected: bool = False,
-) -> tuple[np.ndarray, np.ndarray]:
+    ) -> pd.DataFrame:
     """
-    Function to generate the node and edge arrays
+    Function to preprocess the network dataframe
     """
-
-    # load the data
-    df_network = pd.read_csv(file_name)
-
-    if exclude_special_route:
-        # Exclude "LOOP" AND "SPOON", and "Error" in intermediary
-        df_network = df_network[
-            (df_network["label"] == "0") & (df_network["intermediary"] != "Error")
-        ].copy()
 
     if dict2str:
         # unwrap the dictionary {'symbol': 'DAI'} by extracting the
@@ -69,6 +59,12 @@ def _generate_node_edge(
             df_network[col] = df_network[col].apply(
                 lambda x: x.split(": '")[1].split("'}")[0]
             )
+    
+    if exclude_special_route:
+        # Exclude "LOOP" AND "SPOON", and "Error" in intermediary
+        df_network = df_network[
+            (df_network["label"] == "0") & (df_network["intermediary"] != "Error")
+        ].copy()
 
     # convert the weight to float
     df_network[weight_col] = df_network[weight_col].astype(float)
@@ -85,6 +81,18 @@ def _generate_node_edge(
         df_network = df_network.groupby("edge")[weight_col].sum().reset_index()
         df_network[edge_col[0]] = df_network["edge"].apply(lambda x: x[0])
         df_network[edge_col[1]] = df_network["edge"].apply(lambda x: x[1])
+
+    return df_network
+
+
+def _generate_node_edge(
+    df_network: pd.DataFrame,
+    edge_col: list[str],
+    weight_col: list[str],
+) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Function to generate the node and edge arrays
+    """
 
     # get the edge list
     edge = df_network[edge_col].to_numpy()
@@ -110,18 +118,19 @@ def _compute_indicator(
     :return: a dataframe of eigenvector centrality
     """
 
-    if graph_type == "directed_multi":
-        # create a directed multi graph
-        graph = nx.MultiDiGraph()
-    elif graph_type == "undirected_multi":
-        # create a undirected multi graph
-        graph = nx.MultiGraph()
-    elif graph_type == "directed":
-        # create a directed graph
-        graph = nx.DiGraph()
-    elif graph_type == "undirected":
-        # create a undirected graph
-        graph = nx.Graph()
+    match graph_type:
+        case "directed_multi":
+            # create a directed multi graph
+            graph = nx.MultiDiGraph()
+        case "undirected_multi":
+            # create a undirected multi graph
+            graph = nx.MultiGraph()
+        case "directed":
+            # create a directed graph   
+            graph = nx.DiGraph()
+        case "undirected":
+            # create a undirected graph
+            graph = nx.Graph()
 
     # unique list of the nodes
     token_lst = np.unique(edge)
@@ -212,15 +221,24 @@ def indicator_generator(
         # get the date
         date = file_name.split("_")[-1].split(".")[0]
 
-        # generate the node and edge arrays
-        edge, weight = _generate_node_edge(
-            file_name,
+        # load the data
+        df_network = pd.read_csv(file_name)
+
+        # preprocess the data
+        df_network = _preprocessing(
+            df_network,
             edge_col,
             weight_col,
             exclude_special_route,
             dict2str,
             aggreate_weight,
-            convert_undirected,
+        )
+
+        # generate the node and edge arrays
+        edge, weight = _generate_node_edge(
+            df_network,
+            edge_col,
+            weight_col
         )
 
         # if the weight is empty, skip

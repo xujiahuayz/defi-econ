@@ -2,7 +2,7 @@
 Script to render the moving averages of the variables
 """
 
-from data.constants import EVENT_DATE_LIST, NETWORK_DATA_PATH
+from environ.constants import EVENT_DATE_LIST, NETWORK_DATA_PATH
 from environ.plot.plot_ma import plot_ma_time_series
 from environ.process.market.boom_bust import BOOM_BUST
 
@@ -63,7 +63,6 @@ for v in version:
             "token_col_name": "Token",
         }
 
-for v in version:
     for p in plot_type_eigen_undirected:
         graph_dict[f"eigen_undirected_multi_{v}"] = {
             "file_folder": str(
@@ -74,7 +73,6 @@ for v in version:
             "token_col_name": "Token",
         }
 
-for v in version:
     for p in plot_type_cluster:
         graph_dict[f"cluster_{p}_swap_{v}"] = {
             "file_folder": str(NETWORK_DATA_PATH / v / "clustering_ind"),
@@ -83,7 +81,6 @@ for v in version:
             "token_col_name": "Token",
         }
 
-for v in version:
     for p in plot_type_eigen:
         graph_dict[f"eigen_{p}_swap_{v}"] = {
             "file_folder": str(NETWORK_DATA_PATH / v / "eigen_centrality_swap"),
