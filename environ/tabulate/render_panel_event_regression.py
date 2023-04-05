@@ -18,6 +18,7 @@ def panel_event_regression(
     dummy_prefix_sep: str = "_",
     # TODO: consider removing this variable
     treatment_delay: int = 0,
+    covariates: list[str] | None = None,
     **kwargs,
 ) -> pd.DataFrame:
 
@@ -52,7 +53,9 @@ def panel_event_regression(
         dependent_variables=DEPENDENT_VARIABLES,
         iv_chunk_list=[
             [
-                list(time_to_treat_cols)
+                list(time_to_treat_cols) + covariates
+                if covariates
+                else []
                 + [
                     # "after_treated_date",
                     #    "const"
@@ -69,6 +72,12 @@ def panel_event_regression(
         (diff_in_diff_df["lead_lag"] == 0), ["Token", "Date"]
     ]
     all_added_dates = set(token_dates["Date"])
+
+    diff_in_diff_df = diff_in_diff_df.loc[
+        diff_in_diff_df["Token"].isin(
+            diff_in_diff_df.loc[diff_in_diff_df["lead_lag"] >= 0]["Token"]
+        )
+    ]
 
     did_reg_panel_full = pd.DataFrame()
     for treated_date in all_added_dates:
@@ -94,7 +103,7 @@ def panel_event_regression(
             sum_dummies_grouped = did_reg_panel.groupby("Token")["has_been_treated"]
 
             # select control group
-            sum_dummies = (sum_dummies_grouped.count() == 2 * window + 1) & (
+            sum_dummies = (  # sum_dummies_grouped.count() == 2 * window + 1) & (
                 (sum_dummies_grouped.prod() == 1)
                 if control_with_treated
                 else (sum_dummies_grouped.sum() == 0)
