@@ -39,6 +39,7 @@ def _load_in_data_lst(
 
     return file_name_lst
 
+
 def _preprocessing(
     df_network: pd.DataFrame,
     edge_col: list[str],
@@ -47,7 +48,7 @@ def _preprocessing(
     exclude_special_route: bool = True,
     aggreate_weight: bool = False,
     convert_undirected: bool = False,
-    ) -> pd.DataFrame:
+) -> pd.DataFrame:
     """
     Function to preprocess the network dataframe
     """
@@ -59,7 +60,7 @@ def _preprocessing(
             df_network[col] = df_network[col].apply(
                 lambda x: x.split(": '")[1].split("'}")[0]
             )
-    
+
     if exclude_special_route:
         # Exclude "LOOP" AND "SPOON", and "Error" in intermediary
         df_network = df_network[
@@ -126,7 +127,7 @@ def _compute_indicator(
             # create a undirected multi graph
             graph = nx.MultiGraph()
         case "directed":
-            # create a directed graph   
+            # create a directed graph
             graph = nx.DiGraph()
         case "undirected":
             # create a undirected graph
@@ -229,17 +230,14 @@ def indicator_generator(
             df_network,
             edge_col,
             weight_col,
-            exclude_special_route,
             dict2str,
+            exclude_special_route,
             aggreate_weight,
+            convert_undirected,
         )
 
         # generate the node and edge arrays
-        edge, weight = _generate_node_edge(
-            df_network,
-            edge_col,
-            weight_col
-        )
+        edge, weight = _generate_node_edge(df_network, edge_col, weight_col)
 
         # if the weight is empty, skip
         if not weight.any():
