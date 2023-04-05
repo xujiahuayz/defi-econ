@@ -27,7 +27,6 @@ TEST_RESULT_PATH: Path = Path(PROJECT_ROOT) / "test_results"
 
 DEPENDENT_VARIABLES = [
     "eigen_centrality_undirected",
-    "avg_eigenvector_centrality",
     "betweenness_centrality_volume",
     "betweenness_centrality_count",
     "Volume_share",
