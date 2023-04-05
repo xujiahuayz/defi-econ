@@ -1,6 +1,6 @@
 from matplotlib import pyplot as plt
 import pandas as pd
-from environ.constants import FIGURE_PATH, TABLE_PATH
+from data.constants import FIGURE_PATH, TABLE_PATH
 from environ.utils.variable_constructer import map_variable_name_latex
 
 

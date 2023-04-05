@@ -7,7 +7,7 @@ import glob
 # the new combined dataframe has colume: Date, Token, Volume
 
 # get all csv files in data/data_network/merged/volume_share
-path = rf"data/data_network/merged/volume_share"  # use your path
+path = rf"data/data_network/merged/clustering_ind"  # use your path
 all_files = glob.glob(path + "/*.csv")
 
 # extract date from file name
@@ -17,10 +17,10 @@ li = []
 for filename in all_files:
     df = pd.read_csv(filename, index_col=None, header=0)
     date = filename.split("_")[-1].split(".")[0]
-    df["Volume"] = df["Volume"].astype(float)
+    df["clustering_coefficient"] = df["clustering_coefficient"].astype(float)
     # convert the "yyyymmdd" date to datetime format
     date = pd.to_datetime(date, format="%Y%m%d")
-    li.append((date, (df["Volume"] ** 2).sum()))
+    li.append((date, (df["clustering_coefficient"] ** 2).sum()))
 
 # calculate the herfindahl index that's all
 herfindahl = pd.DataFrame(li, columns=["Date", "Herfindahl Index"])
@@ -57,5 +57,5 @@ plt.axvline(
 plt.xlabel("Date")
 plt.ylabel("Herfindahl Index")
 plt.title("Herfindahl Index of Uniswap")
-plt.savefig("figures/herfindahl.pdf")
+plt.savefig("figures/herfindahl_cluster_coef.pdf")
 plt.show()
