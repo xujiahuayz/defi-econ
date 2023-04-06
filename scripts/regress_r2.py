@@ -24,7 +24,7 @@ for dv in dependent_variables:
 
 iv_chunk_list_unlagged = [
     [["betweenness_centrality_count"], ["betweenness_centrality_volume"]],
-    [[], ["eigen_full_swap"]],
+    [[], ["eigen_centrality_undirected"]],
 ]
 
 

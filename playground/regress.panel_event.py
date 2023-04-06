@@ -36,13 +36,13 @@ reg_panel = pd.read_pickle(TABLE_PATH / "reg_panel.pkl")
 compound_date = pd.DataFrame(
     {
         "Token": v["Token"] if v["Token"] != "ETH" else "WETH",
-        "join_compound_day": pd.to_datetime(v["Date"].split(" ")[0]),
+        "join_compound_time": pd.to_datetime(v["Date"].split(" ")[0]),
     }
     for v in COMPOUND_DEPLOYMENT_DATE
 )
 
 data = reg_panel.merge(compound_date, on="Token", how="left")[
-    ["Token", "Date", "Volume_share", "join_compound_day"]
+    ["Token", "Date", "Volume_share", "join_compound_time"]
 ]
 
 touse = data["Token"].notna().all(axis=1)

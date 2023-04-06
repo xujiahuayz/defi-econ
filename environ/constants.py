@@ -26,11 +26,12 @@ TEST_RESULT_PATH: Path = Path(PROJECT_ROOT) / "test_results"
 
 
 DEPENDENT_VARIABLES = [
-    "eigen_full_swap",
-    "avg_eigenvector_centrality",
+    "eigen_centrality_undirected",
     "betweenness_centrality_volume",
     "betweenness_centrality_count",
     "Volume_share",
+    "vol_undirected_full_len_share",
+    "vol_inter_full_len_share",
 ]
 
 # Aave pool deployment time
@@ -245,15 +246,10 @@ COMPOUND_DEPLOYMENT_DATE = [
         "poolAddress": "0xface851a4921ce59e912d19329929ce6da6eb0c7",
         "Date": "2021-04-21 21:38:22",
     },
-    # {
-    #     "Token": "WBTC2",
-    #     "poolAddress": "0xccF4429DB6322D5C611ee964527D42E5d685DD6a",
-    #     "Date": "2021-03-14 07:44:47",
-    # },
     {
-        "Token": "WBTC",
-        "poolAddress": "0xc11b1268c1a384e55c48c2391d8d480264a3a7f4",
-        "Date": "2019-07-16 19:47:37",
+        "Token": "WBTC2",
+        "poolAddress": "0xccF4429DB6322D5C611ee964527D42E5d685DD6a",
+        "Date": "2021-03-14 07:44:47",
     },
 ]
 
@@ -297,7 +293,7 @@ ALL_TOKEN_DICT = {**STABLE_DICT, **TOKEN_PLOT_DICT}
 FIAT_LIST = list(set([v["underlying"] for v in STABLE_DICT.values()]))
 
 ALL_NAMING_DICT = {
-    "eigen_full_swap": "{\it EigenCent}^{Full}",
+    "eigen_centrality_undirected": "{\it EigenCent}^{Full}",
     "TVL_share": "{\it LiquidityShare}",
     "Inflow_centrality": "{\it EigenCent}^{In}",
     "Outflow_centrality": "{\it EigenCent}^{Out}",
@@ -358,6 +354,7 @@ ALL_NAMING_DICT = {
     "is_boom": "{\it IsBoom}",
     "after_treated_date": "{\it AfterTreatedDate}",
     "is_treated_token": "{\it IsTreatedToken}",
+    "avg_cluster": "${\it AvgClustCoef}$",
 }
 
 NAMING_DICT_OLD = {
