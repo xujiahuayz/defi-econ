@@ -16,7 +16,15 @@ from environ.utils.variable_constructer import (
 reg_panel = pd.read_pickle(DATA_PATH / "processed" / "reg_panel_merged.pkl")
 
 iv_chunk_list_unlagged = [
-    [["clustering_coefficient", "std", "mcap_share", "TVL_share", "Supply_share"]],
+    [
+        [
+            # "clustering_coefficient",
+            "std",
+            "mcap_share",
+            "TVL_share",
+            "Supply_share",
+        ]
+    ],
     [
         # ["corr_gas_with_laggedreturn"],
         ["corr_gas"]
@@ -106,5 +114,5 @@ result_full_interact = render_regress_table(
 
 result_full_latex_interact = render_regress_table_latex(
     result_table=result_full_interact,
-    file_name=TABLE_PATH / "regression_table_full_dom",
+    file_name=TABLE_PATH / "slides_full_dom",
 )

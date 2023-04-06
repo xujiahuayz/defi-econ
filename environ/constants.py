@@ -26,10 +26,10 @@ TEST_RESULT_PATH: Path = Path(PROJECT_ROOT) / "test_results"
 
 
 DEPENDENT_VARIABLES = [
-    "eigen_centrality_undirected",
-    "betweenness_centrality_volume",
-    "betweenness_centrality_count",
-    "Volume_share",
+    # "eigen_centrality_undirected",
+    # "betweenness_centrality_volume",
+    # "betweenness_centrality_count",
+    # "Volume_share",
     "vol_undirected_full_len_share",
     "vol_inter_full_len_share",
 ]
@@ -355,6 +355,8 @@ ALL_NAMING_DICT = {
     "after_treated_date": "{\it AfterTreatedDate}",
     "is_treated_token": "{\it IsTreatedToken}",
     "avg_cluster": "${\it AvgClustCoef}$",
+    "vol_undirected_full_len_share": "${\it VShare}^{\it ulti}$",
+    "vol_inter_full_len_share": "${\it VShare}^{\it betw}$",
 }
 
 NAMING_DICT_OLD = {
