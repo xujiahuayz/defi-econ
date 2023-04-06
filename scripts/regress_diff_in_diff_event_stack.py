@@ -111,7 +111,8 @@ for lead_lag_interval in [None, 7]:
         )
     did_result_latex = render_regress_table_latex(
         result_table=did_result,
-        file_name=TABLE_PATH / "did_event_stack",
+        file_name=TABLE_PATH
+        / f"slides_did_event_stack_{'leadlag' if lead_lag_interval else 'noleadlag'}",
     )
 
     if lead_lag_interval:

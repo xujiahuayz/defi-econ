@@ -19,21 +19,21 @@ iv_chunk_list_unlagged = [
     [
         [
             # "clustering_coefficient",
-            "std",
             "mcap_share",
             "TVL_share",
             "Supply_share",
+            "std",
         ]
-    ],
-    [
-        # ["corr_gas_with_laggedreturn"],
-        ["corr_gas"]
     ],
     [
         # ["Stable", "depegging_degree"],
         # ["pegging_degree"],
         # ["depeg_pers"],
         ["stableshare"],
+    ],
+    [
+        # ["corr_gas_with_laggedreturn"],
+        ["corr_gas"]
     ],
     [
         [
