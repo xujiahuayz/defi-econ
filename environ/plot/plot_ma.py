@@ -12,6 +12,7 @@ import pandas as pd
 from environ.constants import (
     ALL_TOKEN_DICT,
     FIGURE_PATH,
+    DATA_PATH,
     EVENT_DATE_LIST,
     KEY_TOKEN_LIST,
     NETWORK_DATA_PATH,
@@ -157,27 +158,64 @@ def plot_ma_time_series(
         event_date_list=event_date_list,
     )
 
-
-if __name__ == "__main__":
-    df = file_to_df()
+def plot_ma_time_series_panel(
+    panel_path: str,
+    ma_window: int = 30,
+    value_colume: str = "value",
+    token_col_name: str = "token",
+    boom_bust: list[dict] = BOOM_BUST,
+    x_limit: list[str] = SAMPLE_PERIOD,
+    file_name: str = "volume_ma",
+    event_date_list: list[str] = ["2020-03-12"],
+) -> None:
+    df = pd.read_pickle(panel_path)
+    df.reset_index(inplace=True)
     df_prepared = preprocess_ma(
-        df, value_colume="Volume", token_col_name="Token", ma_window=1
+        df,
+        value_colume=value_colume,
+        token_col_name=token_col_name,
+        ma_window=ma_window,
     )
     plot_time_series(
         df_prepared,
-        file_name="volume_ma",
-        value_colume=name_ma_variable("Volume", 1),
-        token_col_name="Token",
-        event_date_list=EVENT_DATE_LIST,
+        file_name=file_name,
+        value_colume=name_ma_variable(value_colume, ma_window),
+        token_col_name=token_col_name,
+        boom_bust=boom_bust,
+        x_limit=x_limit,
+        event_date_list=event_date_list,
     )
 
-    plot_ma_time_series(
-        file_folder=NETWORK_DATA_PATH / "merged" / "volume_share",
+if __name__ == "__main__":
+    # df = file_to_df()
+    # df_prepared = preprocess_ma(
+    #     df, value_colume="Volume", token_col_name="Token", ma_window=1
+    # )
+    # plot_time_series(
+    #     df_prepared,
+    #     file_name="volume_ma",
+    #     value_colume=name_ma_variable("Volume", 1),
+    #     token_col_name="Token",
+    #     event_date_list=EVENT_DATE_LIST,
+    # )
+
+    # plot_ma_time_series(
+    #     file_folder=NETWORK_DATA_PATH / "merged" / "volume_share",
+    #     ma_window=30,
+    #     value_colume="Volume",
+    #     token_col_name="Token",
+    #     boom_bust=BOOM_BUST,
+    #     x_limit=SAMPLE_PERIOD,
+    #     file_name="volume_ma",
+    #     event_date_list=EVENT_DATE_LIST,
+    # )
+    plot_ma_time_series_panel(
+        panel_path=str(DATA_PATH / "reg_panel_merged.pkl"),
         ma_window=30,
-        value_colume="Volume",
+        value_colume="vol_undirected_full_len_share",
         token_col_name="Token",
         boom_bust=BOOM_BUST,
         x_limit=SAMPLE_PERIOD,
-        file_name="volume_ma",
+        file_name="vol_undirected_full_len_share",
         event_date_list=EVENT_DATE_LIST,
     )

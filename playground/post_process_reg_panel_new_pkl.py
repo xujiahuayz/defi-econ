@@ -2,7 +2,7 @@ import pandas as pd
 
 from environ.constants import DATA_PATH, DEPENDENT_VARIABLES
 
-reg_panel = pd.read_pickle(DATA_PATH / "processed" / "reg_panel_merged.pkl")
+reg_panel = pd.read_pickle(DATA_PATH / "reg_panel_merged.pkl")
 
 unprocessed_dvs = ["eigen_centrality_undirected", "vol_undirected_full_len_share"]
 
@@ -34,4 +34,4 @@ reg_panel[DEPENDENT_VARIABLES] = reg_panel[DEPENDENT_VARIABLES].clip(lower=0)
 
 
 # repickle the reg_panel
-reg_panel.to_pickle(DATA_PATH / "processed" / "reg_panel_merged.pkl")
+reg_panel.to_pickle(DATA_PATH / "reg_panel_merged.pkl")
