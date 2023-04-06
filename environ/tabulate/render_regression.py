@@ -181,6 +181,7 @@ def construct_regress_vars(
             for iv_chunk in iv_chunk_list
         ]
     without_lag_dv_part = [[]] if without_lag_dv else []
+    # TODO: find a more elegant way to do this
     return [
         (dv, [x for y in iv_combi for x in y])
         for dv in dependent_variables
@@ -193,6 +194,7 @@ def construct_regress_vars(
                 + iv_chunk_list
             )
         )
+        if [x for y in iv_combi for x in y]
     ]
 
 
