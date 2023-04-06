@@ -30,7 +30,7 @@ DEPENDENT_VARIABLES = [
     "betweenness_centrality_volume",
     "betweenness_centrality_count",
     "Volume_share",
-    "vol_total_full_len_share",
+    "vol_undirected_full_len_share",
     "vol_inter_full_len_share",
 ]
 
