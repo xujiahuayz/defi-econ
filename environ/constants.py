@@ -354,9 +354,9 @@ ALL_NAMING_DICT = {
     "is_boom": "{\it IsBoom}",
     "after_treated_date": "{\it AfterTreatedDate}",
     "is_treated_token": "{\it IsTreatedToken}",
-    "avg_cluster": "${\it AvgClustCoef}$",
-    "vol_undirected_full_len_share": "${\it VShare}^{\it ulti}$",
-    "vol_inter_full_len_share": "${\it VShare}^{\it betw}$",
+    "avg_cluster": "{\it AvgClustCoef}",
+    "vol_undirected_full_len_share": "{\it VShare}^{\it ulti}",
+    "vol_inter_full_len_share": "{\it VShare}^{\it betw}",
 }
 
 NAMING_DICT_OLD = {
