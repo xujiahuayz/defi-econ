@@ -172,7 +172,7 @@ def construct_regress_vars(
             [
                 [
                     name_lag_variable(v)
-                    if v not in ["Stable", "is_boom", "const"] and v in ALL_NAMING_DICT
+                    if v in (set(ALL_NAMING_DICT) - {"Stable", "is_boom", "const"})
                     else v
                     for v in iv
                 ]
@@ -181,9 +181,8 @@ def construct_regress_vars(
             for iv_chunk in iv_chunk_list
         ]
     without_lag_dv_part = [[]] if without_lag_dv else []
-    return [
-        (dv, [x for y in iv_combi for x in y])
-        for dv in dependent_variables
+    regressand_independent_vars = []
+    for dv in dependent_variables:
         for iv_combi in product(
             *(
                 [
@@ -192,8 +191,13 @@ def construct_regress_vars(
                 ]
                 + iv_chunk_list
             )
-        )
-    ]
+        ):
+            if any(iv_combi):
+                regressand_independent_vars.append(
+                    (dv, [x for y in iv_combi for x in y])
+                )
+
+    return regressand_independent_vars
 
 
 def render_regress_table(

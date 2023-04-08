@@ -15,7 +15,6 @@ from environ.constants import (
     DATA_PATH,
     EVENT_DATE_LIST,
     KEY_TOKEN_LIST,
-    NETWORK_DATA_PATH,
     SAMPLE_PERIOD,
 )
 from environ.process.market.boom_bust import BOOM_BUST
@@ -158,6 +157,7 @@ def plot_ma_time_series(
         event_date_list=event_date_list,
     )
 
+
 def plot_ma_time_series_panel(
     panel_path: str,
     ma_window: int = 30,
@@ -185,6 +185,7 @@ def plot_ma_time_series_panel(
         x_limit=x_limit,
         event_date_list=event_date_list,
     )
+
 
 if __name__ == "__main__":
     # df = file_to_df()

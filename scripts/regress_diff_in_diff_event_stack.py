@@ -10,11 +10,13 @@ from environ.constants import (
     COMPOUND_DEPLOYMENT_DATE,
     DATA_PATH,
     DEPENDENT_VARIABLES,
+    FIGURE_PATH,
     SAMPLE_PERIOD,
     TABLE_PATH,
 )
 from environ.tabulate.render_panel_event_regression import panel_event_regression
 from environ.tabulate.render_regression import render_regress_table_latex
+from environ.utils.variable_constructer import name_interaction_variable
 
 # combine AAVE and COMPOUND deployment date list
 plf_list = AAVE_DEPLOYMENT_DATE + COMPOUND_DEPLOYMENT_DATE
@@ -81,67 +83,84 @@ diff_in_diff_df["lead_lag"] = reg_panel["Date"] - reg_panel["earliest_join_time"
 
 diff_in_diff_df["has_been_treated"] = diff_in_diff_df["lead_lag"] >= 0
 
-did_result = panel_event_regression(
-    diff_in_diff_df=diff_in_diff_df,
-    window=70,
-    control_with_treated=False,
-    # lead_lag_interval=7,
-    reltime_dummy=RELTIME_DUMMY,
-    dummy_prefix_sep=FACTOR_PREFIX,
-    standard_beta=False,
-    panel_index_columns=(["Token", "Date"], [True, True]),
-    robust=False,
-    treatment_delay=0,
-    covariates=indvs,
-)
-
-# get index that contains RELTIME_DUMMY
-time_to_treat_cols = [k for k in did_result.index if RELTIME_DUMMY in k]
-
-did_result_latex = render_regress_table_latex(
-    result_table=did_result,
-    file_name=TABLE_PATH / "did_event_stack",
-)
-
-# get all the rows with index in time_to_treat_cols, ignore items in time_to_treat_cols that are not in the index
-plot_df = did_result.loc[did_result.index.intersection(list(time_to_treat_cols)), :]
-plot_df["time_to_join"] = plot_df.index.map(lambda x: int(x.split("_")[-1]))
-# sort by time_to_join
-plot_df = plot_df.sort_values(by="time_to_join")
-
-# get the number for each cell, where the string separates can be either $ or ^, and take the first one
-plot_df_co = (
-    plot_df[did_result.columns]
-    .apply(lambda x: x.str.split(r"[$^]").str[1])
-    .astype(float)
-)
-
-
-plot_df_se = (
-    plot_df[did_result.columns]
-    .applymap(lambda x: float(x.split("($")[1].split("$)")[0]))
-    .astype(float)
-)
-
-x = plot_df["time_to_join"]
-# plot the result
-for k, v in did_result.loc["regressand"].items():
-    plt.plot(x, plot_df_co[k], label=f"${ALL_NAMING_DICT[v]}$")  # type: ignore
-
-    # plot the standard error band
-    plt.fill_between(
-        x,
-        plot_df_co[k] - 1.96 * plot_df_se[k],  # type: ignore
-        plot_df_co[k] + 1.96 * plot_df_se[k],  # type: ignore
-        alpha=0.2,
+for lead_lag_interval in [None, 7]:
+    did_result = panel_event_regression(
+        diff_in_diff_df=diff_in_diff_df,
+        window=70,
+        control_with_treated=False,
+        lead_lag_interval=lead_lag_interval,
+        reltime_dummy=RELTIME_DUMMY,
+        dummy_prefix_sep=FACTOR_PREFIX,
+        standard_beta=False,
+        panel_index_columns=(["Token", "Date"], [True, True]),
+        robust=False,
+        treatment_delay=0,
+        covariates=indvs,
     )
-plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0.0)
 
-# plot verticle line at 0
-plt.axvline(x=0, color="black", linestyle="--")
-# plot horizontal line at 0
-plt.axhline(y=0, color="black", linestyle="--")
-# add x axis label
-plt.xlabel("Time to be included in any PLF (weeks)")
-plt.show()
-plt.close()
+    # get index that contains RELTIME_DUMMY
+    time_to_treat_cols = [k for k in did_result.index if RELTIME_DUMMY in k]
+
+    if lead_lag_interval is None:
+        did_result = did_result.rename(
+            index={
+                f"{RELTIME_DUMMY}{FACTOR_PREFIX}1": name_interaction_variable(
+                    "is_treated_token", "after_treated_date"
+                )
+            }
+        )
+    did_result_latex = render_regress_table_latex(
+        result_table=did_result,
+        file_name=TABLE_PATH
+        / f"slides_did_event_stack_{'leadlag' if lead_lag_interval else 'noleadlag'}",
+    )
+
+    if lead_lag_interval:
+        # get all the rows with index in time_to_treat_cols, ignore items in time_to_treat_cols that are not in the index
+        plot_df = did_result.loc[
+            did_result.index.intersection(list(time_to_treat_cols)), :
+        ]
+        plot_df["time_to_join"] = plot_df.index.map(lambda x: int(x.split("_")[-1]))
+        # sort by time_to_join
+        plot_df = plot_df.sort_values(by="time_to_join")
+
+        # get the number for each cell, where the string separates can be either $ or ^, and take the first one
+        plot_df_co = (
+            plot_df[did_result.columns]
+            .apply(lambda x: x.str.split(r"[$^]").str[1])
+            .astype(float)
+        )
+
+        plot_df_se = (
+            plot_df[did_result.columns]
+            .applymap(lambda x: float(x.split("($")[1].split("$)")[0]))
+            .astype(float)
+        )
+
+        x = plot_df["time_to_join"]
+        # plot the result
+        for k, v in did_result.loc["regressand"].items():
+            plt.plot(x, plot_df_co[k], label=f"${ALL_NAMING_DICT[v]}$")  # type: ignore
+
+            # plot the standard error band
+            plt.fill_between(
+                x,
+                plot_df_co[k] - 1.96 * plot_df_se[k],  # type: ignore
+                plot_df_co[k] + 1.96 * plot_df_se[k],  # type: ignore
+                alpha=0.2,
+            )
+        plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0.0)
+
+        # plot verticle line at 0
+        plt.axvline(x=0, color="black", linestyle="--")
+        # plot horizontal line at 0
+        plt.axhline(y=0, color="black", linestyle="--")
+        # add x axis label
+        plt.xlabel("Time to be included in any PLF (weeks)")
+        # save pdf
+        plt.savefig(
+            FIGURE_PATH / f"did_event_stack_lead_lag.pdf",
+            bbox_inches="tight",
+        )
+        plt.show()
+        plt.close()

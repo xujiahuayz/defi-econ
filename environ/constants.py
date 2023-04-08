@@ -26,12 +26,12 @@ TEST_RESULT_PATH: Path = Path(PROJECT_ROOT) / "test_results"
 
 
 DEPENDENT_VARIABLES = [
+    "vol_undirected_full_len_share",
     "eigen_centrality_undirected",
+    "vol_inter_full_len_share",
     "betweenness_centrality_volume",
     "betweenness_centrality_count",
-    "Volume_share",
-    "vol_undirected_full_len_share",
-    "vol_inter_full_len_share",
+    # "Volume_share",
 ]
 
 # Aave pool deployment time
@@ -297,7 +297,7 @@ ALL_NAMING_DICT = {
     "TVL_share": "{\it LiquidityShare}",
     "Inflow_centrality": "{\it EigenCent}^{In}",
     "Outflow_centrality": "{\it EigenCent}^{Out}",
-    "Volume_share": "{\it VShare}",
+    "Volume_share": "{\it VShare}^{\it full}",
     "volume_in_share": "{\it VShare}^{\it In}",
     "volume_out_share": "{\it VShare}^{\it Out}",
     "Borrow_share": "{\it BorrowShare}",
@@ -354,7 +354,9 @@ ALL_NAMING_DICT = {
     "is_boom": "{\it IsBoom}",
     "after_treated_date": "{\it AfterTreatedDate}",
     "is_treated_token": "{\it IsTreatedToken}",
-    "avg_cluster": "${\it AvgClustCoef}$",
+    "avg_cluster": "{\it AvgClustCoef}",
+    "vol_undirected_full_len_share": "{\it VShare}^{\it ulti}",
+    "vol_inter_full_len_share": "{\it VShare}^{\it betw}",
 }
 
 NAMING_DICT_OLD = {
