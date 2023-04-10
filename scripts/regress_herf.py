@@ -16,14 +16,14 @@ dependent_variables = [
     "herfindahl_volume",
     "herfindahl_betweenness_centrality_count",
     "herfindahl_betweenness_centrality_volume",
-    "herfindahl_tvl",
+    # "herfindahl_tvl",
 ]
 
 iv_chunk_list_unlagged = [
     [
         [
             "is_boom",
-            "avg_cluster",
+            # "avg_cluster",
             "total_volumes",
             name_log_return_vol_variable(
                 "S&P", rolling_window_return=1, rolling_window_vol=30

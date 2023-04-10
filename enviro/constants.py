@@ -17,13 +17,26 @@ EVENT_DATE_LIST = ["2020-11-26", "2021-05-05", "2022-05-10", "2022-11-11"]
 FIGURE_PATH: Path = Path(PROJECT_ROOT) / "figures"
 TABLE_PATH: Path = Path(PROJECT_ROOT) / "tables"
 DATA_PATH: Path = Path(PROJECT_ROOT) / "data"
+PROCESSED_DATA_PATH: Path = Path(PROJECT_ROOT) / "processed_data"
 GLOBAL_DATA_PATH: Path = Path(PROJECT_ROOT) / "data" / "data_global"
 BETWEENNESS_DATA_PATH: Path = Path(PROJECT_ROOT) / "data" / "data_betweenness"
 NETWORK_DATA_PATH: Path = Path(PROJECT_ROOT) / "data" / "data_network"
 PLOT_DATA_PATH: Path = Path(PROJECT_ROOT) / "data" / "data_plot"
+UNISWAP_V2_DATA_PATH: Path = Path(PROJECT_ROOT) / "data" / "data_uniswap_v2"
+UNISWAP_V3_DATA_PATH: Path = Path(PROJECT_ROOT) / "data" / "data_uniswap_v3"
 CACHE_PATH: Path = Path(PROJECT_ROOT) / ".cache"
 TEST_RESULT_PATH: Path = Path(PROJECT_ROOT) / "test_results"
 
+# Information fo variables to be merged into the main panel
+PANEL_VAR_INFO = {
+    "volume_share": {
+        "data_path": str(NETWORK_DATA_PATH / "merged" / "volume_share"),
+        "data_col": ["Volume"],
+        "rename_dict": {"Volume": "Volume_share"},
+        "merge_key": ["Token", "Date"],
+        "merge_way": "outer",
+    }
+}
 
 DEPENDENT_VARIABLES = [
     "vol_undirected_full_len_share",

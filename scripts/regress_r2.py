@@ -2,7 +2,7 @@
 
 import pandas as pd
 
-from environ.constants import DATA_PATH
+from environ.constants import DATA_PATH, TABLE_PATH
 from environ.tabulate.render_regression import (
     construct_regress_vars,
     render_regress_table,
@@ -10,7 +10,7 @@ from environ.tabulate.render_regression import (
 )
 
 
-reg_panel = pd.read_pickle(DATA_PATH / "processed" / "reg_panel_new.pkl")
+reg_panel = pd.read_pickle(DATA_PATH / "processed" / "reg_panel_merged.pkl")
 
 
 dependent_variables = [
@@ -23,8 +23,10 @@ for dv in dependent_variables:
 
 
 iv_chunk_list_unlagged = [
-    [["betweenness_centrality_count"], ["betweenness_centrality_volume"]],
-    [[], ["eigen_centrality_undirected"]],
+    [[], ["vol_inter_full_len_share"]],
+    [[], ["vol_undirected_full_len_share"]],
+    # [["betweenness_centrality_count"], ["betweenness_centrality_volume"]],
+    # [[], ["eigen_centrality_undirected"]],
 ]
 
 
@@ -45,6 +47,6 @@ result_r2 = render_regress_table(
     robust=False,
 )
 
-result_full_latex_interact = render_regress_table_latex(
-    result_table=result_r2, file_name="full_vshare"
+result_latex = render_regress_table_latex(
+    result_table=result_r2, file_name=TABLE_PATH / "full_vshare"
 )
