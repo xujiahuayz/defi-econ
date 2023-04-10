@@ -1,4 +1,9 @@
+"""
+Constants for the project.
+"""
+
 from pathlib import Path
+
 from environ.settings import PROJECT_ROOT
 
 # google what is my user agent to get it
@@ -28,11 +33,40 @@ TEST_RESULT_PATH: Path = Path(PROJECT_ROOT) / "test_results"
 PANEL_VAR_INFO = {
     "volume_share": {
         "data_path": str(NETWORK_DATA_PATH / "merged" / "volume_share"),
-        "data_col": ["Volume"],
+        "data_col": ["Volume_share"],
         "rename_dict": {"Volume": "Volume_share"},
-        "merge_key": ["Token", "Date"],
-        "merge_way": "outer",
-    }
+    },
+    "volume_in_share": {
+        "data_path": str(NETWORK_DATA_PATH / "merged" / "volume_in_share"),
+        "data_col": ["volume_in_share"],
+        "rename_dict": {"Volume": "volume_in_share"},
+    },
+    "volume_out_share": {
+        "data_path": str(NETWORK_DATA_PATH / "merged" / "volume_out_share"),
+        "data_col": ["volume_out_share"],
+        "rename_dict": {"Volume": "volume_out_share"},
+    },
+    "tvl_share": {
+        "data_path": str(NETWORK_DATA_PATH / "merged" / "tvl_share"),
+        "data_col": ["TVL_share"],
+        "rename_dict": {"total_tvl": "TVL_share", "token": "Token"},
+    },
+    "inflow_centrality": {
+        "data_path": str(NETWORK_DATA_PATH / "merged" / "inflow_centrality"),
+        "data_col": ["Inflow_centrality"],
+        "rename_dict": {
+            "eigenvector_centrality": "Inflow_centrality",
+            "token": "Token",
+        },
+    },
+    "outflow_centrality": {
+        "data_path": str(NETWORK_DATA_PATH / "merged" / "outflow_centrality"),
+        "data_col": ["Outflow_centrality"],
+        "rename_dict": {
+            "eigenvector_centrality": "Outflow_centrality",
+            "token": "Token",
+        },
+    },
 }
 
 DEPENDENT_VARIABLES = [

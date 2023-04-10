@@ -11,8 +11,8 @@ import pandas as pd
 def load_data(
     panel_main: pd.DataFrame,
     data_path: str,
-    rename_dict: dict[str, str],
     data_col: list[str],
+    rename_dict: dict[str, str],
     merge_key: list[str] | None = None,
     merge_way: Literal["left", "outer"] | None = None,
 ) -> pd.DataFrame:
@@ -36,7 +36,7 @@ def load_data(
         merge_key = ["Token", "Date"]
 
     if merge_way is None:
-        merge_way = "left"
+        merge_way = "outer"
 
     # get the list of files in a given path
     files_lst = glob.glob(data_path + "/*.csv")
@@ -52,9 +52,6 @@ def load_data(
         # add the date column
         df_data["Date"] = file.split("_")[-1].split(".")[0]
 
-        # keep the columns that are needed
-        df_data = df_data[merge_key + data_col]
-
         # append the data to the list
         df_lst.append(df_data)
 
@@ -63,6 +60,9 @@ def load_data(
 
     # rename the columns
     df_merged = df_merged.rename(columns=rename_dict)
+
+    # keep the columns that are needed
+    df_merged = df_merged[merge_key + data_col]
 
     # merge the data with the main panel
     panel_main = panel_main.merge(df_merged, on=merge_key, how=merge_way)

@@ -22,11 +22,7 @@ def construct_panel() -> pd.DataFrame:
         # load the data
         panel_main = load_data(
             panel_main=panel_main,
-            data_path=var_info["data_path"],
-            rename_dict=var_info["rename_dict"],
-            data_col=var_info["data_col"],
-            merge_key=var_info["merge_key"],
-            merge_way=var_info["merge_way"],
+            **var_info,
         )
 
     return panel_main
