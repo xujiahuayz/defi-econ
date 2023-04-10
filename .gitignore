@@ -157,5 +157,6 @@ dmypy.json
 data/
 test/
 tables/*.csv 
+processed_data/
 
 test_results/
