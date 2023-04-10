@@ -13,8 +13,8 @@ def load_data(
     data_path: str,
     rename_dict: dict[str, str],
     data_col: list[str],
-    merge_key: list[str],
-    merge_way: Literal["left", "outer"],
+    merge_key: list[str] | None = None,
+    merge_way: Literal["left", "outer"] | None = None,
 ) -> pd.DataFrame:
     """
     Function to load in the data and merge them together

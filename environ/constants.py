@@ -24,6 +24,16 @@ PLOT_DATA_PATH: Path = Path(PROJECT_ROOT) / "data" / "data_plot"
 CACHE_PATH: Path = Path(PROJECT_ROOT) / ".cache"
 TEST_RESULT_PATH: Path = Path(PROJECT_ROOT) / "test_results"
 
+# Information fo variables to be merged into the main panel
+PANEL_VAR_INFO = {
+    "volume_share": {
+        "data_path": str(NETWORK_DATA_PATH / "merged" / "volume_share"),
+        "data_col": ["Volume"],
+        "rename_dict": {"Volume": "Volume_share"},
+        "merge_key": ["Token", "Date"],
+        "merge_way": "outer",
+    }
+}
 
 DEPENDENT_VARIABLES = [
     "vol_undirected_full_len_share",

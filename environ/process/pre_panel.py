@@ -5,11 +5,11 @@ Functions to prepare the main token-date panel.
 import pandas as pd
 from tqdm import tqdm
 
-from enviro.constants import PANEL_VAR_INFO
-from enviro.utils.data_loader import load_data
+from environ.constants import PANEL_VAR_INFO
+from environ.utils.data_loader import load_data
 
 
-def construct_panel():
+def construct_panel() -> pd.DataFrame:
     """
     Function to construct the main token-date panel
     """
