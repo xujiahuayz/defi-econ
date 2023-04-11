@@ -3,7 +3,6 @@ Util to merge data from different sources
 """
 
 import glob
-from typing import Literal
 
 import pandas as pd
 
@@ -13,8 +12,7 @@ def load_data(
     data_path: str,
     data_col: list[str],
     rename_dict: dict[str, str],
-    merge_key: list[str] | None = None,
-    merge_way: Literal["left", "outer"] | None = None,
+    **kwargs,
 ) -> pd.DataFrame:
     """
     Function to load in the data and merge them together
@@ -30,13 +28,6 @@ def load_data(
     Returns:
         pd.DataFrame: Merged dataframe
     """
-
-    # Default values for lists
-    if merge_key is None:
-        merge_key = ["Token", "Date"]
-
-    if merge_way is None:
-        merge_way = "outer"
 
     # get the list of files in a given path
     files_lst = glob.glob(data_path + "/*.csv")
@@ -62,9 +53,11 @@ def load_data(
     df_merged = df_merged.rename(columns=rename_dict)
 
     # keep the columns that are needed
+    merge_key = kwargs.pop("merge_key", ["Token", "Date"])
     df_merged = df_merged[merge_key + data_col]
 
     # merge the data with the main panel
+    merge_way = kwargs.pop("merge_way", "outer")
     panel_main = panel_main.merge(df_merged, on=merge_key, how=merge_way)
 
     return panel_main
