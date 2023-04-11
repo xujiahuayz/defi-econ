@@ -31,28 +31,28 @@ CACHE_PATH: Path = Path(PROJECT_ROOT) / ".cache"
 TEST_RESULT_PATH: Path = Path(PROJECT_ROOT) / "test_results"
 
 # Information fo variables to be merged into the main panel
-PANEL_VAR_INFO = {
-    "volume_share": {
+PANEL_VAR_INFO = [
+    {
         "data_path": str(NETWORK_DATA_PATH / "merged" / "volume_share"),
         "data_col": ["Volume_share"],
         "rename_dict": {"Volume": "Volume_share"},
     },
-    "volume_in_share": {
+    {
         "data_path": str(NETWORK_DATA_PATH / "merged" / "volume_in_share"),
         "data_col": ["volume_in_share"],
         "rename_dict": {"Volume": "volume_in_share"},
     },
-    "volume_out_share": {
+    {
         "data_path": str(NETWORK_DATA_PATH / "merged" / "volume_out_share"),
         "data_col": ["volume_out_share"],
         "rename_dict": {"Volume": "volume_out_share"},
     },
-    "tvl_share": {
+    {
         "data_path": str(NETWORK_DATA_PATH / "merged" / "tvl_share"),
         "data_col": ["TVL_share"],
         "rename_dict": {"total_tvl": "TVL_share", "token": "Token"},
     },
-    "inflow_centrality": {
+    {
         "data_path": str(NETWORK_DATA_PATH / "merged" / "inflow_centrality"),
         "data_col": ["Inflow_centrality"],
         "rename_dict": {
@@ -60,7 +60,7 @@ PANEL_VAR_INFO = {
             "token": "Token",
         },
     },
-    "outflow_centrality": {
+    {
         "data_path": str(NETWORK_DATA_PATH / "merged" / "outflow_centrality"),
         "data_col": ["Outflow_centrality"],
         "rename_dict": {
@@ -68,7 +68,7 @@ PANEL_VAR_INFO = {
             "token": "Token",
         },
     },
-    "borrow_rate": {
+    {
         "data_path": str(COMPOUND_DATA_PATH / "processed"),
         "data_col": ["Borrow_share", "Supply_share"],
         "rename_dict": {
@@ -76,7 +76,7 @@ PANEL_VAR_INFO = {
             "supply_share": "Supply_share",
         },
     },
-}
+]
 
 DEPENDENT_VARIABLES = [
     "vol_undirected_full_len_share",
