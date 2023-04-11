@@ -68,6 +68,14 @@ PANEL_VAR_INFO = {
             "token": "Token",
         },
     },
+    "borrow_rate": {
+        "data_path": str(COMPOUND_DATA_PATH / "processed"),
+        "data_col": ["Borrow_share", "Supply_share"],
+        "rename_dict": {
+            "borrow_share": "Borrow_share",
+            "supply_share": "Supply_share",
+        },
+    },
 }
 
 DEPENDENT_VARIABLES = [
