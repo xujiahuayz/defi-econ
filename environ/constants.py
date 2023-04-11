@@ -26,6 +26,7 @@ GLOBAL_DATA_PATH: Path = Path(PROJECT_ROOT) / "data" / "data_global"
 BETWEENNESS_DATA_PATH: Path = Path(PROJECT_ROOT) / "data" / "data_betweenness"
 NETWORK_DATA_PATH: Path = Path(PROJECT_ROOT) / "data" / "data_network"
 PLOT_DATA_PATH: Path = Path(PROJECT_ROOT) / "data" / "data_plot"
+COMPOUND_DATA_PATH: Path = Path(PROJECT_ROOT) / "data" / "data_compound"
 CACHE_PATH: Path = Path(PROJECT_ROOT) / ".cache"
 TEST_RESULT_PATH: Path = Path(PROJECT_ROOT) / "test_results"
 
