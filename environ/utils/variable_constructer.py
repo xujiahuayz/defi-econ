@@ -2,7 +2,7 @@
 This module contains functions to construct variables in preparation for regression.
 """
 
-from typing import Any, Callable, Iterable, Optional, Union
+from typing import Any, Callable, Iterable
 
 import numpy as np
 import pandas as pd
@@ -98,11 +98,11 @@ def map_variable_name_latex(variable: str) -> str:
 
 def column_manipulator(
     data: pd.DataFrame,
-    variable: Union[str, Iterable[str]],
+    variable: str | Iterable[str],
     summary_func: Callable[[pd.Series], Any],
     new_col_name_func: Callable[[str], str],
     time_variable: str = "Date",
-    entity_variable: Optional[str] = None,
+    entity_variable: str | None = None,
 ) -> pd.DataFrame:
     """
     Manipulate the columns of a dataframe.
@@ -122,9 +122,9 @@ def column_manipulator(
 
 def diff_variable_columns(
     data: pd.DataFrame,
-    variable: Union[str, Iterable[str]],
+    variable: str | Iterable[str],
     time_variable: str = "Date",
-    entity_variable: Optional[str] = None,
+    entity_variable: str | None = None,
     lag: int = 1,
 ) -> pd.DataFrame:
     """
@@ -143,9 +143,9 @@ def diff_variable_columns(
 
 def lag_variable_columns(
     data: pd.DataFrame,
-    variable: Union[str, Iterable[str]],
+    variable: str | Iterable[str],
     time_variable: str = "Date",
-    entity_variable: Optional[str] = None,
+    entity_variable: str | None = None,
     lag: int = 1,
 ) -> pd.DataFrame:
     """
@@ -164,9 +164,9 @@ def lag_variable_columns(
 
 def ma_variable_columns(
     data: pd.DataFrame,
-    variable: Union[str, Iterable[str]],
+    variable: str | Iterable[str],
     time_variable: str = "Date",
-    entity_variable: Optional[str] = None,
+    entity_variable: str | None = None,
     rolling_window_ma: int = 1,
 ) -> pd.DataFrame:
     """
@@ -187,7 +187,7 @@ def ma_variable_columns(
 
 def log_return(
     data: pd.DataFrame,
-    variable: Union[str, Iterable[str]],
+    variable: str | Iterable[str],
     time_variable: str = "Date",
     rolling_window_return: int = 1,
 ) -> pd.DataFrame:

@@ -3,13 +3,14 @@ Util to merge data from different sources
 """
 
 import glob
+from pathlib import Path
 
 import pandas as pd
 
 
 def load_data(
     panel_main: pd.DataFrame,
-    data_path: str,
+    data_path: str | Path,
     data_col: list[str],
     rename_dict: dict[str, str],
     **kwargs,
@@ -28,8 +29,8 @@ def load_data(
     """
 
     df_merged = pd.DataFrame()
-    for file_name in glob.glob(data_path + "/*.csv"):
-        df_data = pd.read_csv(file_name)
+    for file_name in glob.glob("*.csv", root_dir=data_path):
+        df_data = pd.read_csv(str(data_path) + file_name)
         df_data["Date"] = file_name.split("_")[-1].split(".")[0]
         df_merged = pd.concat([df_merged, df_data])
 
