@@ -3,7 +3,6 @@ Util to merge data from different sources
 """
 
 import glob
-from typing import Literal
 
 import pandas as pd
 
@@ -11,10 +10,9 @@ import pandas as pd
 def load_data(
     panel_main: pd.DataFrame,
     data_path: str,
-    rename_dict: dict[str, str],
     data_col: list[str],
-    merge_key: list[str],
-    merge_way: Literal["left", "outer"],
+    rename_dict: dict[str, str],
+    **kwargs,
 ) -> pd.DataFrame:
     """
     Function to load in the data and merge them together
@@ -31,13 +29,6 @@ def load_data(
         pd.DataFrame: Merged dataframe
     """
 
-    # Default values for lists
-    if merge_key is None:
-        merge_key = ["Token", "Date"]
-
-    if merge_way is None:
-        merge_way = "left"
-
     # get the list of files in a given path
     files_lst = glob.glob(data_path + "/*.csv")
 
@@ -52,9 +43,6 @@ def load_data(
         # add the date column
         df_data["Date"] = file.split("_")[-1].split(".")[0]
 
-        # keep the columns that are needed
-        df_data = df_data[merge_key + data_col]
-
         # append the data to the list
         df_lst.append(df_data)
 
@@ -64,7 +52,12 @@ def load_data(
     # rename the columns
     df_merged = df_merged.rename(columns=rename_dict)
 
+    # keep the columns that are needed
+    merge_key = kwargs.pop("merge_key", ["Token", "Date"])
+    df_merged = df_merged[merge_key + data_col]
+
     # merge the data with the main panel
+    merge_way = kwargs.pop("merge_way", "outer")
     panel_main = panel_main.merge(df_merged, on=merge_key, how=merge_way)
 
     return panel_main
