@@ -33,5 +33,7 @@ def construct_panel(merge_on: list[str]) -> pd.DataFrame:
 
 
 if __name__ == "__main__":
-    print(construct_panel(merge_on=["Token", "Date"]))
-
+    # save the panel to the test folder
+    construct_panel(merge_on=["Token", "Date"]).to_csv(
+        "test/panel_main.csv", index=False
+    )

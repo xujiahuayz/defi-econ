@@ -30,9 +30,8 @@ COMPOUND_DATA_PATH: Path = Path(PROJECT_ROOT) / "data" / "data_compound"
 CACHE_PATH: Path = Path(PROJECT_ROOT) / ".cache"
 TEST_RESULT_PATH: Path = Path(PROJECT_ROOT) / "test_results"
 
-
-# Shared information for the main panel and the herfindahl panel
-SHARED_VAR_INFO = [
+# Information fo variables to be merged into the main panel
+PANEL_VAR_INFO = [
     {
         "data_path": NETWORK_DATA_PATH / "merged" / "volume_share",
         "data_col": ["Volume_share"],
@@ -59,11 +58,6 @@ SHARED_VAR_INFO = [
         "data_col": ["TVL_share"],
         "rename_dict": {"total_tvl": "TVL_share", "token": "Token"},
     },
-]
-
-# Information fo variables to be merged into the main panel
-PANEL_VAR_INFO = [
-    *SHARED_VAR_INFO,
     {
         "data_path": NETWORK_DATA_PATH / "merged" / "volume_in_share",
         "data_col": ["volume_in_share"],
@@ -84,10 +78,15 @@ PANEL_VAR_INFO = [
     },
 ]
 
-# Information fo variables to be merged into the herfindahl panel
-HERFIN_VAR_INFO = [
-    *SHARED_VAR_INFO,
-]
+# Information fo variables to be merged into the herfindal pane;
+HERFIN_VAR_INFO = {
+    "Volume_share": "herfindahl_volume",
+    # "Inflow_centrality": "herfindahl_inflow_centrality",
+    # "Outflow_centrality": "herfindahl_outflow_centrality",
+    # "betweenness_centrality_count": "herfindahl_betweenness_centrality_count",
+    # "betweenness_centrality_volume": "herfindahl_betweenness_centrality_volume",
+    "TVL_share": "herfindahl_tvl",
+}
 
 DEPENDENT_VARIABLES = [
     "vol_undirected_full_len_share",
