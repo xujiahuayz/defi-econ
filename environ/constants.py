@@ -7,7 +7,11 @@ from pathlib import Path
 from environ.settings import PROJECT_ROOT
 
 # google what is my user agent to get it
-USER_AGENT: str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"
+USER_AGENT: str = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+    + "AppleWebKit/537.36 (KHTML, like Gecko) "
+    + "Chrome/111.0.0.0 Safari/537.36"
+)
 
 
 SAMPLE_PERIOD = [
@@ -422,32 +426,6 @@ ALL_NAMING_DICT = {
     "vol_inter_full_len_share": "{\it VShare}^{\it betw}",
 }
 
-NAMING_DICT_OLD = {
-    "TVL_share": "${\it LiquidityShare}$",
-    "Inflow_centrality": "${\it EigenCent}^{In}$",
-    "Outflow_centrality": "${\it EigenCent}^{Out}$",
-    "Volume_share": "${\it VShare}$",
-    "volume_in_share": "${\it VShare}^{\it In}$",
-    "volume_out_share": "${\it VShare}^{\it Out}$",
-    "Borrow_share": "${\it BorrowShare}$",
-    "Supply_share": "${\it SupplyShare}$",
-    "betweenness_centrality_count": "${\it BetwCent}^C$",
-    "betweenness_centrality_volume": "${\it BetwCent}^V$",
-    "cov_gas": "${\it CovGas}$",
-    "cov_sp": "${\it CovSP}$",
-    "cov_eth": "${\it CovETH}$",
-    "log_return": "${R}^{\it USD}$",
-    "std": "${\it \sigma}^{USD}$",
-    "borrow_rate": "${\it BorrowAPY}^{USD}$",
-    "supply_rates": "${\it SupplyAPY}^{USD}$",
-    # "is_boom": "${\it Boom}$",
-    # "cor_sp": "${\it CorSP}$",
-    # "cor_eth": "${\it CorETH}$",
-    # "cor_gas": "${\it CorGas}$",
-    # "price": "${\it Price}$",
-    # "market_cap": "${\it MarketCap}$",
-}
-
 
 NAMING_DIC_PROPERTIES_OF_DOMINANCE = {
     # Dominance
@@ -514,35 +492,6 @@ NAMING_DIC_HERFINDAHL = {
     "boom": "${\it DeFiboom}$",
     "bust": "${\it DeFibust}$",
 }
-
-# merge all naming dics above
-# TODO: clean up - only need one naming dict
-NAMING_DICT_OLD = {
-    **NAMING_DICT_OLD,
-    **NAMING_DIC_PROPERTIES_OF_DOMINANCE,
-    **NAMING_DIC_HERFINDAHL,
-}
-
-
-# NAMING_DICT = {
-#     "TVL_share": "${\it LiquidityShare}$",
-#     "Inflow_centrality": "${\it EigenCent}^{In}$",
-#     "Outflow_centrality": "${\it EigenCent}^{Out}$",
-#     "Volume_share": "${\it VShare}$",
-#     "volume_in_share": "${\it VShare}^{\it In}$",
-#     "volume_out_share": "${\it VShare}^{\it Out}$",
-#     "Borrow_share": "${\it BorrowShare}$",
-#     "Supply_share": "${\it SupplyShare}$",
-#     "betweenness_centrality_count": "${\it BetwCent}^C$",
-#     "betweenness_centrality_volume": "${\it BetwCent}^V$",
-#     "cov_gas": "${\it CovGas}$",
-#     "cov_sp": "${\it CovSP}$",
-#     "cov_eth": "${\it CovETH}$",
-#     "log_return": "${R}^{\it USD}$",
-#     "std": "${\it \sigma}^{USD}$",
-#     "borrow_rate": "${\it BorrowAPY}^{USD}$",
-#     "supply_rates": "${\it SupplyAPY}^{USD}$",
-# }
 
 # Initialize constants
 NAMING_DIC_PROPERTIES_OF_DOMINANCE_LAG = {
