@@ -34,3 +34,4 @@ def construct_panel(merge_on: list[str]) -> pd.DataFrame:
 
 if __name__ == "__main__":
     print(construct_panel(merge_on=["Token", "Date"]))
+
