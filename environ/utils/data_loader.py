@@ -30,7 +30,7 @@ def load_data(
 
     df_merged = pd.DataFrame()
     for file_name in glob.glob("*.csv", root_dir=data_path):
-        df_data = pd.read_csv(str(data_path) + file_name)
+        df_data = pd.read_csv(f"{str(data_path)}/{file_name}")
         df_data["Date"] = file_name.split("_")[-1].split(".")[0]
         df_merged = pd.concat([df_merged, df_data])
 

@@ -7,7 +7,11 @@ from pathlib import Path
 from environ.settings import PROJECT_ROOT
 
 # google what is my user agent to get it
-USER_AGENT: str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"
+USER_AGENT: str = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+    + "AppleWebKit/537.36 (KHTML, like Gecko) "
+    + "Chrome/111.0.0.0 Safari/537.36"
+)
 
 
 SAMPLE_PERIOD = [
@@ -38,21 +42,6 @@ PANEL_VAR_INFO = [
         "rename_dict": {"Volume": "Volume_share"},
     },
     {
-        "data_path": NETWORK_DATA_PATH / "merged" / "volume_in_share",
-        "data_col": ["volume_in_share"],
-        "rename_dict": {"Volume": "volume_in_share"},
-    },
-    {
-        "data_path": NETWORK_DATA_PATH / "merged" / "volume_out_share",
-        "data_col": ["volume_out_share"],
-        "rename_dict": {"Volume": "volume_out_share"},
-    },
-    {
-        "data_path": NETWORK_DATA_PATH / "merged" / "tvl_share",
-        "data_col": ["TVL_share"],
-        "rename_dict": {"total_tvl": "TVL_share", "token": "Token"},
-    },
-    {
         "data_path": NETWORK_DATA_PATH / "merged" / "inflow_centrality",
         "data_col": ["Inflow_centrality"],
         "rename_dict": {
@@ -69,6 +58,21 @@ PANEL_VAR_INFO = [
         },
     },
     {
+        "data_path": NETWORK_DATA_PATH / "merged" / "tvl_share",
+        "data_col": ["TVL_share"],
+        "rename_dict": {"total_tvl": "TVL_share", "token": "Token"},
+    },
+    {
+        "data_path": NETWORK_DATA_PATH / "merged" / "volume_in_share",
+        "data_col": ["volume_in_share"],
+        "rename_dict": {"Volume": "volume_in_share"},
+    },
+    {
+        "data_path": NETWORK_DATA_PATH / "merged" / "volume_out_share",
+        "data_col": ["volume_out_share"],
+        "rename_dict": {"Volume": "volume_out_share"},
+    },
+    {
         "data_path": COMPOUND_DATA_PATH / "processed",
         "data_col": ["Borrow_share", "Supply_share"],
         "rename_dict": {
@@ -77,6 +81,16 @@ PANEL_VAR_INFO = [
         },
     },
 ]
+
+# Information fo variables to be merged into the herfindal pane;
+HERFIN_VAR_INFO = {
+    "Volume_share": "herfindahl_volume",
+    # "Inflow_centrality": "herfindahl_inflow_centrality",
+    # "Outflow_centrality": "herfindahl_outflow_centrality",
+    # "betweenness_centrality_count": "herfindahl_betweenness_centrality_count",
+    # "betweenness_centrality_volume": "herfindahl_betweenness_centrality_volume",
+    "TVL_share": "herfindahl_tvl",
+}
 
 DEPENDENT_VARIABLES = [
     "vol_undirected_full_len_share",
@@ -412,32 +426,6 @@ ALL_NAMING_DICT = {
     "vol_inter_full_len_share": "{\it VShare}^{\it betw}",
 }
 
-NAMING_DICT_OLD = {
-    "TVL_share": "${\it LiquidityShare}$",
-    "Inflow_centrality": "${\it EigenCent}^{In}$",
-    "Outflow_centrality": "${\it EigenCent}^{Out}$",
-    "Volume_share": "${\it VShare}$",
-    "volume_in_share": "${\it VShare}^{\it In}$",
-    "volume_out_share": "${\it VShare}^{\it Out}$",
-    "Borrow_share": "${\it BorrowShare}$",
-    "Supply_share": "${\it SupplyShare}$",
-    "betweenness_centrality_count": "${\it BetwCent}^C$",
-    "betweenness_centrality_volume": "${\it BetwCent}^V$",
-    "cov_gas": "${\it CovGas}$",
-    "cov_sp": "${\it CovSP}$",
-    "cov_eth": "${\it CovETH}$",
-    "log_return": "${R}^{\it USD}$",
-    "std": "${\it \sigma}^{USD}$",
-    "borrow_rate": "${\it BorrowAPY}^{USD}$",
-    "supply_rates": "${\it SupplyAPY}^{USD}$",
-    # "is_boom": "${\it Boom}$",
-    # "cor_sp": "${\it CorSP}$",
-    # "cor_eth": "${\it CorETH}$",
-    # "cor_gas": "${\it CorGas}$",
-    # "price": "${\it Price}$",
-    # "market_cap": "${\it MarketCap}$",
-}
-
 
 NAMING_DIC_PROPERTIES_OF_DOMINANCE = {
     # Dominance
@@ -504,35 +492,6 @@ NAMING_DIC_HERFINDAHL = {
     "boom": "${\it DeFiboom}$",
     "bust": "${\it DeFibust}$",
 }
-
-# merge all naming dics above
-# TODO: clean up - only need one naming dict
-NAMING_DICT_OLD = {
-    **NAMING_DICT_OLD,
-    **NAMING_DIC_PROPERTIES_OF_DOMINANCE,
-    **NAMING_DIC_HERFINDAHL,
-}
-
-
-# NAMING_DICT = {
-#     "TVL_share": "${\it LiquidityShare}$",
-#     "Inflow_centrality": "${\it EigenCent}^{In}$",
-#     "Outflow_centrality": "${\it EigenCent}^{Out}$",
-#     "Volume_share": "${\it VShare}$",
-#     "volume_in_share": "${\it VShare}^{\it In}$",
-#     "volume_out_share": "${\it VShare}^{\it Out}$",
-#     "Borrow_share": "${\it BorrowShare}$",
-#     "Supply_share": "${\it SupplyShare}$",
-#     "betweenness_centrality_count": "${\it BetwCent}^C$",
-#     "betweenness_centrality_volume": "${\it BetwCent}^V$",
-#     "cov_gas": "${\it CovGas}$",
-#     "cov_sp": "${\it CovSP}$",
-#     "cov_eth": "${\it CovETH}$",
-#     "log_return": "${R}^{\it USD}$",
-#     "std": "${\it \sigma}^{USD}$",
-#     "borrow_rate": "${\it BorrowAPY}^{USD}$",
-#     "supply_rates": "${\it SupplyAPY}^{USD}$",
-# }
 
 # Initialize constants
 NAMING_DIC_PROPERTIES_OF_DOMINANCE_LAG = {
