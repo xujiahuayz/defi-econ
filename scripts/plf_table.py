@@ -1,5 +1,5 @@
 import pandas as pd
-from environ.constants import COMPOUND_DEPLOYMENT_DATE, AAVE_DEPLOYMENT_DATE, TABLE_PATH
+from environ.constants import COMPOUND_DEPLOYMENT_DATE, AAVE_DEPLOYMENT_DATE, DATA_PATH
 
 
 for k, v in {
@@ -22,7 +22,7 @@ for k, v in {
     # make latex table and ensure that the smart contract column is not escaped and shown in full
     with pd.option_context("max_colwidth", 1000):
         plf_table.to_latex(
-            TABLE_PATH / f"{k}_table.tex",
+            DATA_PATH / f"{k}_table.tex",
             escape=False,
             index=False,
         )

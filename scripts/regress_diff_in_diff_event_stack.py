@@ -12,7 +12,7 @@ from environ.constants import (
     DEPENDENT_VARIABLES,
     FIGURE_PATH,
     SAMPLE_PERIOD,
-    TABLE_PATH,
+    DATA_PATH,
 )
 from environ.tabulate.render_panel_event_regression import panel_event_regression
 from environ.tabulate.render_regression import render_regress_table_latex
@@ -111,7 +111,7 @@ for lead_lag_interval in [None, 7]:
         )
     did_result_latex = render_regress_table_latex(
         result_table=did_result,
-        file_name=TABLE_PATH
+        file_name=DATA_PATH
         / f"slides_did_event_stack_{'leadlag' if lead_lag_interval else 'noleadlag'}",
     )
 

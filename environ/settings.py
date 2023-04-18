@@ -1,7 +1,3 @@
-"""
-settings for the environ 
-"""
+from pathlib import Path
 
-from os import path
-
-PROJECT_ROOT = path.dirname(path.dirname(__file__))
+PROJECT_ROOT = Path(__file__).parent.parent

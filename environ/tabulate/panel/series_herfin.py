@@ -11,7 +11,7 @@ from environ.constants import (
     BETWEENNESS_DATA_PATH,
     GLOBAL_DATA_PATH,
     SAMPLE_PERIOD,
-    TABLE_PATH,
+    DATA_PATH,
     FIGURE_PATH,
 )
 
@@ -415,7 +415,7 @@ def generate_series_herfin() -> pd.DataFrame:
     herfindahl = _merge_gas(herfindahl)
 
     # save the dataframe to table
-    herfindahl.to_csv(rf"{TABLE_PATH}/series_herfindahl.csv", index=False)
+    herfindahl.to_csv(rf"{DATA_PATH}/series_herfindahl.csv", index=False)
 
     return herfindahl
 
