@@ -131,14 +131,11 @@ PANEL_VAR_INFO = {
 
 # Information fo variables to be merged into the herfindal pane;
 HERFIN_VAR_INFO = {
-    "Volume_share": "herfindahl_volume",
-    # "Inflow_centrality": "herfindahl_inflow_centrality",
-    # "Outflow_centrality": "herfindahl_outflow_centrality",
+    "volume_ultimate_share": "herfindahl_volume_ultimate",
     "betweenness_centrality_count": "herfindahl_betweenness_centrality_count",
     "betweenness_centrality_volume": "herfindahl_betweenness_centrality_volume",
-    "TVL_share": "herfindahl_tvl",
-    "volume_ultimate_share": "herfindahl_volume_ultimate",
     "vol_inter_full_len_share": "herfindahl_vol_inter_full_len",
+    "Volume_share": "herfindahl_volume",
 }
 
 DEPENDENT_VARIABLES = [
@@ -474,6 +471,7 @@ ALL_NAMING_DICT = {
     "after_treated_date": "{\it AfterTreatedDate}",
     "is_treated_token": "{\it IsTreatedToken}",
     "avg_cluster": "{\it AvgClustCoef}",
+    "norm_clique_num": "{\it NumClique / NumTxn}",
     "vol_undirected_full_len_share": "{\it VShare}^{\it Ulti}",
     "vol_inter_full_len_share": "{\it VShare}^{\it Betw}",
 }
