@@ -33,6 +33,7 @@ PLOT_DATA_PATH: Path = Path(PROJECT_ROOT) / "data" / "data_plot"
 COMPOUND_DATA_PATH: Path = Path(PROJECT_ROOT) / "data" / "data_compound"
 CACHE_PATH: Path = Path(PROJECT_ROOT) / ".cache"
 TEST_RESULT_PATH: Path = Path(PROJECT_ROOT) / "test_results"
+PROCESSED_DATA_PATH: Path = Path(PROJECT_ROOT) / "processed_data"
 
 # Information fo variables to be merged into the main panel
 PANEL_VAR_INFO = {

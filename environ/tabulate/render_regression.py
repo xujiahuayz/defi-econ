@@ -39,6 +39,10 @@ def regress(
         dv (str, optional): The dependent variable. Defaults to "Volume_share".
         iv (list[str], optional): The independent variables. Defaults to ["is_boom", "mcap_share"].
     """
+
+    # drop None values
+    data = data.dropna()
+
     # if method not in ["ols", "panel"], raise f"method {method} must be either 'ols' or 'panel'"
     if panel_index_columns:
         data = data.reset_index().set_index(panel_index_columns[0])
@@ -58,7 +62,6 @@ def regress(
         robust: bool,
         panel_index_columns: tuple[list[str], list[bool]] | None = None,
     ):
-
         if panel_index_columns:
             model = PanelOLS(
                 dependent_var,
@@ -224,6 +227,7 @@ def render_regress_table(
     counter = 0
     # initiate all_ivs set
     all_ivs = []
+
     for dv, ivs in reg_combi:
         result_column = render_regression_column(
             reg_panel,

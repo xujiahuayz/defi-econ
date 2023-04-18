@@ -1,6 +1,5 @@
 # get the regression panel dataset from pickled file
 import pandas as pd
-
 from environ.constants import DATA_PATH, SAMPLE_PERIOD, TABLE_PATH
 from environ.tabulate.render_regression import (
     construct_regress_vars,
@@ -23,7 +22,8 @@ iv_chunk_list_unlagged = [
     [
         [
             "is_boom",
-            # "avg_cluster",
+            "avg_cluster",
+            "norm_clique_num",
             "total_volumes",
             name_log_return_vol_variable(
                 "S&P", rolling_window_return=1, rolling_window_vol=30
@@ -60,10 +60,12 @@ reg_combi = construct_regress_vars(
 )
 
 
-# make is_boom numeric
-herf_panel["is_boom"] = herf_panel["is_boom"].astype(int)
-# herf_panel["const"] = 1
+# convert all the values to int for all the boolean values
+for col in herf_panel.columns:
+    if herf_panel[col].dtype == "bool":
+        herf_panel[col] = herf_panel[col].astype(int)
 
+# herf_panel["const"] = 1
 LAG_DV_NAME = "\it HHI_{t-1}"
 
 result_full = render_regress_table(
