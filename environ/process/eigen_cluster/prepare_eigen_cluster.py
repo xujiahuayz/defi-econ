@@ -295,27 +295,27 @@ if __name__ == "__main__":
         )
 
     # compute the multi undirected eigenvector centrality using full-length routes
-    for version in ["v2", "v3", "v2v3"]:
-        indicator_generator(
-            file_root=str(BETWEENNESS_DATA_PATH / "swap_route"),
-            filter_name=version,
-            edge_col=["ultimate_source", "ultimate_target"],
-            weight_col=["volume_usd"],
-            save_root=str(
-                NETWORK_DATA_PATH / version / "eigen_centrality_undirected_multi"
-            )
-            if version != "v2v3"
-            else str(
-                NETWORK_DATA_PATH / "merged" / "eigen_centrality_undirected_multi"
-            ),
-            save_name="eigen_centrality",
-            exclude_special_route=True,
-            dict2str=False,
-            aggreate_weight=False,
-            graph_type="undirected_multi",
-            indicator_type="eigenvector",
-            convert_undirected=False,
-        )
+    # for version in ["v2", "v3", "v2v3"]:
+    #     indicator_generator(
+    #         file_root=str(BETWEENNESS_DATA_PATH / "swap_route"),
+    #         filter_name=version,
+    #         edge_col=["ultimate_source", "ultimate_target"],
+    #         weight_col=["volume_usd"],
+    #         save_root=str(
+    #             NETWORK_DATA_PATH / version / "eigen_centrality_undirected_multi"
+    #         )
+    #         if version != "v2v3"
+    #         else str(
+    #             NETWORK_DATA_PATH / "merged" / "eigen_centrality_undirected_multi"
+    #         ),
+    #         save_name="eigen_centrality",
+    #         exclude_special_route=True,
+    #         dict2str=False,
+    #         aggreate_weight=False,
+    #         graph_type="undirected_multi",
+    #         indicator_type="eigenvector",
+    #         convert_undirected=False,
+    #     )
 
     # for version in ["v2", "v3", "merged"]:
     #     eigencent_generator(
@@ -329,7 +329,7 @@ if __name__ == "__main__":
     #         multi_graph=True,
     #     )
 
-    # for version in ["v3", "v2v3"]:
+    # for version in ["v2", "v3", "v2v3"]:
     #     eigencent_generator(
     #         file_root=str(BETWEENNESS_DATA_PATH / "swap_route"),
     #         filter_name=version,

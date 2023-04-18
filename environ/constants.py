@@ -111,6 +111,13 @@ PANEL_VAR_INFO = {
                 "volume": "vol_inter_full_len",
             },
         },
+        {
+            "data_path": NETWORK_DATA_PATH / "merged" / "eigen_centrality_undirected",
+            "data_col": ["eigen_centrality_undirected"],
+            "rename_dict": {
+                "eigenvector_centrality": "eigen_centrality_undirected",
+            },
+        },
     ],
     "corr_var": {
         "corr_gas": "gas_price_usd",
@@ -126,6 +133,7 @@ PANEL_VAR_INFO = {
         "vol_out_full_len",
         "vol_inter_full_len",
         "volume_ultimate",
+        "mcap",
     ],
 }
 
@@ -139,12 +147,12 @@ HERFIN_VAR_INFO = {
 }
 
 DEPENDENT_VARIABLES = [
-    "vol_undirected_full_len_share",
+    "volume_ultimate",
     "eigen_centrality_undirected",
     "vol_inter_full_len_share",
     "betweenness_centrality_volume",
     "betweenness_centrality_count",
-    # "Volume_share",
+    "Volume_share",
 ]
 
 # Aave pool deployment time
@@ -406,13 +414,14 @@ ALL_TOKEN_DICT = {**STABLE_DICT, **TOKEN_PLOT_DICT}
 FIAT_LIST = list(set([v["underlying"] for v in STABLE_DICT.values()]))
 
 ALL_NAMING_DICT = {
-    "eigen_centrality_undirected": "{\it EigenCent}^{Full}",
+    "eigen_centrality_undirected": "{\it EigenCent^{\it Ulti}}",
     "TVL_share": "{\it LiquidityShare}",
     "Inflow_centrality": "{\it EigenCent}^{In}",
     "Outflow_centrality": "{\it EigenCent}^{Out}",
     "Volume_share": "{\it VShare}",
     "volume_in_share": "{\it VShare}^{\it In}",
     "volume_out_share": "{\it VShare}^{\it Out}",
+    "volume_ultimate": "{\it {VShare}^{\it Ulti}}",
     # "volume_
     "Borrow_share": "{\it BorrowShare}",
     "Supply_share": "{\it SupplyShare}",

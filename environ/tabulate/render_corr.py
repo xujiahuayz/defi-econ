@@ -1,6 +1,7 @@
 """
 Script to render the table of correlation heatmap.
 """
+from pathlib import Path
 from typing import Literal, Optional
 
 import matplotlib.pyplot as plt
@@ -108,7 +109,7 @@ def render_corr_cov_tab(
 
 def render_corr_cov_figure(
     corr_cov_tab: pd.DataFrame,
-    file_name: str,
+    file_name: str | Path,
 ):
     """
     Function to render the correlation table figure.

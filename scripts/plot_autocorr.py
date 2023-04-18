@@ -6,13 +6,19 @@ Plot (auto)correlation and (auto)covariance matrices
 import numpy as np
 import pandas as pd
 
-from environ.constants import DATA_PATH, DEPENDENT_VARIABLES
+from environ.constants import (
+    DATA_PATH,
+    DEPENDENT_VARIABLES,
+    PROCESSED_DATA_PATH,
+    FIGURE_PATH,
+)
 from environ.tabulate.render_corr import render_corr_cov_figure, render_corr_cov_tab
 from environ.utils.variable_constructer import lag_variable_columns
 
 
-reg_panel = pd.read_pickle(DATA_PATH / "processed" / "reg_panel_merged.pkl")
-
+reg_panel = pd.read_pickle(
+    PROCESSED_DATA_PATH / "panel_main.pickle.zip", compression="zip"
+)
 
 # columns to be included in the correlation table
 corr_columns = DEPENDENT_VARIABLES + [
