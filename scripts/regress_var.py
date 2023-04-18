@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from environ.constants import DATA_PATH
+from environ.constants import DATA_PATH, PROCESSED_DATA_PATH, TABLE_PATH
 from environ.tabulate.render_regression import (
     construct_regress_vars,
     render_regress_table,
@@ -17,7 +17,9 @@ from environ.utils.variable_constructer import (
     name_lag_variable,
 )
 
-reg_panel = pd.read_pickle(Path(DATA_PATH) / "reg_panel.pkl")
+reg_panel = pd.read_pickle(
+    PROCESSED_DATA_PATH / "reg_panel_merged.pickle.zip", compression="zip"
+)
 
 betw_cents = [
     "betweenness_centrality_volume",
@@ -79,5 +81,5 @@ for k, q in {"full": "", "boom": "is_boom", "bust": "~is_boom"}.items():
     )
 
     result_full_latex_interact = render_regress_table_latex(
-        result_table=reg_result, file_name=f"{k}_dom_var"
+        result_table=reg_result, file_name=TABLE_PATH / f"{k}_dom_var"
     )
