@@ -5,9 +5,11 @@ Functions to prepare the main token-date panel.
 import pandas as pd
 from tqdm import tqdm
 
-from environ.constants import PANEL_VAR_INFO, SAMPLE_PERIOD
+from environ.constants import PANEL_VAR_INFO, SAMPLE_PERIOD, PROCESSED_DATA_PATH
 from environ.process.market.dollar_exchange_rate import dollar_df
 from environ.process.market.prepare_market_data import market_data
+from environ.process.market.stable_share import stable_share_df
+from environ.process.market.market_cap import mcap
 from environ.utils.data_loader import load_data
 from environ.utils.variable_constructer import (
     name_log_return_variable,
@@ -52,6 +54,21 @@ def construct_panel(merge_on: list[str]) -> pd.DataFrame:
         0
     ]
 
+    # merge the other data such as dollar exchange rate
+    for df_name in [dollar_df, stable_share_df, mcap]:
+        panel_main = panel_main.merge(
+            df_name,
+            how="left",
+            on=merge_on,
+        )
+
+    # merge the market data
+    panel_main = panel_main.merge(
+        market_data,
+        how="left",
+        on=["Date"],
+    )
+
     # calculate the share of the variables
     for var_name in tqdm(
         PANEL_VAR_INFO["share_var"],
@@ -61,20 +78,6 @@ def construct_panel(merge_on: list[str]) -> pd.DataFrame:
             data=panel_main,
             variable=var_name,
         )
-
-    # merge the dollar exchange rate
-    panel_main = panel_main.merge(
-        dollar_df,
-        how="left",
-        on=merge_on,
-    )
-
-    # merge the market data
-    panel_main = panel_main.merge(
-        market_data,
-        how="left",
-        on=["Date"],
-    )
 
     # construct the correlation variables
     for var_name, source_var in tqdm(
@@ -95,7 +98,7 @@ def construct_panel(merge_on: list[str]) -> pd.DataFrame:
 
 
 if __name__ == "__main__":
-    # save the panel to the test folder
-    construct_panel(merge_on=["Token", "Date"]).to_csv(
-        "test/panel_main.csv", index=False
+    # save the panel as a zip pickle
+    construct_panel(merge_on=["Token", "Date"]).to_pickle(
+        PROCESSED_DATA_PATH / "panel_main.pickle.zip", compression="zip"
     )
