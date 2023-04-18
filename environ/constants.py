@@ -26,6 +26,7 @@ EVENT_DATE_LIST = ["2020-11-26", "2021-05-05", "2022-05-10", "2022-11-11"]
 FIGURE_PATH: Path = PROJECT_ROOT / "figures"
 TABLE_PATH: Path = PROJECT_ROOT / "tables"
 DATA_PATH: Path = PROJECT_ROOT / "data"
+PROCESSED_DATA_PATH: Path = PROJECT_ROOT / "processed_data"
 GLOBAL_DATA_PATH: Path = PROJECT_ROOT / "data" / "data_global"
 BETWEENNESS_DATA_PATH: Path = PROJECT_ROOT / "data" / "data_betweenness"
 NETWORK_DATA_PATH: Path = PROJECT_ROOT / "data" / "data_network"
