@@ -54,6 +54,13 @@ def name_log_return_vol_variable(
     return f"{variable}_log_return_vol_{rolling_window_return}_{rolling_window_vol}"
 
 
+def name_share_variable(variable: str) -> str:
+    """
+    name the share variable
+    """
+    return f"{variable}_share"
+
+
 def map_variable_name_latex(variable: str) -> str:
     """
     Map the variable name to its corresponding LaTeX representation.
@@ -102,7 +109,7 @@ def column_manipulator(
     summary_func: Callable[[pd.Series], Any],
     new_col_name_func: Callable[[str], str],
     time_variable: str = "Date",
-    entity_variable: str | None = None,
+    group_variable: str | None = None,
 ) -> pd.DataFrame:
     """
     Manipulate the columns of a dataframe.
@@ -110,13 +117,13 @@ def column_manipulator(
     data = data.sort_values(by=time_variable)
 
     # Group by entity_variable if it is provided, otherwise use the whole panel_data as a group
-    groupby = data.groupby(entity_variable) if entity_variable else data
+    grouped_df = data.groupby(group_variable) if group_variable else data
 
     if isinstance(variable, str):
         variable = [variable]
 
     for var in variable:
-        data[new_col_name_func(var)] = groupby[var].transform(summary_func)
+        data[new_col_name_func(var)] = grouped_df[var].transform(summary_func)
     return data
 
 
@@ -137,7 +144,7 @@ def diff_variable_columns(
         summary_func=lambda x: x.diff(lag),
         new_col_name_func=lambda x: name_diff_variable(x, lag=lag),
         time_variable=time_variable,
-        entity_variable=entity_variable,
+        group_variable=entity_variable,
     )
 
 
@@ -158,7 +165,27 @@ def lag_variable_columns(
         summary_func=lambda x: x.shift(lag),
         new_col_name_func=lambda x: name_lag_variable(x, lag=lag),
         time_variable=time_variable,
-        entity_variable=entity_variable,
+        group_variable=entity_variable,
+    )
+
+
+def share_variable_columns(
+    data: pd.DataFrame,
+    variable: str | Iterable[str],
+    time_variable: str = "Date",
+    entity_variable: str | None = "Date",
+) -> pd.DataFrame:
+    """
+    Calculate the share of the variable.
+    """
+
+    return column_manipulator(
+        data=data,
+        variable=variable,
+        summary_func=lambda x: x / x.sum(),
+        new_col_name_func=name_share_variable,
+        time_variable=time_variable,
+        group_variable=entity_variable,
     )
 
 
@@ -181,7 +208,7 @@ def ma_variable_columns(
             x, rolling_window_ma=rolling_window_ma
         ),
         time_variable=time_variable,
-        entity_variable=entity_variable,
+        group_variable=entity_variable,
     )
 
 
