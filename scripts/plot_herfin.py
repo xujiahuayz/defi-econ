@@ -1,3 +1,7 @@
+"""
+Script to plot herfindahl index
+"""
+
 from matplotlib import pyplot as plt
 import pandas as pd
 from environ.constants import FIGURE_PATH, PROCESSED_DATA_PATH
