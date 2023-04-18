@@ -4,6 +4,7 @@ Script to plot the series of a given dataset.
 
 import matplotlib.pyplot as plt
 import pandas as pd
+from environ.constants import FIGURE_PATH
 
 panel_main = pd.read_csv("test/panel_main.csv")
 
@@ -32,4 +33,5 @@ plt.xticks(rotation=45)
 # tight layout
 plt.tight_layout()
 
-plt.show()
+# save the figure
+plt.savefig(FIGURE_PATH / "ulti_volume_fraction.pdf")
