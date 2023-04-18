@@ -39,9 +39,9 @@ TEST_RESULT_PATH: Path = PROJECT_ROOT / "test_results"
 PANEL_VAR_INFO = {
     "panel_var": [
         {
-            "data_path": NETWORK_DATA_PATH / "merged" / "volume_share",
-            "data_col": ["Volume_share"],
-            "rename_dict": {"Volume": "Volume_share"},
+            "data_path": NETWORK_DATA_PATH / "merged" / "volume_total",
+            "data_col": ["Volume"],
+            "rename_dict": {"Volume": "Volume"},
         },
         {
             "data_path": NETWORK_DATA_PATH / "merged" / "inflow_centrality",
@@ -60,19 +60,19 @@ PANEL_VAR_INFO = {
             },
         },
         {
-            "data_path": NETWORK_DATA_PATH / "merged" / "tvl_share",
-            "data_col": ["TVL_share"],
-            "rename_dict": {"total_tvl": "TVL_share", "token": "Token"},
+            "data_path": NETWORK_DATA_PATH / "merged" / "tvl",
+            "data_col": ["TVL"],
+            "rename_dict": {"total_tvl": "TVL", "token": "Token"},
         },
         {
-            "data_path": NETWORK_DATA_PATH / "merged" / "volume_in_share",
-            "data_col": ["volume_in_share"],
-            "rename_dict": {"Volume": "volume_in_share"},
+            "data_path": NETWORK_DATA_PATH / "merged" / "volume_in",
+            "data_col": ["volume_in"],
+            "rename_dict": {"Volume": "volume_in"},
         },
         {
-            "data_path": NETWORK_DATA_PATH / "merged" / "volume_out_share",
-            "data_col": ["volume_out_share"],
-            "rename_dict": {"Volume": "volume_out_share"},
+            "data_path": NETWORK_DATA_PATH / "merged" / "volume_out",
+            "data_col": ["volume_out"],
+            "rename_dict": {"Volume": "volume_out"},
         },
         {
             "data_path": COMPOUND_DATA_PATH / "processed",
@@ -90,12 +90,43 @@ PANEL_VAR_INFO = {
             ],
             "rename_dict": {"node": "Token"},
         },
+        {
+            "data_path": NETWORK_DATA_PATH / "merged" / "vol_in_full_len",
+            "data_col": ["vol_in_full_len"],
+            "rename_dict": {
+                "volume": "vol_in_full_len",
+            },
+        },
+        {
+            "data_path": NETWORK_DATA_PATH / "merged" / "vol_out_full_len",
+            "data_col": ["vol_out_full_len"],
+            "rename_dict": {
+                "volume": "vol_out_full_len",
+            },
+        },
+        {
+            "data_path": NETWORK_DATA_PATH / "merged" / "vol_inter_full_len",
+            "data_col": ["vol_inter_full_len"],
+            "rename_dict": {
+                "volume": "vol_inter_full_len",
+            },
+        },
     ],
     "corr_var": {
         "corr_gas": "gas_price_usd",
         "corr_eth": "ether_price_usd",
         "corr_sp": "S&P",
     },
+    "share_var": [
+        "Volume",
+        "TVL",
+        "volume_in",
+        "volume_out",
+        "vol_in_full_len",
+        "vol_out_full_len",
+        "vol_inter_full_len",
+        "volume_ultimate",
+    ],
 }
 
 # Information fo variables to be merged into the herfindal pane;
@@ -106,6 +137,8 @@ HERFIN_VAR_INFO = {
     "betweenness_centrality_count": "herfindahl_betweenness_centrality_count",
     "betweenness_centrality_volume": "herfindahl_betweenness_centrality_volume",
     "TVL_share": "herfindahl_tvl",
+    "volume_ultimate_share": "herfindahl_volume_ultimate",
+    "vol_inter_full_len_share": "herfindahl_vol_inter_full_len",
 }
 
 DEPENDENT_VARIABLES = [
@@ -380,14 +413,14 @@ ALL_NAMING_DICT = {
     "TVL_share": "{\it LiquidityShare}",
     "Inflow_centrality": "{\it EigenCent}^{In}",
     "Outflow_centrality": "{\it EigenCent}^{Out}",
-    "Volume_share": "{\it VShare}^{\it Full}",
+    "Volume_share": "{\it VShare}",
     "volume_in_share": "{\it VShare}^{\it In}",
     "volume_out_share": "{\it VShare}^{\it Out}",
     # "volume_
     "Borrow_share": "{\it BorrowShare}",
     "Supply_share": "{\it SupplyShare}",
-    "betweenness_centrality_count": "{\it BetwCent}^{\it Eql}",
-    "betweenness_centrality_volume": "{\it BetwCent}^{\it Vlm}",
+    "betweenness_centrality_count": "{\it BetwCent}^{\it E}",
+    "betweenness_centrality_volume": "{\it BetwCent}^{\it V}",
     "cov_gas": "{\it CovGas}",
     "cov_sp": "{\it CovSP}",
     "cov_eth": "{\it CovETH}",
@@ -423,12 +456,14 @@ ALL_NAMING_DICT = {
     "itlnMCapUSD": "{\it \ln MCap}^{USD}",
     "mcap_share": "{\it MCapShare}",
     "corr_sentiment": "{\it CorrSent}",
-    "herfindahl_volume": "{\it HHI_{VolumeShare}}",
+    "herfindahl_volume": "{\it HHI_{VShare}}",
     "herfindahl_inflow_centrality": "{\it HHIEigenCent}^{In}",
     "herfindahl_outflow_centrality": "{\it HHIEigenCent}^{Out}",
-    "herfindahl_betweenness_centrality_count": "{\it HHI_{{BetwCent}^{\it Eql}}}",
-    "herfindahl_betweenness_centrality_volume": "{\it HHI_{{BetwCent}^{\it Vlm}}}",
+    "herfindahl_betweenness_centrality_count": "{\it HHI_{{BetwCent}^{\it E}}}",
+    "herfindahl_betweenness_centrality_volume": "{\it HHI_{{BetwCent}^{\it V}}}",
     "herfindahl_tvl": "{\it HHI_{LiquidityShare}}",
+    "herfindahl_volume_ultimate": "{\it HHI_{{VShare}^{\it Ulti}}}",
+    "herfindahl_vol_inter_full_len": "{\it HHI_{{VShare}^{\it Betw}}}",
     "total_volumes": "{\it MarketVolume}",
     "S&P": "{\it R}^{USD}_{SP}",
     # TODO: to be removed
