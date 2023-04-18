@@ -15,7 +15,7 @@ from environ.constants import (
     COMPOUND_DEPLOYMENT_DATE,
     DEPENDENT_VARIABLES,
     SAMPLE_PERIOD,
-    TABLE_PATH,
+    DATA_PATH,
 )
 from environ.tabulate.render_regression import (
     construct_regress_vars,
@@ -31,7 +31,7 @@ from environ.process.paneleventstudy import (
     gencalendartime_numerics,
 )
 
-reg_panel = pd.read_pickle(TABLE_PATH / "reg_panel.pkl")
+reg_panel = pd.read_pickle(DATA_PATH / "reg_panel.pkl")
 
 compound_date = pd.DataFrame(
     {

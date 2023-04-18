@@ -9,13 +9,13 @@ from typing import Optional, Literal
 import pandas as pd
 from tqdm import tqdm
 
-from environ.constants import NETWORK_DATA_PATH, TABLE_PATH, DATA_PATH
+from environ.constants import NETWORK_DATA_PATH, DATA_PATH, DATA_PATH
 
 
 def merge_util(
-    reg_panel_path: Path = TABLE_PATH / "reg_panel.pkl",
+    reg_panel_path: Path = DATA_PATH / "reg_panel.pkl",
     merge_path: Path = NETWORK_DATA_PATH / "merged" / "eigen_centrality_swap",
-    save_path: Path = TABLE_PATH / "reg_panel_new.pkl",
+    save_path: Path = DATA_PATH / "reg_panel_new.pkl",
     merge_key: list[str] = ["Token", "Date"],
     time_key: str = "Date",
     rename_dict: Optional[dict[str, str]] = None,

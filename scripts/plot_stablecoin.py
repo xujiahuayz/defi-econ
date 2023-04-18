@@ -5,11 +5,11 @@ plot stablecoin price
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from environ.constants import FIGURE_PATH, TABLE_PATH, STABLE_DICT, SAMPLE_PERIOD
+from environ.constants import FIGURE_PATH, DATA_PATH, STABLE_DICT, SAMPLE_PERIOD
 
 # read pickled reg_panel
 series_name = "exchange_to_underlying"
-reg_panel = pd.read_pickle(TABLE_PATH / "reg_panel.pkl")
+reg_panel = pd.read_pickle(DATA_PATH / "reg_panel.pkl")
 # get only token, date and dollar price for only stablecoins
 reg_panel.reset_index(inplace=True)
 # restrict to stablecoins and SAMPLE_PERIOD

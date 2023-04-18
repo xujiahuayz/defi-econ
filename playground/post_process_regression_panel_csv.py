@@ -6,7 +6,7 @@ import re
 
 import pandas as pd
 
-from environ.constants import DEPENDENT_VARIABLES, NAMING_DICT_OLD, TABLE_PATH
+from environ.constants import DEPENDENT_VARIABLES, NAMING_DICT_OLD, DATA_PATH
 from environ.process.market.prepare_market_data import market_data
 from environ.tabulate.panel.fiat_stable_price import _merge_fiat_underlying
 from environ.tabulate.panel.panel_generator import _merge_boom_bust
@@ -15,7 +15,7 @@ from environ.utils.variable_constructer import (
 )
 
 # read csv file as pd.DataFrame where Date column is parsed as datetime
-reg_panel = pd.read_csv(TABLE_PATH / "regression_panel.csv", parse_dates=["Date"])
+reg_panel = pd.read_csv(DATA_PATH / "regression_panel.csv", parse_dates=["Date"])
 # renmove Unnamed0 column
 reg_panel = reg_panel.loc[:, ~reg_panel.columns.str.contains("^Unnamed")]
 
@@ -54,4 +54,4 @@ reg_panel = _merge_fiat_underlying(
 # reg_panel = _merge_depeg_persistancy(reg_panel, price_col_name="exchange_to_underlying")
 # reg_panel = _merge_pegging(reg_panel, price_col_name="exchange_to_underlying")
 # pickle the reg_panel
-reg_panel.to_pickle(TABLE_PATH / "reg_panel.pkl")
+reg_panel.to_pickle(DATA_PATH / "reg_panel.pkl")

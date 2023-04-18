@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 import sympy
 
-from environ.constants import TABLE_PATH
+from environ.constants import DATA_PATH
 
 
 def dropmissing(data: pd.DataFrame, event: str) -> pd.DataFrame:
@@ -333,4 +333,4 @@ def checkfullrank(data, rhs, intercept="Intercept"):
 
 
 if __name__ == "__main__":
-    regression_panel = pd.read_pickle(TABLE_PATH / "reg_panel.pkl")
+    regression_panel = pd.read_pickle(DATA_PATH / "reg_panel.pkl")

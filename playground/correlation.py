@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
-from environ.constants import FIGURE_PATH, TABLE_PATH
+from environ.constants import FIGURE_PATH, DATA_PATH
 
 # create the correlation matrix and set the decimal places to 2 and keep the digits
 corr = summary_panel.corr().round(4)
@@ -89,7 +89,7 @@ else:
     plt.clf()
 
 # save the correlation matrix as a csv file
-corr.to_csv(rf"{TABLE_PATH}/correlation_matrix_{file_name}.csv")
+corr.to_csv(rf"{DATA_PATH}/correlation_matrix_{file_name}.csv")
 
 if lag:
     # plot the heatmap for the covariance matrix

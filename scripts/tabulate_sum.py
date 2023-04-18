@@ -4,11 +4,11 @@ Tabulate the summary statistics of the data.
 
 import pandas as pd
 
-from environ.constants import DEPENDENT_VARIABLES, SAMPLE_PERIOD, TABLE_PATH
+from environ.constants import DEPENDENT_VARIABLES, SAMPLE_PERIOD, DATA_PATH
 from environ.tabulate.render_summary import render_summary_table_latex
 
 # get the regressuib panel dataset from pickle file
-regression_panel = pd.read_pickle(TABLE_PATH / "reg_panel.pkl")
+regression_panel = pd.read_pickle(DATA_PATH / "reg_panel.pkl")
 
 # generate the summary table
 res = render_summary_table_latex(

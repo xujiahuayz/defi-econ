@@ -23,17 +23,16 @@ KEY_TOKEN_LIST = ["WETH", "WBTC", "MATIC", "USDC", "USDT", "DAI", "FEI"]
 
 EVENT_DATE_LIST = ["2020-11-26", "2021-05-05", "2022-05-10", "2022-11-11"]
 
-FIGURE_PATH: Path = Path(PROJECT_ROOT) / "figures"
-TABLE_PATH: Path = Path(PROJECT_ROOT) / "tables"
-DATA_PATH: Path = Path(PROJECT_ROOT) / "data"
-GLOBAL_DATA_PATH: Path = Path(PROJECT_ROOT) / "data" / "data_global"
-BETWEENNESS_DATA_PATH: Path = Path(PROJECT_ROOT) / "data" / "data_betweenness"
-NETWORK_DATA_PATH: Path = Path(PROJECT_ROOT) / "data" / "data_network"
-PLOT_DATA_PATH: Path = Path(PROJECT_ROOT) / "data" / "data_plot"
-COMPOUND_DATA_PATH: Path = Path(PROJECT_ROOT) / "data" / "data_compound"
-CACHE_PATH: Path = Path(PROJECT_ROOT) / ".cache"
-TEST_RESULT_PATH: Path = Path(PROJECT_ROOT) / "test_results"
-PROCESSED_DATA_PATH: Path = Path(PROJECT_ROOT) / "processed_data"
+FIGURE_PATH: Path = PROJECT_ROOT / "figures"
+TABLE_PATH: Path = PROJECT_ROOT / "tables"
+DATA_PATH: Path = PROJECT_ROOT / "data"
+GLOBAL_DATA_PATH: Path = PROJECT_ROOT / "data" / "data_global"
+BETWEENNESS_DATA_PATH: Path = PROJECT_ROOT / "data" / "data_betweenness"
+NETWORK_DATA_PATH: Path = PROJECT_ROOT / "data" / "data_network"
+PLOT_DATA_PATH: Path = PROJECT_ROOT / "data" / "data_plot"
+COMPOUND_DATA_PATH: Path = PROJECT_ROOT / "data" / "data_compound"
+CACHE_PATH: Path = PROJECT_ROOT / ".cache"
+TEST_RESULT_PATH: Path = PROJECT_ROOT / "test_results"
 
 # Information fo variables to be merged into the main panel
 PANEL_VAR_INFO = {
@@ -380,13 +379,13 @@ ALL_NAMING_DICT = {
     "TVL_share": "{\it LiquidityShare}",
     "Inflow_centrality": "{\it EigenCent}^{In}",
     "Outflow_centrality": "{\it EigenCent}^{Out}",
-    "Volume_share": "{\it VShare}^{\it full}",
+    "Volume_share": "{\it VShare}^{\it Full}",
     "volume_in_share": "{\it VShare}^{\it In}",
     "volume_out_share": "{\it VShare}^{\it Out}",
     "Borrow_share": "{\it BorrowShare}",
     "Supply_share": "{\it SupplyShare}",
-    "betweenness_centrality_count": "{\it BetwCent}^C",
-    "betweenness_centrality_volume": "{\it BetwCent}^V",
+    "betweenness_centrality_count": "{\it BetwCent}^{\it Eql}",
+    "betweenness_centrality_volume": "{\it BetwCent}^{\it Vlm}",
     "cov_gas": "{\it CovGas}",
     "cov_sp": "{\it CovSP}",
     "cov_eth": "{\it CovETH}",
@@ -425,8 +424,8 @@ ALL_NAMING_DICT = {
     "herfindahl_volume": "{\it HHI_{VolumeShare}}",
     "herfindahl_inflow_centrality": "{\it HHIEigenCent}^{In}",
     "herfindahl_outflow_centrality": "{\it HHIEigenCent}^{Out}",
-    "herfindahl_betweenness_centrality_count": "{\it HHI_{{BetwCent}^C}}",
-    "herfindahl_betweenness_centrality_volume": "{\it HHI_{{BetwCent}^V}}",
+    "herfindahl_betweenness_centrality_count": "{\it HHI_{{BetwCent}^{\it Eql}}}",
+    "herfindahl_betweenness_centrality_volume": "{\it HHI_{{BetwCent}^{\it Vlm}}}",
     "herfindahl_tvl": "{\it HHI_{LiquidityShare}}",
     "total_volumes": "{\it MarketVolume}",
     "S&P": "{\it R}^{USD}_{SP}",
