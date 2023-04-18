@@ -1,6 +1,5 @@
 # get the regression panel dataset from pickled file
 from itertools import product
-from pathlib import Path
 
 import pandas as pd
 

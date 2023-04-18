@@ -216,6 +216,7 @@ def log_return(
     data: pd.DataFrame,
     variable: str | Iterable[str],
     time_variable: str = "Date",
+    group_variable: str | None = None,
     rolling_window_return: int = 1,
 ) -> pd.DataFrame:
     """
@@ -223,7 +224,13 @@ def log_return(
     """
 
     data = data.sort_values(by=time_variable)
-    data = data.set_index(time_variable).resample("D").asfreq().reset_index()
+
+    # TODO: fix Pylance error
+    data = (
+        data.groupby(group_variable)
+        if group_variable
+        else (data.set_index(time_variable).resample("D").asfreq().reset_index())
+    )
 
     if isinstance(variable, str):
         variable = [variable]
@@ -265,59 +272,59 @@ def return_vol(
     return data
 
 
-def log_return_panel(
-    data: pd.DataFrame,
-    variable: str,
-    output_variable: str,
-    entity_variable: str = "Token",
-    time_variable: str = "Date",
-    rolling_window_return: int = 1,
-) -> pd.DataFrame:
-    """
-    Calculate the log return of the panel variable
-    """
+# def log_return_panel(
+#     data: pd.DataFrame,
+#     variable: str,
+#     output_variable: str,
+#     entity_variable: str = "Token",
+#     time_variable: str = "Date",
+#     rolling_window_return: int = 1,
+# ) -> pd.DataFrame:
+#     """
+#     Calculate the log return of the panel variable
+#     """
 
-    data = data.sort_values(by=time_variable, ascending=True)
+#     data = data.sort_values(by=time_variable, ascending=True)
 
-    # # fill the missing values with the previous value with linear interpolation
-    # data[variable] = data.groupby(entity_variable)[variable].fillna(method="ffill")
+#     # # fill the missing values with the previous value with linear interpolation
+#     # data[variable] = data.groupby(entity_variable)[variable].fillna(method="ffill")
 
-    # handle 0
-    # first replace 0 with nan
-    data[variable].replace(0, np.nan, inplace=True)
+#     # handle 0
+#     # first replace 0 with nan
+#     data[variable].replace(0, np.nan, inplace=True)
 
-    # data.groupby(variable).apply(lambda group: group.interpolate(method="linear"))
+#     # data.groupby(variable).apply(lambda group: group.interpolate(method="linear"))
 
-    data[output_variable] = data.groupby(entity_variable)[variable].transform(
-        lambda x: np.log(x / x.shift(rolling_window_return))
-    )
+#     data[output_variable] = data.groupby(entity_variable)[variable].transform(
+#         lambda x: np.log(x / x.shift(rolling_window_return))
+#     )
 
-    return data
+#     return data
 
 
-def return_vol_panel(
-    data: pd.DataFrame,
-    variable: str,
-    output_variable: str,
-    entity_variable: str = "Token",
-    time_variable: str = "Date",
-    rolling_window_vol: int = 4,
-) -> pd.DataFrame:
-    """
-    Calculate the volatility of the variable.
-    """
+# def return_vol_panel(
+#     data: pd.DataFrame,
+#     variable: str,
+#     output_variable: str,
+#     entity_variable: str = "Token",
+#     time_variable: str = "Date",
+#     rolling_window_vol: int = 4,
+# ) -> pd.DataFrame:
+#     """
+#     Calculate the volatility of the variable.
+#     """
 
-    # sort the data by "Token" and "Date
-    data = data.sort_values(by=[entity_variable, time_variable])
+#     # sort the data by "Token" and "Date
+#     data = data.sort_values(by=[entity_variable, time_variable])
 
-    data[output_variable] = (
-        data.groupby(entity_variable)[variable]
-        .rolling(rolling_window_vol)
-        .std()
-        .reset_index(0, drop=True)
-    )
+#     data[output_variable] = (
+#         data.groupby(entity_variable)[variable]
+#         .rolling(rolling_window_vol)
+#         .std()
+#         .reset_index(0, drop=True)
+#     )
 
-    return data
+#     return data
 
 
 if __name__ == "__main__":
