@@ -9,10 +9,16 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from data.constants import NETWORK_DATA_PATH, TABLE_PATH, BETWEENNESS_DATA_PATH
+from environ.constants import (
+    NETWORK_DATA_PATH,
+    TABLE_PATH,
+    BETWEENNESS_DATA_PATH,
+    GLOBAL_DATA_PATH,
+)
 from environ.process.eigen_cluster.prepare_eigen_cluster import (
     _load_in_data_lst,
     _generate_node_edge,
+    _preprocessing,
 )
 
 # Ignore warnings
@@ -61,8 +67,11 @@ def indicator_generator(
     # load the data
     file_name_lst = _load_in_data_lst(file_root, filter_name=filter_name)
 
-    # a dataframe to store the data with column "Date", "avg_cluster"
-    avg_cluster_df = pd.DataFrame(columns=["Date", "avg_cluster"])
+    # lists to store the average clustering coefficient
+    date_lst = []
+    avg_cluster_lst = []
+
+    # avg_cluster_df = pd.DataFrame(columns=["Date", "avg_cluster"])
 
     # loop through the data
     for file_name in tqdm(
@@ -71,16 +80,22 @@ def indicator_generator(
         # get the date
         date = file_name.split("_")[-1].split(".")[0]
 
-        # generate the node and edge arrays
-        edge, weight = _generate_node_edge(
-            file_name,
+        # load the data
+        df_network = pd.read_csv(file_name)
+
+        # preprocessing
+        df_network = _preprocessing(
+            df_network,
             edge_col,
             weight_col,
-            exclude_special_route,
             dict2str,
+            exclude_special_route,
             aggreate_weight,
             convert_undirected,
         )
+
+        # generate the node and edge arrays
+        edge, weight = _generate_node_edge(df_network, edge_col, weight_col)
 
         # if the weight is empty, skip
         if not weight.any():
@@ -89,10 +104,14 @@ def indicator_generator(
         # compute the average clustering coefficient
         avg_cluster = _compute_avg_cluster(edge, weight)
 
-        # append to the dataframe
-        avg_cluster_df = avg_cluster_df.append(
-            {"Date": date, "avg_cluster": avg_cluster}, ignore_index=True
-        )
+        # append to the list
+        date_lst.append(date)
+        avg_cluster_lst.append(avg_cluster)
+
+    # create a dataframe
+    avg_cluster_df = pd.DataFrame(
+        data={"Date": date_lst, "avg_cluster": avg_cluster_lst}
+    )
 
     # convert the date column to datetime
     avg_cluster_df["Date"] = pd.to_datetime(avg_cluster_df["Date"])
@@ -101,12 +120,6 @@ def indicator_generator(
 
 
 if __name__ == "__main__":
-    # load in the data
-    series_df = pd.read_pickle(TABLE_PATH / "herf_panel.pkl")
-
-    # convert the date column to datetime
-    series_df["Date"] = pd.to_datetime(series_df["Date"])
-
     # compute the average clustering coefficient
     avg_cluster_df = indicator_generator(
         file_root=str(BETWEENNESS_DATA_PATH / "swap_route"),
@@ -119,13 +132,9 @@ if __name__ == "__main__":
         convert_undirected=True,
     )
 
-    # merge the data
-    series_df = series_df.merge(
-        avg_cluster_df,
-        how="left",
-        left_on="Date",
-        right_on="Date",
+    # save the data
+    avg_cluster_df.to_csv(
+        str(GLOBAL_DATA_PATH / "token_market" / "cluster_coef.csv"), index=False
     )
 
-    # save the data
-    series_df.to_pickle(TABLE_PATH / "herf_panel_merged.pkl")
+    print(avg_cluster_df)

@@ -1,5 +1,9 @@
-from environ.process.market.sp import sp_df
+"""
+Script to preprocess the market data
+"""
+
 from environ.process.market.eth_gas import gas_eth_df
+from environ.process.market.sp import sp_df
 from environ.utils.variable_constructer import log_return, return_vol
 
 # join two dataframes

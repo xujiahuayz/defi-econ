@@ -6,7 +6,10 @@ import pandas as pd
 from tqdm import tqdm
 
 from environ.constants import PANEL_VAR_INFO
+from environ.process.market.prepare_market_data import market_data
 from environ.utils.data_loader import load_data
+from environ.utils.variable_constructer import name_log_return_variable
+from environ.process.market.dollar_exchange_rate import dollar_df
 
 
 def construct_panel(merge_on: list[str]) -> pd.DataFrame:
@@ -18,7 +21,7 @@ def construct_panel(merge_on: list[str]) -> pd.DataFrame:
     panel_main = pd.DataFrame(columns=merge_on)
 
     # iterate through the variables
-    for var_info in tqdm(PANEL_VAR_INFO, desc="Constructing main panel"):
+    for var_info in tqdm(PANEL_VAR_INFO["panel_var"], desc="Merge panel data"):
         # load the data
         panel_main = load_data(
             panel_main=panel_main,
@@ -28,6 +31,31 @@ def construct_panel(merge_on: list[str]) -> pd.DataFrame:
             how="outer",
             on=merge_on,
         )
+
+    # merge the dollar exchange rate
+    panel_main = panel_main.merge(
+        dollar_df,
+        how="left",
+        on=merge_on,
+    )
+
+    # merge the market data
+    panel_main = panel_main.merge(
+        market_data,
+        how="left",
+        on=["Date"],
+    )
+
+    # construct the correlation variables
+    for var_name, source_var in tqdm(
+        PANEL_VAR_INFO["corr_var"].items(),
+        desc="Construct correlation variables",
+    ):
+        panel_main[var_name] = panel_main.groupby("Token")[
+            name_log_return_variable(source_var, 1)
+        ].transform(lambda x: x.rolling(30).corr(panel_main["dollar_exchange_rate"]))
+
+    print(panel_main)
 
     return panel_main
 

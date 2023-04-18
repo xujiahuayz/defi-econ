@@ -35,60 +35,75 @@ CACHE_PATH: Path = Path(PROJECT_ROOT) / ".cache"
 TEST_RESULT_PATH: Path = Path(PROJECT_ROOT) / "test_results"
 
 # Information fo variables to be merged into the main panel
-PANEL_VAR_INFO = [
-    {
-        "data_path": NETWORK_DATA_PATH / "merged" / "volume_share",
-        "data_col": ["Volume_share"],
-        "rename_dict": {"Volume": "Volume_share"},
-    },
-    {
-        "data_path": NETWORK_DATA_PATH / "merged" / "inflow_centrality",
-        "data_col": ["Inflow_centrality"],
-        "rename_dict": {
-            "eigenvector_centrality": "Inflow_centrality",
-            "token": "Token",
+PANEL_VAR_INFO = {
+    "panel_var": [
+        {
+            "data_path": NETWORK_DATA_PATH / "merged" / "volume_share",
+            "data_col": ["Volume_share"],
+            "rename_dict": {"Volume": "Volume_share"},
         },
-    },
-    {
-        "data_path": NETWORK_DATA_PATH / "merged" / "outflow_centrality",
-        "data_col": ["Outflow_centrality"],
-        "rename_dict": {
-            "eigenvector_centrality": "Outflow_centrality",
-            "token": "Token",
+        {
+            "data_path": NETWORK_DATA_PATH / "merged" / "inflow_centrality",
+            "data_col": ["Inflow_centrality"],
+            "rename_dict": {
+                "eigenvector_centrality": "Inflow_centrality",
+                "token": "Token",
+            },
         },
-    },
-    {
-        "data_path": NETWORK_DATA_PATH / "merged" / "tvl_share",
-        "data_col": ["TVL_share"],
-        "rename_dict": {"total_tvl": "TVL_share", "token": "Token"},
-    },
-    {
-        "data_path": NETWORK_DATA_PATH / "merged" / "volume_in_share",
-        "data_col": ["volume_in_share"],
-        "rename_dict": {"Volume": "volume_in_share"},
-    },
-    {
-        "data_path": NETWORK_DATA_PATH / "merged" / "volume_out_share",
-        "data_col": ["volume_out_share"],
-        "rename_dict": {"Volume": "volume_out_share"},
-    },
-    {
-        "data_path": COMPOUND_DATA_PATH / "processed",
-        "data_col": ["Borrow_share", "Supply_share"],
-        "rename_dict": {
-            "borrow_share": "Borrow_share",
-            "supply_share": "Supply_share",
+        {
+            "data_path": NETWORK_DATA_PATH / "merged" / "outflow_centrality",
+            "data_col": ["Outflow_centrality"],
+            "rename_dict": {
+                "eigenvector_centrality": "Outflow_centrality",
+                "token": "Token",
+            },
         },
+        {
+            "data_path": NETWORK_DATA_PATH / "merged" / "tvl_share",
+            "data_col": ["TVL_share"],
+            "rename_dict": {"total_tvl": "TVL_share", "token": "Token"},
+        },
+        {
+            "data_path": NETWORK_DATA_PATH / "merged" / "volume_in_share",
+            "data_col": ["volume_in_share"],
+            "rename_dict": {"Volume": "volume_in_share"},
+        },
+        {
+            "data_path": NETWORK_DATA_PATH / "merged" / "volume_out_share",
+            "data_col": ["volume_out_share"],
+            "rename_dict": {"Volume": "volume_out_share"},
+        },
+        {
+            "data_path": COMPOUND_DATA_PATH / "processed",
+            "data_col": ["Borrow_share", "Supply_share"],
+            "rename_dict": {
+                "borrow_share": "Borrow_share",
+                "supply_share": "Supply_share",
+            },
+        },
+        {
+            "data_path": NETWORK_DATA_PATH / "merged" / "betweenness",
+            "data_col": [
+                "betweenness_centrality_count",
+                "betweenness_centrality_volume",
+            ],
+            "rename_dict": {"node": "Token"},
+        },
+    ],
+    "corr_var": {
+        "corr_gas": "gas_price_usd",
+        "corr_eth": "ether_price_usd",
+        "corr_sp": "S&P",
     },
-]
+}
 
 # Information fo variables to be merged into the herfindal pane;
 HERFIN_VAR_INFO = {
     "Volume_share": "herfindahl_volume",
     # "Inflow_centrality": "herfindahl_inflow_centrality",
     # "Outflow_centrality": "herfindahl_outflow_centrality",
-    # "betweenness_centrality_count": "herfindahl_betweenness_centrality_count",
-    # "betweenness_centrality_volume": "herfindahl_betweenness_centrality_volume",
+    "betweenness_centrality_count": "herfindahl_betweenness_centrality_count",
+    "betweenness_centrality_volume": "herfindahl_betweenness_centrality_volume",
     "TVL_share": "herfindahl_tvl",
 }
 
