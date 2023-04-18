@@ -30,11 +30,11 @@ from .fetch_uni_v3.top50_pair_directional_volume_v3_script import (
 from .fetch_uni_v2.fetch_swap_transactions_v2 import uniswap_v2_swaps
 from .fetch_uni_v3.fetch_swap_transactions_v3 import uniswap_v3_swaps
 
+
 # Fetch uniswap-related data
 def fetch_uni(
     top50_list_label: str, start_date: datetime.datetime, end_date: datetime.datetime
 ) -> None:
-
     """
     Aggregate functon to fetch uniswap-related data.
     """
@@ -50,64 +50,64 @@ def fetch_uni(
         date = start_date + datetime.timedelta(i)
         date_list.append(date)
 
-    # List for finished pool list of Uniswap V2
-    done_v2_pool_list = os.listdir(
-        path.join(
-            config["dev"]["config"]["data"]["UNISWAP_V2_DATA_PATH"],
-            "pool_list/",
-        )
-    )
+    # # List for finished pool list of Uniswap V2
+    # done_v2_pool_list = os.listdir(
+    #     path.join(
+    #         config["dev"]["config"]["data"]["UNISWAP_V2_DATA_PATH"],
+    #         "pool_list/",
+    #     )
+    # )
 
-    # List for finished pool list of Uniswap V3
-    done_v3_pool_list = os.listdir(
-        path.join(
-            config["dev"]["config"]["data"]["UNISWAP_V3_DATA_PATH"],
-            "pool_list/",
-        )
-    )
+    # # List for finished pool list of Uniswap V3
+    # done_v3_pool_list = os.listdir(
+    #     path.join(
+    #         config["dev"]["config"]["data"]["UNISWAP_V3_DATA_PATH"],
+    #         "pool_list/",
+    #     )
+    # )
 
-    # List for to-do dates of Uniswap V2 for top 50 directional volume
-    done_v2_directional_volume_list = os.listdir(
-        path.join(
-            config["dev"]["config"]["data"]["UNISWAP_V2_DATA_PATH"],
-            "directional_volume/",
-        )
-    )
-    date_list_v2 = [
-        to_do_date
-        for to_do_date in date_list
-        if "top50_directional_volume_v2_" + to_do_date.strftime("%Y%m%d") + ".csv"
-        not in done_v2_directional_volume_list
-    ]
+    # # List for to-do dates of Uniswap V2 for top 50 directional volume
+    # done_v2_directional_volume_list = os.listdir(
+    #     path.join(
+    #         config["dev"]["config"]["data"]["UNISWAP_V2_DATA_PATH"],
+    #         "directional_volume/",
+    #     )
+    # )
+    # date_list_v2 = [
+    #     to_do_date
+    #     for to_do_date in date_list
+    #     if "top50_directional_volume_v2_" + to_do_date.strftime("%Y%m%d") + ".csv"
+    #     not in done_v2_directional_volume_list
+    # ]
 
-    # List for to-do dates of Uniswap V3 for top 50 directional volume
-    done_v3_directional_volume_list = os.listdir(
-        path.join(
-            config["dev"]["config"]["data"]["UNISWAP_V3_DATA_PATH"],
-            "directional_volume/",
-        )
-    )
-    date_list_v3 = [
-        to_do_date
-        for to_do_date in date_list
-        if "top50_directional_volume_v3_" + to_do_date.strftime("%Y%m%d") + ".csv"
-        not in done_v3_directional_volume_list
-    ]
+    # # List for to-do dates of Uniswap V3 for top 50 directional volume
+    # done_v3_directional_volume_list = os.listdir(
+    #     path.join(
+    #         config["dev"]["config"]["data"]["UNISWAP_V3_DATA_PATH"],
+    #         "directional_volume/",
+    #     )
+    # )
+    # date_list_v3 = [
+    #     to_do_date
+    #     for to_do_date in date_list
+    #     if "top50_directional_volume_v3_" + to_do_date.strftime("%Y%m%d") + ".csv"
+    #     not in done_v3_directional_volume_list
+    # ]
 
-    # List for to-do dates of Uniswap V2 for raw swap data
-    done_v2_swap_list = os.listdir(
-        path.join(
-            config["dev"]["config"]["data"]["UNISWAP_V2_DATA_PATH"],
-            "swap/",
-        )
-    )
+    # # List for to-do dates of Uniswap V2 for raw swap data
+    # done_v2_swap_list = os.listdir(
+    #     path.join(
+    #         config["dev"]["config"]["data"]["UNISWAP_V2_DATA_PATH"],
+    #         "swap/",
+    #     )
+    # )
 
-    swap_date_list_v2 = [
-        to_do_date
-        for to_do_date in date_list
-        if "uniswap_v2_swaps_" + to_do_date.strftime("%Y%m%d") + ".csv"
-        not in done_v2_swap_list
-    ]
+    # swap_date_list_v2 = [
+    #     to_do_date
+    #     for to_do_date in date_list
+    #     if "uniswap_v2_swaps_" + to_do_date.strftime("%Y%m%d") + ".csv"
+    #     not in done_v2_swap_list
+    # ]
 
     # List for to-do dates of Uniswap V3 for raw swap data
     done_v3_swap_list = os.listdir(
@@ -170,22 +170,22 @@ def fetch_uni(
     #             "Error",
     #         )
 
-    # Step 3: Fetch raw swap data
-    print_info_log("Fetch raw swap data", "Uniswap V2")
+    # # Step 3: Fetch raw swap data
+    # print_info_log("Fetch raw swap data", "Uniswap V2")
 
-    for date in tqdm(swap_date_list_v2):
-        try:
-            date_str = date.strftime("%Y%m%d")
-            start_timestamp = int(calendar.timegm(date.timetuple()))  # include
-            end_date = date + datetime.timedelta(days=1)
-            end_timestamp = int(calendar.timegm(end_date.timetuple()))  # exclude
+    # for date in tqdm(swap_date_list_v2):
+    #     try:
+    #         date_str = date.strftime("%Y%m%d")
+    #         start_timestamp = int(calendar.timegm(date.timetuple()))  # include
+    #         end_date = date + datetime.timedelta(days=1)
+    #         end_timestamp = int(calendar.timegm(end_date.timetuple()))  # exclude
 
-            uniswap_v2_swaps(start_timestamp, end_timestamp, date_str)
-        except:
-            print_info_log(
-                f"Failed to fetch raw sawp data for {date} for Uniswap V2.",
-                "Error",
-            )
+    #         uniswap_v2_swaps(start_timestamp, end_timestamp, date_str)
+    #     except:
+    #         print_info_log(
+    #             f"Failed to fetch raw sawp data for {date} for Uniswap V2.",
+    #             "Error",
+    #         )
 
     print_info_log("Fetch raw swap data", "Uniswap V3")
 

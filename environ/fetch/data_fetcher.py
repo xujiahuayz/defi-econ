@@ -26,7 +26,6 @@ from .fetch_source.uniswap import fetch_uni
 
 
 def fetch_data():
-
     """
     Aggregate function to fetch defi data.
     """
@@ -68,12 +67,12 @@ def fetch_data():
         )
         # fetch_uni(label, start_date, end_date)
 
-        # Fetch compound-related data
-        print_info_log(
-            f"Fetch Compound Data from {start_date_str} to {end_date_str}",
-            "progress",
-        )
-        fetch_comp(start_date, end_date)
+        # # Fetch compound-related data
+        # print_info_log(
+        #     f"Fetch Compound Data from {start_date_str} to {end_date_str}",
+        #     "progress",
+        # )
+        # fetch_comp(start_date, end_date)
 
         # Fetch aave-related data
         # print_info_log("Fetch AAVE Data", "progress")

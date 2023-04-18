@@ -1,16 +1,18 @@
-\begin{tabular}{lllll}
+\begin{tabular}{llll}
 \toprule
-{} &                                       (1) &                                        (2) &                                       (3) &                                     (4) \\
+ & (1) & (2) & (3) \\
 \midrule
-Dependent Var               &                 ${\it HHI_{VolumeShare}}$ &                 ${\it HHI_{{BetwCent}^C}}$ &                ${\it HHI_{{BetwCent}^V}}$ &            ${\it HHI_{LiquidityShare}}$ \\
-$\it HHI_{t-1}$             &   \makecell{$0.4466^{***}$ \\ ($0.0485$)} &    \makecell{$0.6555^{***}$ \\ ($0.0370$)} &   \makecell{$0.6604^{***}$ \\ ($0.0462$)} &  \makecell{$0.3992^{**}$ \\ ($0.1731$)} \\
-${\it IsBoom}$              &      \makecell{$0.0034^{}$ \\ ($0.0023$)} &    \makecell{$0.0312^{***}$ \\ ($0.0090$)} &   \makecell{$0.0396^{***}$ \\ ($0.0104$)} &  \makecell{$0.0038^{**}$ \\ ($0.0015$)} \\
-${\it MarketVolume}$        &      \makecell{$0.0023^{}$ \\ ($0.0017$)} &       \makecell{$0.0036^{}$ \\ ($0.0054$)} &     \makecell{$-0.0030^{}$ \\ ($0.0061$)} &   \makecell{$-0.0043^{}$ \\ ($0.0037$)} \\
-${\it \sigma}^{USD}_{SP}$   &      \makecell{$0.0380^{}$ \\ ($0.0869$)} &       \makecell{$0.4528^{}$ \\ ($0.2868$)} &     \makecell{$-0.4865^{}$ \\ ($0.3183$)} &  \makecell{$-0.2135^{*}$ \\ ($0.1166$)} \\
-${\it GasPrice}^{USD}$      &  \makecell{$-11.1508^{**}$ \\ ($4.8183$)} &  \makecell{$70.1972^{***}$ \\ ($23.3217$)} &  \makecell{$71.4545^{**}$ \\ ($28.6534$)} &   \makecell{$-9.1603^{}$ \\ ($7.4014$)} \\
-${\it \sigma}_{Gas}^{USD}$  &   \makecell{$-0.0169^{**}$ \\ ($0.0081$)} &    \makecell{$0.0702^{***}$ \\ ($0.0251$)} &    \makecell{$0.0768^{**}$ \\ ($0.0304$)} &    \makecell{$0.0087^{}$ \\ ($0.0232$)} \\
-$\text{Year-Month Dummies}$ &                            \makecell{yes} &                             \makecell{yes} &                            \makecell{yes} &                          \makecell{yes} \\
-\midrule N                  &                                       944 &                                        945 &                                       945 &                                     945 \\
-$R^2$                       &                                     0.781 &                                      0.960 &                                     0.960 &                                   0.518 \\
+Dependent Var & ${\it HHI_{VolumeShare}}$ & ${\it HHI_{{BetwCent}^C}}$ & ${\it HHI_{{BetwCent}^V}}$ \\
+$\it HHI_{t-1}$ & \makecell{$0.4397^{***}$ \\ ($0.0488$)} & \makecell{$0.6299^{***}$ \\ ($0.0381$)} & \makecell{$0.6447^{***}$ \\ ($0.0460$)} \\
+${\it IsBoom}$ & \makecell{$0.0093^{}$ \\ ($0.0058$)} & \makecell{$0.0345^{***}$ \\ ($0.0093$)} & \makecell{$0.0428^{***}$ \\ ($0.0105$)} \\
+${\it AvgClustCoef}$ & \makecell{$0.0465^{*}$ \\ ($0.0268$)} & \makecell{$0.0485^{}$ \\ ($0.0760$)} & \makecell{$0.0826^{}$ \\ ($0.0754$)} \\
+$norm_clique_num$ & \makecell{$-0.0046^{}$ \\ ($0.0038$)} & \makecell{$-0.0603^{***}$ \\ ($0.0158$)} & \makecell{$-0.0525^{***}$ \\ ($0.0166$)} \\
+${\it MarketVolume}$ & \makecell{$0.0003^{}$ \\ ($0.0023$)} & \makecell{$-0.0005^{}$ \\ ($0.0056$)} & \makecell{$-0.0071^{}$ \\ ($0.0063$)} \\
+${\it \sigma}^{USD}_{SP}$ & \makecell{$-0.0213^{}$ \\ ($0.0996$)} & \makecell{$0.3516^{}$ \\ ($0.2920$)} & \makecell{$-0.6414^{**}$ \\ ($0.3184$)} \\
+${\it GasPrice}^{USD}$ & \makecell{$-14.3427^{***}$ \\ ($5.3049$)} & \makecell{$46.9715^{**}$ \\ ($20.8932$)} & \makecell{$49.7317^{*}$ \\ ($27.7102$)} \\
+${\it \sigma}_{Gas}^{USD}$ & \makecell{$-0.0125^{}$ \\ ($0.0088$)} & \makecell{$0.0823^{***}$ \\ ($0.0273$)} & \makecell{$0.0909^{***}$ \\ ($0.0320$)} \\
+$	ext{Year-Month Dummies}$ & \makecell{yes} & \makecell{yes} & \makecell{yes} \\
+\midrule N & 944 & 944 & 944 \\
+$R^2$ & 0.706 & 0.960 & 0.961 \\
 \bottomrule
 \end{tabular}
