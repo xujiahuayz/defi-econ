@@ -9,10 +9,6 @@ from environ.constants import DEPENDENT_VARIABLES, PROCESSED_DATA_PATH, FIGURE_P
 from environ.tabulate.render_corr import render_corr_cov_figure, render_corr_cov_tab
 
 
-# reg_panel = pd.read_pickle(
-#     PROCESSED_DATA_PATH / "reg_panel_merged.pickle.zip", compression="zip"
-# )
-
 reg_panel = pd.read_pickle(
     PROCESSED_DATA_PATH / "panel_main.pickle.zip", compression="zip"
 )
