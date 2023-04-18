@@ -4,9 +4,11 @@ Script to plot the series of a given dataset.
 
 import matplotlib.pyplot as plt
 import pandas as pd
-from environ.constants import FIGURE_PATH
+from environ.constants import FIGURE_PATH, PROCESSED_DATA_PATH
 
-panel_main = pd.read_csv("test/panel_main.csv")
+panel_main = pd.read_pickle(
+    PROCESSED_DATA_PATH / "panel_main.pickle.zip", compression="zip"
+)
 
 # calculate the ulti_volume_fraction group by date
 panel_main = (
