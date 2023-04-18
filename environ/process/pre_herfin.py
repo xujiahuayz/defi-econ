@@ -50,7 +50,9 @@ def construct_herfin(
 
 if __name__ == "__main__":
     # read in the main panel
-    df_main = pd.read_csv("test/panel_main.csv")
+    df_main = pd.read_pickle(
+        PROCESSED_DATA_PATH / "panel_main.pickle.zip", compression="zip"
+    )
 
     # construct the herfin date series
     df_herfin = construct_herfin(main_panel=df_main)
