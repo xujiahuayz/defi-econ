@@ -22,8 +22,7 @@ reg_panel[name_log_return_variable(var, rolling_window_return)] = np.log(
 )
 
 # calculate the correlation between the gas price and the exchange rate log return
-
-reg_panel["corr_gas"] = (
+corr_gas = (
     reg_panel.groupby("Token")[
         name_log_return_variable("gas_price_usd", rolling_window_return)
     ]
