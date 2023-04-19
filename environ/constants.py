@@ -147,7 +147,7 @@ HERFIN_VAR_INFO = {
 }
 
 DEPENDENT_VARIABLES = [
-    "volume_ultimate",
+    "volume_ultimate_share",
     "eigen_centrality_undirected",
     "vol_inter_full_len_share",
     "betweenness_centrality_volume",
@@ -421,7 +421,7 @@ ALL_NAMING_DICT = {
     "Volume_share": "{\it VShare}",
     "volume_in_share": "{\it VShare}^{\it In}",
     "volume_out_share": "{\it VShare}^{\it Out}",
-    "volume_ultimate": "{\it {VShare}^{\it Ulti}}",
+    "volume_ultimate_share": "{\it {VShare}^{\it Ulti}}",
     # "volume_
     "Borrow_share": "{\it BorrowShare}",
     "Supply_share": "{\it SupplyShare}",

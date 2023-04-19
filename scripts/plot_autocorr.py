@@ -7,10 +7,8 @@ import numpy as np
 import pandas as pd
 
 from environ.constants import (
-    DATA_PATH,
     DEPENDENT_VARIABLES,
     PROCESSED_DATA_PATH,
-    FIGURE_PATH,
 )
 from environ.tabulate.render_corr import render_corr_cov_figure, render_corr_cov_tab
 from environ.utils.variable_constructer import lag_variable_columns
@@ -26,9 +24,9 @@ corr_columns = DEPENDENT_VARIABLES + [
     "TVL_share",
     "Supply_share",
     "stableshare",
-    "std",
-    "corr_gas",
-    "corr_eth",
+    # "std",
+    # "corr_gas",
+    # "corr_eth",
     # "gas_price_usd",
     # "gas_price_usd_log_return_vol_1_30",
 ]

@@ -81,7 +81,7 @@ result_full = render_regress_table(
 
 # get the index of the row before nobs
 index_before_nobs = result_full.index[result_full.index.get_loc("nobs") - 1]
-new_index = "\text{Year-Month Dummies}"
+new_index = rf"\text{{Year-Month Dummies}}"
 result_full.rename(index={index_before_nobs: new_index}, inplace=True)
 # change the value of each cell in the row before nobs to "yes"
 result_full.loc[new_index, :] = "yes"
