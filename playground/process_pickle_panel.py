@@ -1,12 +1,43 @@
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 
-from environ.constants import PROCESSED_DATA_PATH
-from environ.utils.variable_constructer import name_log_return_variable
+from environ.constants import DEPENDENT_VARIABLES, PANEL_VAR_INFO, PROCESSED_DATA_PATH
+from environ.utils.variable_constructer import (
+    name_log_return_variable,
+    share_variable_columns,
+)
 
 reg_panel = pd.read_pickle(
     PROCESSED_DATA_PATH / "panel_main.pickle.zip", compression="zip"
 )
+
+# fill the na values
+# NOTE: NA must be processed BEFORE constructing the share variables
+var_without_na = PANEL_VAR_INFO["share_var"] + ["stableshare", "Supply_share"]
+
+reg_panel[var_without_na] = reg_panel[var_without_na].fillna(0)
+reg_panel[var_without_na] = reg_panel[var_without_na].clip(lower=0)
+
+
+reg_panel["volume_ultimate"] = (
+    reg_panel["vol_in_full_len"] + reg_panel["vol_out_full_len"]
+)
+
+
+for var_name in tqdm(
+    PANEL_VAR_INFO["share_var"],
+    desc="Construct share variables",
+):
+    reg_panel = share_variable_columns(
+        data=reg_panel,
+        variable=var_name,
+    )
+
+
+reg_panel[DEPENDENT_VARIABLES] = reg_panel[DEPENDENT_VARIABLES].fillna(0)
+reg_panel[DEPENDENT_VARIABLES] = reg_panel[DEPENDENT_VARIABLES].clip(lower=0)
+
 
 var = "dollar_exchange_rate"
 rolling_window_return = 1
@@ -43,3 +74,6 @@ for k, w in {
         reg_panel.loc[corr_gas.index, k] = corr_gas
 
 reg_panel.to_pickle(PROCESSED_DATA_PATH / "panel_main.pickle.zip", compression="zip")
+
+# check na values of dependent variables
+reg_panel[DEPENDENT_VARIABLES].isna().sum()

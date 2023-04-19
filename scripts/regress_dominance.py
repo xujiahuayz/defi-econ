@@ -21,6 +21,7 @@ from environ.utils.variable_constructer import (
 reg_panel = pd.read_pickle(
     PROCESSED_DATA_PATH / "panel_main.pickle.zip", compression="zip"
 )
+reg_panel[DEPENDENT_VARIABLES].isna().sum()
 
 iv_chunk_list_unlagged = [
     [
