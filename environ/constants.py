@@ -483,4 +483,5 @@ ALL_NAMING_DICT = {
     "norm_clique_num": "{\it NumClique / NumTxn}",
     "vol_undirected_full_len_share": "{\it VShare}^{\it Ulti}",
     "vol_inter_full_len_share": "{\it VShare}^{\it Betw}",
+    "dollar_exchange_rate_log_return_1": "\ln R",
 }

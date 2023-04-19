@@ -18,10 +18,10 @@ def panel_event_regression(
     dummy_prefix_sep: str = "_",
     # TODO: consider removing this variable
     treatment_delay: int = 0,
+    dependent_variables: list[str] = DEPENDENT_VARIABLES,
     covariates: list[str] | None = None,
     **kwargs,
 ) -> pd.DataFrame:
-
     diff_in_diff_df[reltime_dummy] = diff_in_diff_df["lead_lag"].map(
         lambda x: (
             str(int(x // lead_lag_interval))
@@ -50,7 +50,7 @@ def panel_event_regression(
     )
 
     reg_combi = construct_regress_vars(
-        dependent_variables=DEPENDENT_VARIABLES,
+        dependent_variables=dependent_variables,
         iv_chunk_list=[
             [
                 list(time_to_treat_cols) + covariates
@@ -94,7 +94,6 @@ def panel_event_regression(
                 "Date"
             ].min()
         ):
-
             did_reg_panel = diff_in_diff_df.loc[
                 (diff_in_diff_df["Date"] >= obs_start_date - treatment_delay)
                 & (diff_in_diff_df["Date"] <= obs_end_date)
@@ -110,7 +109,6 @@ def panel_event_regression(
             )
 
             if sum_dummies.sum() > 0:
-
                 additional_tokens = set(sum_dummies[sum_dummies].index)
 
                 # remove tokens with time_to_treat_cols != 0
