@@ -216,7 +216,6 @@ def log_return(
     data: pd.DataFrame,
     variable: str | Iterable[str],
     time_variable: str = "Date",
-    group_variable: str | None = None,
     rolling_window_return: int = 1,
 ) -> pd.DataFrame:
     """
@@ -225,12 +224,7 @@ def log_return(
 
     data = data.sort_values(by=time_variable)
 
-    # TODO: fix Pylance error
-    data = (
-        data.groupby(group_variable)
-        if group_variable
-        else (data.set_index(time_variable).resample("D").asfreq().reset_index())
-    )
+    data = data.set_index(time_variable).resample("D").asfreq().reset_index()
 
     if isinstance(variable, str):
         variable = [variable]
