@@ -3,7 +3,7 @@ from itertools import product
 
 import pandas as pd
 
-from environ.constants import DATA_PATH, PROCESSED_DATA_PATH, TABLE_PATH
+from environ.constants import PROCESSED_DATA_PATH, TABLE_PATH
 from environ.tabulate.render_regression import (
     construct_regress_vars,
     render_regress_table,
@@ -12,12 +12,11 @@ from environ.tabulate.render_regression import (
 from environ.utils.variable_constructer import (
     diff_variable_columns,
     lag_variable_columns,
-    name_diff_variable,
     name_lag_variable,
 )
 
 reg_panel = pd.read_pickle(
-    PROCESSED_DATA_PATH / "reg_panel_merged.pickle.zip", compression="zip"
+    PROCESSED_DATA_PATH / "panel_main.pickle.zip", compression="zip"
 )
 
 betw_cents = [
@@ -25,7 +24,7 @@ betw_cents = [
     "betweenness_centrality_count",
 ]
 other_dvs = [
-    "avg_eigenvector_centrality",
+    "eigen_centrality_undirected",
     # "stableshare",
 ]
 all_dev = betw_cents + other_dvs

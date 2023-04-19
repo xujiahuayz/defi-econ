@@ -11,12 +11,17 @@ from environ.constants import (
     DATA_PATH,
     DEPENDENT_VARIABLES,
     FIGURE_PATH,
+    PROCESSED_DATA_PATH,
     SAMPLE_PERIOD,
     DATA_PATH,
+    TABLE_PATH,
 )
 from environ.tabulate.render_panel_event_regression import panel_event_regression
 from environ.tabulate.render_regression import render_regress_table_latex
-from environ.utils.variable_constructer import name_interaction_variable
+from environ.utils.variable_constructer import (
+    name_interaction_variable,
+    name_log_return_variable,
+)
 
 # combine AAVE and COMPOUND deployment date list
 plf_list = AAVE_DEPLOYMENT_DATE + COMPOUND_DEPLOYMENT_DATE
@@ -43,8 +48,9 @@ plf_date = pd.DataFrame(
 )
 
 
-reg_panel = pd.read_pickle(DATA_PATH / "processed" / "reg_panel_merged.pkl")
-
+reg_panel = pd.read_pickle(
+    PROCESSED_DATA_PATH / "panel_main.pickle.zip", compression="zip"
+)
 # restrict to SAMPE_PERIOD
 reg_panel = reg_panel[
     (reg_panel["Date"] >= SAMPLE_PERIOD[0]) & (reg_panel["Date"] <= SAMPLE_PERIOD[1])
@@ -63,7 +69,8 @@ FACTOR_PREFIX = "_"
 all_added_dates = set(plf_date["join_time_list"].sum())
 
 indvs = ["mcap_share", "stableshare"]
-diff_in_diff_df = reg_panel.loc[:, ["Token", "Date"] + DEPENDENT_VARIABLES + indvs]
+dvs = DEPENDENT_VARIABLES
+diff_in_diff_df = reg_panel.loc[:, ["Token", "Date"] + dvs + indvs]
 
 
 def lead_lag(date: float, join_time_list: list[float]) -> float:
@@ -95,6 +102,7 @@ for lead_lag_interval in [None, 7]:
         panel_index_columns=(["Token", "Date"], [True, True]),
         robust=False,
         treatment_delay=0,
+        dependent_variables=dvs,
         covariates=indvs,
     )
 
@@ -111,7 +119,7 @@ for lead_lag_interval in [None, 7]:
         )
     did_result_latex = render_regress_table_latex(
         result_table=did_result,
-        file_name=DATA_PATH
+        file_name=TABLE_PATH
         / f"slides_did_event_stack_{'leadlag' if lead_lag_interval else 'noleadlag'}",
     )
 
