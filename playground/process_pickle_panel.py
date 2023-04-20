@@ -5,6 +5,7 @@ from tqdm import tqdm
 from environ.constants import DEPENDENT_VARIABLES, PANEL_VAR_INFO, PROCESSED_DATA_PATH
 from environ.utils.variable_constructer import (
     name_log_return_variable,
+    return_vol,
     share_variable_columns,
 )
 
@@ -41,7 +42,16 @@ reg_panel[DEPENDENT_VARIABLES] = reg_panel[DEPENDENT_VARIABLES].clip(lower=0)
 
 var = "dollar_exchange_rate"
 rolling_window_return = 1
+rolling_window_std = 30
 variable_log_return = name_log_return_variable(var, rolling_window_return)
+
+reg_panel = return_vol(
+    data=reg_panel,
+    variable=var,
+    rolling_window_return=rolling_window_return,
+    rolling_window_vol=rolling_window_std,
+)
+
 grouped_data = reg_panel.groupby(var)
 # fill the missing values with the previous value with linear interpolation
 # add this to reg_panel
@@ -66,7 +76,7 @@ for k, w in {
 
         corr_gas = (
             group_data[price_log_return]
-            .rolling(30)
+            .rolling(rolling_window_std)
             .corr(group_data[variable_log_return])
         )
 

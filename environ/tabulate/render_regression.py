@@ -40,9 +40,6 @@ def regress(
         iv (list[str], optional): The independent variables. Defaults to ["is_boom", "mcap_share"].
     """
 
-    # drop None values
-    data = data.dropna()
-
     # if method not in ["ols", "panel"], raise f"method {method} must be either 'ols' or 'panel'"
     if panel_index_columns:
         data = data.reset_index().set_index(panel_index_columns[0])

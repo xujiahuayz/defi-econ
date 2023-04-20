@@ -8,15 +8,19 @@ from environ.constants import (
     AAVE_DEPLOYMENT_DATE,
     ALL_NAMING_DICT,
     COMPOUND_DEPLOYMENT_DATE,
-    DATA_PATH,
     DEPENDENT_VARIABLES,
     FIGURE_PATH,
+    PROCESSED_DATA_PATH,
     SAMPLE_PERIOD,
-    DATA_PATH,
+    TABLE_PATH,
 )
 from environ.tabulate.render_panel_event_regression import panel_event_regression
 from environ.tabulate.render_regression import render_regress_table_latex
-from environ.utils.variable_constructer import name_interaction_variable
+from environ.utils.variable_constructer import (
+    name_interaction_variable,
+    name_log_return_vol_variable,
+    return_vol,
+)
 
 # combine AAVE and COMPOUND deployment date list
 plf_list = AAVE_DEPLOYMENT_DATE + COMPOUND_DEPLOYMENT_DATE
@@ -43,13 +47,23 @@ plf_date = pd.DataFrame(
 )
 
 
-reg_panel = pd.read_pickle(DATA_PATH / "processed" / "reg_panel_merged.pkl")
-
+reg_panel = pd.read_pickle(
+    PROCESSED_DATA_PATH / "panel_main.pickle.zip", compression="zip"
+)
 # restrict to SAMPE_PERIOD
 reg_panel = reg_panel[
     (reg_panel["Date"] >= SAMPLE_PERIOD[0]) & (reg_panel["Date"] <= SAMPLE_PERIOD[1])
 ]
 
+variable = "dollar_exchange_rate"
+rolling_window_return = 1
+rolling_window_vol = 30
+reg_panel = return_vol(
+    reg_panel,
+    variable=variable,
+    rolling_window_return=rolling_window_return,
+    rolling_window_vol=rolling_window_vol,
+)
 reg_panel["Date"] = reg_panel["Date"].astype(int) // (10**9 * INTERVAL_IN_SECONDS)
 # average by Date and Token
 reg_panel = reg_panel.groupby(["Date", "Token"]).mean(numeric_only=True).reset_index()
@@ -62,8 +76,12 @@ FACTOR_PREFIX = "_"
 
 all_added_dates = set(plf_date["join_time_list"].sum())
 
-indvs = ["mcap_share", "stableshare"]
-diff_in_diff_df = reg_panel.loc[:, ["Token", "Date"] + DEPENDENT_VARIABLES + indvs]
+indvs = ["mcap_share", "stableshare", "Supply_share", "TVL_share"]
+
+dvs = DEPENDENT_VARIABLES + [
+    # name_log_return_vol_variable(variable, rolling_window_return, rolling_window_vol)
+]
+diff_in_diff_df = reg_panel.loc[:, ["Token", "Date"] + dvs + indvs]
 
 
 def lead_lag(date: float, join_time_list: list[float]) -> float:
@@ -86,7 +104,7 @@ diff_in_diff_df["has_been_treated"] = diff_in_diff_df["lead_lag"] >= 0
 for lead_lag_interval in [None, 7]:
     did_result = panel_event_regression(
         diff_in_diff_df=diff_in_diff_df,
-        window=70,
+        window=7 * 20,
         control_with_treated=False,
         lead_lag_interval=lead_lag_interval,
         reltime_dummy=RELTIME_DUMMY,
@@ -95,6 +113,7 @@ for lead_lag_interval in [None, 7]:
         panel_index_columns=(["Token", "Date"], [True, True]),
         robust=False,
         treatment_delay=0,
+        dependent_variables=dvs,
         covariates=indvs,
     )
 
@@ -111,7 +130,7 @@ for lead_lag_interval in [None, 7]:
         )
     did_result_latex = render_regress_table_latex(
         result_table=did_result,
-        file_name=DATA_PATH
+        file_name=TABLE_PATH
         / f"slides_did_event_stack_{'leadlag' if lead_lag_interval else 'noleadlag'}",
     )
 
@@ -140,7 +159,7 @@ for lead_lag_interval in [None, 7]:
         x = plot_df["time_to_join"]
         # plot the result
         for k, v in did_result.loc["regressand"].items():
-            plt.plot(x, plot_df_co[k], label=f"${ALL_NAMING_DICT[v]}$")  # type: ignore
+            plt.plot(x, plot_df_co[k], label=f"{'$'+ALL_NAMING_DICT[v]+'$' if v in ALL_NAMING_DICT else v}")  # type: ignore
 
             # plot the standard error band
             plt.fill_between(

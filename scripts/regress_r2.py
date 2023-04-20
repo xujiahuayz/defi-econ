@@ -2,7 +2,7 @@
 
 import pandas as pd
 
-from environ.constants import DATA_PATH, DATA_PATH
+from environ.constants import TABLE_PATH, PROCESSED_DATA_PATH
 from environ.tabulate.render_regression import (
     construct_regress_vars,
     render_regress_table,
@@ -10,23 +10,21 @@ from environ.tabulate.render_regression import (
 )
 
 
-reg_panel = pd.read_pickle(DATA_PATH / "processed" / "reg_panel_merged.pkl")
+reg_panel = pd.read_pickle(
+    PROCESSED_DATA_PATH / "panel_main.pickle.zip", compression="zip"
+)
 
 
 dependent_variables = [
     "Volume_share",
 ]
 
-# fill the missing values with 0 for all dependent variables
-for dv in dependent_variables:
-    reg_panel[dv] = reg_panel[dv].fillna(0)
-
 
 iv_chunk_list_unlagged = [
-    [[], ["vol_inter_full_len_share"]],
-    [[], ["vol_undirected_full_len_share"]],
-    # [["betweenness_centrality_count"], ["betweenness_centrality_volume"]],
-    # [[], ["eigen_centrality_undirected"]],
+    [
+        ["volume_ultimate_share", "vol_inter_full_len_share"],
+        ["eigen_centrality_undirected", "betweenness_centrality_volume"],
+    ],
 ]
 
 
@@ -48,5 +46,5 @@ result_r2 = render_regress_table(
 )
 
 result_latex = render_regress_table_latex(
-    result_table=result_r2, file_name=DATA_PATH / "full_vshare"
+    result_table=result_r2, file_name=TABLE_PATH / "full_vshare"
 )
