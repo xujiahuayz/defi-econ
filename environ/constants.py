@@ -118,6 +118,14 @@ PANEL_VAR_INFO = {
                 "eigenvector_centrality": "eigen_centrality_undirected",
             },
         },
+        {
+            "data_path": NETWORK_DATA_PATH / "merged" / "total_eigen_centrality_undirected",
+            "data_col": ["total_eigen_centrality_undirected"],
+            "rename_dict": {
+                "eigenvector_centrality": "total_eigen_centrality_undirected",
+            },
+
+        }
     ],
     "corr_var": {
         "corr_gas": "gas_price_usd",
@@ -148,6 +156,7 @@ HERFIN_VAR_INFO = {
 
 DEPENDENT_VARIABLES = [
     "volume_ultimate_share",
+    "total_eigen_centrality_undirected",
     "eigen_centrality_undirected",
     "vol_inter_full_len_share",
     "betweenness_centrality_volume",
@@ -415,6 +424,7 @@ FIAT_LIST = list(set([v["underlying"] for v in STABLE_DICT.values()]))
 
 ALL_NAMING_DICT = {
     "eigen_centrality_undirected": "{\it EigenCent^{\it Ulti}}",
+    "total_eigen_centrality_undirected": "{\it EigenCent}",
     "TVL_share": "{\it LiquidityShare}",
     "Inflow_centrality": "{\it EigenCent}^{In}",
     "Outflow_centrality": "{\it EigenCent}^{Out}",
