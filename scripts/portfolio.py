@@ -15,3 +15,9 @@ reg_panel = ma_variable_columns(
     entity_variable="Token",
     rolling_window_ma=30,
 )
+
+#  find medium value of all tokens' 30 day moving average for each day
+
+reg_panel[[f"{var}_median" for var in DEPENDENT_VARIABLES]] = reg_panel.groupby("Date")[
+    DEPENDENT_VARIABLES
+].transform("median")
