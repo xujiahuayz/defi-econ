@@ -76,11 +76,9 @@ FACTOR_PREFIX = "_"
 
 all_added_dates = set(plf_date["join_time_list"].sum())
 
-indvs = ["mcap_share", "stableshare"]
+indvs = ["mcap_share", "stableshare", "Supply_share", "TVL_share"]
 
 dvs = DEPENDENT_VARIABLES + [
-    "Supply_share",
-    "TVL_share"
     # name_log_return_vol_variable(variable, rolling_window_return, rolling_window_vol)
 ]
 diff_in_diff_df = reg_panel.loc[:, ["Token", "Date"] + dvs + indvs]
@@ -103,10 +101,10 @@ diff_in_diff_df["lead_lag"] = reg_panel["Date"] - reg_panel["earliest_join_time"
 
 diff_in_diff_df["has_been_treated"] = diff_in_diff_df["lead_lag"] >= 0
 
-for lead_lag_interval in [None, 14]:
+for lead_lag_interval in [None, 7]:
     did_result = panel_event_regression(
         diff_in_diff_df=diff_in_diff_df,
-        window=70,
+        window=7 * 20,
         control_with_treated=False,
         lead_lag_interval=lead_lag_interval,
         reltime_dummy=RELTIME_DUMMY,

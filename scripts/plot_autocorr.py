@@ -19,17 +19,18 @@ reg_panel = pd.read_pickle(
 )
 
 # columns to be included in the correlation table
-corr_columns = DEPENDENT_VARIABLES + [
-    "mcap_share",
-    "TVL_share",
-    "Supply_share",
-    "stableshare",
-    # "std",
-    # "corr_gas",
-    # "corr_eth",
-    # "gas_price_usd",
-    # "gas_price_usd_log_return_vol_1_30",
-]
+corr_columns = DEPENDENT_VARIABLES[:5]
+# + [
+#     "mcap_share",
+#     "TVL_share",
+#     "Supply_share",
+#     "stableshare",
+#     # "std",
+#     # "corr_gas",
+#     # "corr_eth",
+#     # "gas_price_usd",
+#     # "gas_price_usd_log_return_vol_1_30",
+# ]
 
 reg_panel[corr_columns] = reg_panel[corr_columns].fillna(0)
 LAG = 28
