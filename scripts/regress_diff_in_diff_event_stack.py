@@ -8,19 +8,18 @@ from environ.constants import (
     AAVE_DEPLOYMENT_DATE,
     ALL_NAMING_DICT,
     COMPOUND_DEPLOYMENT_DATE,
-    DATA_PATH,
     DEPENDENT_VARIABLES,
     FIGURE_PATH,
     PROCESSED_DATA_PATH,
     SAMPLE_PERIOD,
-    DATA_PATH,
     TABLE_PATH,
 )
 from environ.tabulate.render_panel_event_regression import panel_event_regression
 from environ.tabulate.render_regression import render_regress_table_latex
 from environ.utils.variable_constructer import (
     name_interaction_variable,
-    name_log_return_variable,
+    name_log_return_vol_variable,
+    return_vol,
 )
 
 # combine AAVE and COMPOUND deployment date list
@@ -56,6 +55,15 @@ reg_panel = reg_panel[
     (reg_panel["Date"] >= SAMPLE_PERIOD[0]) & (reg_panel["Date"] <= SAMPLE_PERIOD[1])
 ]
 
+variable = "dollar_exchange_rate"
+rolling_window_return = 1
+rolling_window_vol = 30
+reg_panel = return_vol(
+    reg_panel,
+    variable=variable,
+    rolling_window_return=rolling_window_return,
+    rolling_window_vol=rolling_window_vol,
+)
 reg_panel["Date"] = reg_panel["Date"].astype(int) // (10**9 * INTERVAL_IN_SECONDS)
 # average by Date and Token
 reg_panel = reg_panel.groupby(["Date", "Token"]).mean(numeric_only=True).reset_index()
@@ -69,7 +77,12 @@ FACTOR_PREFIX = "_"
 all_added_dates = set(plf_date["join_time_list"].sum())
 
 indvs = ["mcap_share", "stableshare"]
-dvs = DEPENDENT_VARIABLES
+
+dvs = DEPENDENT_VARIABLES + [
+    "Supply_share",
+    "TVL_share"
+    # name_log_return_vol_variable(variable, rolling_window_return, rolling_window_vol)
+]
 diff_in_diff_df = reg_panel.loc[:, ["Token", "Date"] + dvs + indvs]
 
 
@@ -90,7 +103,7 @@ diff_in_diff_df["lead_lag"] = reg_panel["Date"] - reg_panel["earliest_join_time"
 
 diff_in_diff_df["has_been_treated"] = diff_in_diff_df["lead_lag"] >= 0
 
-for lead_lag_interval in [None, 7]:
+for lead_lag_interval in [None, 14]:
     did_result = panel_event_regression(
         diff_in_diff_df=diff_in_diff_df,
         window=70,
@@ -148,7 +161,7 @@ for lead_lag_interval in [None, 7]:
         x = plot_df["time_to_join"]
         # plot the result
         for k, v in did_result.loc["regressand"].items():
-            plt.plot(x, plot_df_co[k], label=f"${ALL_NAMING_DICT[v]}$")  # type: ignore
+            plt.plot(x, plot_df_co[k], label=f"{'$'+ALL_NAMING_DICT[v]+'$' if v in ALL_NAMING_DICT else v}")  # type: ignore
 
             # plot the standard error band
             plt.fill_between(
