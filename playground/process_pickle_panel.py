@@ -5,6 +5,7 @@ from tqdm import tqdm
 from environ.constants import DEPENDENT_VARIABLES, PANEL_VAR_INFO, PROCESSED_DATA_PATH
 from environ.utils.variable_constructer import (
     name_log_return_variable,
+    name_log_return_vol_variable,
     return_vol,
     share_variable_columns,
 )
@@ -82,6 +83,11 @@ for k, w in {
 
         # Set the 'corr_gas' values in the 'reg_panel' DataFrame using the indices of the 'group_data' DataFrame
         reg_panel.loc[corr_gas.index, k] = corr_gas
+
+
+reg_panel["std"] = reg_panel[
+    name_log_return_vol_variable("dollar_exchange_rate", 1, 30)
+]  # * np.sqrt(7 / 30)
 
 reg_panel.to_pickle(PROCESSED_DATA_PATH / "panel_main.pickle.zip", compression="zip")
 

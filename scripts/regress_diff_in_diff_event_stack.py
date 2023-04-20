@@ -18,7 +18,6 @@ from environ.tabulate.render_panel_event_regression import panel_event_regressio
 from environ.tabulate.render_regression import render_regress_table_latex
 from environ.utils.variable_constructer import (
     name_interaction_variable,
-    name_log_return_vol_variable,
     return_vol,
 )
 
@@ -76,7 +75,13 @@ FACTOR_PREFIX = "_"
 
 all_added_dates = set(plf_date["join_time_list"].sum())
 
-indvs = ["mcap_share", "stableshare", "Supply_share", "TVL_share"]
+indvs = [
+    "mcap_share",
+    "stableshare",
+    "std"
+    #  "Supply_share",
+    #  "TVL_share"
+]
 
 dvs = DEPENDENT_VARIABLES + [
     # name_log_return_vol_variable(variable, rolling_window_return, rolling_window_vol)
@@ -104,7 +109,7 @@ diff_in_diff_df["has_been_treated"] = diff_in_diff_df["lead_lag"] >= 0
 for lead_lag_interval in [None, 7]:
     did_result = panel_event_regression(
         diff_in_diff_df=diff_in_diff_df,
-        window=7 * 20,
+        window=7 * 9,
         control_with_treated=False,
         lead_lag_interval=lead_lag_interval,
         reltime_dummy=RELTIME_DUMMY,
