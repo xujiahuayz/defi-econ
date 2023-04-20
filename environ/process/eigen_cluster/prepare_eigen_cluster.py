@@ -75,6 +75,10 @@ def _preprocessing(
         df_network = df_network.groupby(edge_col)[weight_col].sum().reset_index()
 
     if convert_undirected:
+
+        # convert the edge to str
+        df_network[edge_col] = df_network[edge_col].astype(str)
+
         # convert the edge to undirected
         df_network["edge"] = df_network[edge_col].apply(
             lambda x: tuple(sorted(x)), axis=1
@@ -276,23 +280,40 @@ if __name__ == "__main__":
     #     )
 
     # compute the simple undirected eigenvector centrality using full-length routes
-    for version in ["v2", "v3", "v2v3"]:
+    for version in ["v2", "v3", "merged"]:
         indicator_generator(
-            file_root=str(BETWEENNESS_DATA_PATH / "swap_route"),
-            filter_name=version,
-            edge_col=["ultimate_source", "ultimate_target"],
-            weight_col=["volume_usd"],
-            save_root=str(NETWORK_DATA_PATH / version / "eigen_centrality_undirected")
-            if version != "v2v3"
-            else str(NETWORK_DATA_PATH / "merged" / "eigen_centrality_undirected"),
-            save_name="eigen_centrality",
-            exclude_special_route=True,
+            file_root=str(NETWORK_DATA_PATH / version / "inout_flow"),
+            edge_col=["Source", "Target"],
+            weight_col=["Volume"],
+            save_root=str(NETWORK_DATA_PATH / version / "total_eigen_centrality_undirected"),
+            save_name="total_eigen_centrality_undirected",
+            exclude_special_route=False,
             dict2str=False,
             aggreate_weight=False,
             graph_type="undirected",
             indicator_type="eigenvector",
             convert_undirected=True,
         )
+
+    # # compute the simple undirected eigenvector centrality using total volume
+    # for version in ["v2", "v3", "v2v3"]:
+    #     indicator_generator(
+    #         file_root=str(BETWEENNESS_DATA_PATH / "swap_route"),
+    #         filter_name=version,
+    #         edge_col=["ultimate_source", "ultimate_target"],
+    #         weight_col=["volume_usd"],
+    #         save_root=str(NETWORK_DATA_PATH / version / "eigen_centrality_undirected")
+    #         if version != "v2v3"
+    #         else str(NETWORK_DATA_PATH / "merged" / "eigen_centrality_undirected"),
+    #         save_name="eigen_centrality",
+    #         exclude_special_route=True,
+    #         dict2str=False,
+    #         aggreate_weight=True,
+    #         graph_type="undirected",
+    #         indicator_type="eigenvector",
+    #         convert_undirected=True,
+    #     )
+
 
     # compute the multi undirected eigenvector centrality using full-length routes
     # for version in ["v2", "v3", "v2v3"]:

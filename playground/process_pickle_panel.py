@@ -45,13 +45,6 @@ rolling_window_return = 1
 rolling_window_std = 30
 variable_log_return = name_log_return_variable(var, rolling_window_return)
 
-reg_panel = return_vol(
-    data=reg_panel,
-    variable=var,
-    rolling_window_return=rolling_window_return,
-    rolling_window_vol=rolling_window_std,
-)
-
 grouped_data = reg_panel.groupby(var)
 # fill the missing values with the previous value with linear interpolation
 # add this to reg_panel
@@ -60,6 +53,13 @@ reg_panel[var] = grouped_data[var].fillna(method="ffill")
 reg_panel[var] = reg_panel[var].replace(0, np.nan).interpolate(method="linear")
 reg_panel[variable_log_return] = np.log(
     reg_panel[var] / reg_panel[var].shift(rolling_window_return)
+)
+
+reg_panel = return_vol(
+    data=reg_panel,
+    variable=var,
+    rolling_window_return=rolling_window_return,
+    rolling_window_vol=rolling_window_std,
 )
 
 grouped_reg_panel = reg_panel.groupby("Token")

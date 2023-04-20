@@ -3,6 +3,7 @@ Functions to prepare the main token-date panel.
 """
 
 import pandas as pd
+import numpy as np  
 from tqdm import tqdm
 
 from environ.constants import (
@@ -20,8 +21,7 @@ from environ.utils.data_loader import load_data
 from environ.utils.variable_constructer import (
     name_log_return_variable,
     share_variable_columns,
-    log_return_panel,
-    return_vol_panel,
+    return_vol
 )
 
 
@@ -77,6 +77,13 @@ def construct_panel(merge_on: list[str]) -> pd.DataFrame:
         on=["Date"],
     )
 
+    # fill the na values
+    # NOTE: NA must be processed BEFORE constructing the share variables
+    var_without_na = PANEL_VAR_INFO["share_var"] + ["stableshare", "Supply_share"]
+
+    panel_main[var_without_na] = panel_main[var_without_na].fillna(0)
+    panel_main[var_without_na] = panel_main[var_without_na].clip(lower=0)
+
     # calculate the share of the variables
     for var_name in tqdm(
         PANEL_VAR_INFO["share_var"],
@@ -87,38 +94,55 @@ def construct_panel(merge_on: list[str]) -> pd.DataFrame:
             variable=var_name,
         )
 
-    # calculate the log return
-    panel_main = log_return_panel(
-        data=panel_main,
-        variable="dollar_exchange_rate",
-        output_variable="log_return",
+    var = "dollar_exchange_rate"
+    rolling_window_return = 1
+    rolling_window_std = 30
+    variable_log_return = name_log_return_variable(var, rolling_window_return)
+
+    grouped_data = panel_main.groupby(var)
+    # fill the missing values with the previous value with linear interpolation
+    # add this to reg_panel
+    panel_main[var] = grouped_data[var].fillna(method="ffill")
+    # impute all na with the previous value
+    panel_main[var] = panel_main[var].replace(0, np.nan).interpolate(method="linear")
+    panel_main[variable_log_return] = np.log(
+        panel_main[var] / panel_main[var].shift(rolling_window_return)
     )
 
-    # calculate the volatility
-    panel_main = return_vol_panel(
-        data=panel_main,
-        variable="log_return",
-        output_variable="std",
-        rolling_window_vol=30,
-    )
+    panel_main = return_vol(
+    data=panel_main,
+    variable=var,
+    rolling_window_return=rolling_window_return,
+    rolling_window_vol=rolling_window_std,
+)
 
-    # construct the correlation variables
-    for var_name, source_var in tqdm(
-        PANEL_VAR_INFO["corr_var"].items(),
-        desc="Construct correlation variables",
-    ):
-        panel_main[var_name] = (
-            panel_main.groupby("Token")[name_log_return_variable(source_var, 1)]
-            .rolling(30)
-            .corr(panel_main["log_return"])
-        )
+    grouped_reg_panel = panel_main.groupby("Token")
+
+    for k, w in {
+        "corr_gas": "gas_price_usd",
+        "corr_eth": "ether_price_usd",
+        "corr_sp": "S&P",
+    }.items():
+        for group in grouped_reg_panel:
+            _, group_data = group
+
+            price_log_return = name_log_return_variable(w, rolling_window_return)
+
+            corr_gas = (
+                group_data[price_log_return]
+                .rolling(rolling_window_std)
+                .corr(group_data[variable_log_return])
+            )
+
+            # Set the 'corr_gas' values in the 'reg_panel' DataFrame 
+            # using the indices of the 'group_data' DataFrame
+            panel_main.loc[corr_gas.index, k] = corr_gas
 
     # merge boom bust cycles
     panel_main = _merge_boom_bust(panel_main)
 
     # fill the na values
-    var_without_na = list(set(DEPENDENT_VARIABLES))
-    panel_main[var_without_na] = panel_main[var_without_na].fillna(0)
+    panel_main[DEPENDENT_VARIABLES] = panel_main[DEPENDENT_VARIABLES].fillna(0)
     panel_main[DEPENDENT_VARIABLES] = panel_main[DEPENDENT_VARIABLES].clip(lower=0)
 
     return panel_main.loc[
