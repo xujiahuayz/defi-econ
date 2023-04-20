@@ -17,6 +17,7 @@ reg_panel = pd.read_pickle(
 
 dependent_variables = [
     "Volume_share",
+    "total_eigen_centrality_undirected",
 ]
 
 
