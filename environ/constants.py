@@ -34,6 +34,8 @@ PLOT_DATA_PATH: Path = PROJECT_ROOT / "data" / "data_plot"
 COMPOUND_DATA_PATH: Path = PROJECT_ROOT / "data" / "data_compound"
 CACHE_PATH: Path = PROJECT_ROOT / ".cache"
 TEST_RESULT_PATH: Path = PROJECT_ROOT / "test_results"
+UNISWAP_V2_DATA_PATH: Path = PROJECT_ROOT / "data" / "data_uniswap_v2"
+UNISWAP_V3_DATA_PATH: Path = PROJECT_ROOT / "data" / "data_uniswap_v3"
 
 # Information fo variables to be merged into the main panel
 PANEL_VAR_INFO = {
