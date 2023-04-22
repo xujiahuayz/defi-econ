@@ -121,13 +121,14 @@ PANEL_VAR_INFO = {
             },
         },
         {
-            "data_path": NETWORK_DATA_PATH / "merged" / "total_eigen_centrality_undirected",
+            "data_path": NETWORK_DATA_PATH
+            / "merged"
+            / "total_eigen_centrality_undirected",
             "data_col": ["total_eigen_centrality_undirected"],
             "rename_dict": {
                 "eigenvector_centrality": "total_eigen_centrality_undirected",
             },
-
-        }
+        },
     ],
     "corr_var": {
         "corr_gas": "gas_price_usd",
@@ -158,11 +159,11 @@ HERFIN_VAR_INFO = {
 
 DEPENDENT_VARIABLES = [
     "volume_ultimate_share",
-    "total_eigen_centrality_undirected",
     "eigen_centrality_undirected",
     "vol_inter_full_len_share",
     "betweenness_centrality_volume",
     "betweenness_centrality_count",
+    "total_eigen_centrality_undirected",
     "Volume_share",
 ]
 

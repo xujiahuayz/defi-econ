@@ -9,7 +9,7 @@ import pandas as pd
 import seaborn as sns
 from matplotlib import colors
 
-from environ.constants import FIGURE_PATH, DATA_PATH
+from environ.constants import FIGURE_PATH, PROCESSED_DATA_PATH
 from environ.utils.variable_constructer import (
     lag_variable_columns,
     map_variable_name_latex,
@@ -21,21 +21,21 @@ COLOR_DICT = {
     "red": (
         (0.0, 0.0, 0.0),
         (0.25, 0.0, 0.0),
-        (0.5, 0.8, 1.0),
-        (0.75, 1.0, 1.0),
+        (0.5, 1.0, 1.0),
+        (0.75, 0.8, 1.0),
         (1.0, 0.4, 1.0),
     ),
     "green": (
         (0.0, 0.0, 0.0),
         (0.25, 0.0, 0.0),
-        (0.5, 0.9, 0.9),
+        (0.5, 1.0, 1.0),
         (0.75, 0.0, 0.0),
         (1.0, 0.0, 0.0),
     ),
     "blue": (
-        (0.0, 0.0, 0.4),
-        (0.25, 1.0, 1.0),
-        (0.5, 1.0, 0.8),
+        (0.0, 1.0, 0.4),
+        (0.25, 1.0, 0.8),
+        (0.5, 1.0, 1.0),
         (0.75, 0.0, 0.0),
         (1.0, 0.0, 0.0),
     ),
@@ -153,16 +153,15 @@ def render_corr_cov_figure(
 
 if __name__ == "__main__":
     # get the regressuib panel dataset from pickle file
-    regression_panel = pd.read_pickle(DATA_PATH / "reg_panel.pkl")
-
+    regression_panel = pd.read_pickle(
+        PROCESSED_DATA_PATH / "panel_main.pickle.zip", compression="zip"
+    )
     # columns to be included in the correlation table
     corr_columns = [
         "Volume_share",
-        "avg_eigenvector_centrality",
         "TVL_share",
         "betweenness_centrality_count",
         "betweenness_centrality_volume",
-        "stableshare",
     ]
 
     # set the lag number

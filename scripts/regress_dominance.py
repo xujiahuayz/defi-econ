@@ -16,7 +16,6 @@ from environ.utils.variable_constructer import (
     lag_variable_columns,
     name_interaction_variable,
     name_lag_variable,
-    name_log_return_vol_variable,
 )
 
 reg_panel = pd.read_pickle(
@@ -24,9 +23,6 @@ reg_panel = pd.read_pickle(
 )
 reg_panel[DEPENDENT_VARIABLES].isna().sum()
 
-reg_panel["std"] = reg_panel[
-    name_log_return_vol_variable("dollar_exchange_rate", 1, 30)
-]  # * np.sqrt(7 / 30)
 
 iv_chunk_list_unlagged = [
     [
