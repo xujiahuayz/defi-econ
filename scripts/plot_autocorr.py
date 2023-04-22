@@ -34,12 +34,15 @@ corr_columns = DEPENDENT_VARIABLES[:5]
 
 reg_panel[corr_columns] = reg_panel[corr_columns].fillna(0)
 LAG = 28
-for subsample in ["bust", "boom"]:
+for subsample in ["boom", "bust", "full"]:
     reg_panel_sub = reg_panel[corr_columns + ["Date", "Token", "is_boom"]]
     # change all corr_columns value from corr_columns to np.na for is_boom != True
-    reg_panel_sub.loc[
-        reg_panel_sub["is_boom"] == (subsample == "bust"), corr_columns
-    ] = np.nan
+    # switch case for subsample
+    if subsample == "boom":
+        reg_panel_sub.loc[reg_panel_sub["is_boom"] == False, corr_columns] = np.nan
+    elif subsample == "bust":
+        reg_panel_sub.loc[reg_panel_sub["is_boom"], corr_columns] = np.nan
+
     reg_panel_sub = lag_variable_columns(
         data=reg_panel_sub,
         variable=corr_columns,
@@ -58,8 +61,19 @@ for subsample in ["bust", "boom"]:
         lag=LAG,
     )
 
+    # transpose the table but keep the same index and columns as the original
+    corr_cov_table_t = corr_cov_table.T
+    corr_cov_table_t.index = corr_cov_table.index
+    corr_cov_table_t.columns = corr_cov_table.columns
+    corr_cov_table_diff = corr_cov_table - corr_cov_table_t
+
     # render the correlation table figure
     render_corr_cov_figure(
         corr_cov_tab=corr_cov_table,
         file_name=f"auto_corr_{subsample}",
+    )
+
+    render_corr_cov_figure(
+        corr_cov_tab=corr_cov_table_diff,
+        file_name=f"auto_corr_{subsample}_diff",
     )
