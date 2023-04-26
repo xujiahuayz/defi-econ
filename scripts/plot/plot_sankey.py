@@ -4,12 +4,15 @@ Script to plot the sankey diagram
 
 import os
 from glob import glob
+import warnings
 
 import pandas as pd
 from tqdm import tqdm
 
 from environ.constants import BETWEENNESS_DATA_PATH, NETWORK_DATA_PATH
 from environ.plot.plot_sankey import plot_sankey
+
+warnings.filterwarnings("ignore")
 
 for uni_version in ["v2", "v3", "merged"]:
     # load the data in the betweenness data path
