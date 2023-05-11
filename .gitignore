@@ -159,3 +159,5 @@ test/
 tables/*.csv 
 test_results/
 processed_data/
+
+.DS_Store
