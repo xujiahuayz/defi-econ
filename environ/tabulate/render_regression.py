@@ -12,6 +12,7 @@ from environ.utils.variable_constructer import (
     lag_variable_columns,
     map_variable_name_latex,
     name_lag_variable,
+    map_regressand_name_latex,
 )
 
 REGRESSION_NAMING_DICT = {
@@ -288,7 +289,7 @@ def render_regress_table_latex(
 
     # rename 'regressand' row
     result_table_latex.loc["regressand"] = result_table_latex.loc["regressand"].map(
-        map_variable_name_latex
+        map_regressand_name_latex
     )
 
     result_table_latex.rename(index=REGRESSION_NAMING_DICT, inplace=True)
