@@ -78,7 +78,7 @@ PANEL_VAR_INFO = {
         },
         {
             "data_path": COMPOUND_DATA_PATH / "processed",
-            "data_col": ["Borrow_share", "Supply_share"],
+            "data_col": ["Borrow_share", "Supply_share", "borrow_rate", "supply_rates"],
             "rename_dict": {
                 "borrow_share": "Borrow_share",
                 "supply_share": "Supply_share",

@@ -32,7 +32,13 @@ def calculate_borrow_supply(file_name: str) -> pd.DataFrame:
 
     # only keep the required columns
     compound_info = compound_info[
-        ["block_timestamp", "total_borrow_usd", "total_supply_usd"]
+        [
+            "block_timestamp",
+            "total_borrow_usd",
+            "total_supply_usd",
+            "borrow_rate",
+            "supply_rates",
+        ]
     ]
     return compound_info
 
@@ -64,13 +70,28 @@ if __name__ == "__main__":
             compound_info = pd.concat(
                 [compound_info, compound_info2], ignore_index=True
             )
+
+            # aggregate the data by timestamp, and take the first borrow rate and supply rate
             compound_info = (
-                compound_info.groupby(["block_timestamp"])[
-                    ["total_borrow_usd", "total_supply_usd"]
-                ]
-                .sum()
+                compound_info.groupby(["block_timestamp"])
+                .agg(
+                    {
+                        "total_borrow_usd": "sum",
+                        "total_supply_usd": "sum",
+                        "borrow_rate": "first",
+                        "supply_rates": "first",
+                    }
+                )
                 .reset_index()
             )
+
+            # compound_info = (
+            #     compound_info.groupby(["block_timestamp"])[
+            #         ["total_borrow_usd", "total_supply_usd"]
+            #     ]
+            #     .sum()
+            #     .reset_index()
+            # )
 
         # skip the wbtc2 data
         if ctoken_symbol == "WBTC2":
