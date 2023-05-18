@@ -61,48 +61,6 @@ def name_share_variable(variable: str) -> str:
     return f"{variable}_share"
 
 
-def map_regressand_name_latex(variable: str) -> str:
-    """
-    Map the regressand name to its corresponding LaTeX representation.
-
-    Args:
-        variable (str): The variable name to be mapped.
-
-    Returns:
-        str: The LaTeX representation of the variable name.
-    """
-
-    def format_variable(var: str) -> str:
-        """Format the given variable to its LaTeX representation."""
-        if var in ALL_NAMING_DICT:
-            return ALL_NAMING_DICT[var]
-
-        has_lag = "_lag_" in var
-        if has_lag:
-            var, lag = var.split("_lag_")
-            if var in ALL_NAMING_DICT:
-                return f"{ALL_NAMING_DICT.get(var, var)}_{{t-{lag}}}"
-
-        if "_diff_" in var:
-            var, diff = var.split("_diff_")
-            var = ALL_NAMING_DICT.get(var, var)
-            var = f"\\Delta^{{{diff if diff != '1' else ''}}} {var}"
-
-        if has_lag:
-            var = f"{var}_{{t-{lag}}}"
-
-        return var
-
-    # Split the variable name by * for interaction variable
-    variables = variable.split("*")
-
-    # Format each variable
-    formatted_variables = [format_variable(var) for var in variables]
-
-    # Combine all with ":" for interaction variables, accommodating for the case of 3 variables
-    return f'{":".join(formatted_variables)}'
-
-
 def map_variable_name_latex(variable: str) -> str:
     """
     Map the variable name to its corresponding LaTeX representation.
@@ -142,7 +100,7 @@ def map_variable_name_latex(variable: str) -> str:
     formatted_variables = [format_variable(var) for var in variables]
 
     # Combine all with ":" for interaction variables, accommodating for the case of 3 variables
-    return f'${":".join(formatted_variables)}$'
+    return f'{":".join(formatted_variables)}'
 
 
 def column_manipulator(

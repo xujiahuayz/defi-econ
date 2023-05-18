@@ -2,26 +2,26 @@
 Functions to prepare the main token-date panel.
 """
 
+import numpy as np
 import pandas as pd
-import numpy as np  
 from tqdm import tqdm
 
 from environ.constants import (
-    PANEL_VAR_INFO,
-    SAMPLE_PERIOD,
-    PROCESSED_DATA_PATH,
     DEPENDENT_VARIABLES,
+    PANEL_VAR_INFO,
+    PROCESSED_DATA_PATH,
+    SAMPLE_PERIOD,
 )
 from environ.process.market.dollar_exchange_rate import dollar_df
+from environ.process.market.market_cap import mcap
 from environ.process.market.prepare_market_data import market_data
 from environ.process.market.stable_share import stable_share_df
 from environ.tabulate.panel.panel_generator import _merge_boom_bust
-from environ.process.market.market_cap import mcap
 from environ.utils.data_loader import load_data
 from environ.utils.variable_constructer import (
     name_log_return_variable,
+    return_vol,
     share_variable_columns,
-    return_vol
 )
 
 
@@ -110,11 +110,11 @@ def construct_panel(merge_on: list[str]) -> pd.DataFrame:
     )
 
     panel_main = return_vol(
-    data=panel_main,
-    variable=var,
-    rolling_window_return=rolling_window_return,
-    rolling_window_vol=rolling_window_std,
-)
+        data=panel_main,
+        variable=var,
+        rolling_window_return=rolling_window_return,
+        rolling_window_vol=rolling_window_std,
+    )
 
     grouped_reg_panel = panel_main.groupby("Token")
 
@@ -134,7 +134,7 @@ def construct_panel(merge_on: list[str]) -> pd.DataFrame:
                 .corr(group_data[variable_log_return])
             )
 
-            # Set the 'corr_gas' values in the 'reg_panel' DataFrame 
+            # Set the 'corr_gas' values in the 'reg_panel' DataFrame
             # using the indices of the 'group_data' DataFrame
             panel_main.loc[corr_gas.index, k] = corr_gas
 
