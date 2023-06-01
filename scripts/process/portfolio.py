@@ -21,3 +21,9 @@ reg_panel = ma_variable_columns(
 reg_panel[[f"{var}_median" for var in DEPENDENT_VARIABLES]] = reg_panel.groupby("Date")[
     DEPENDENT_VARIABLES
 ].transform("median")
+
+# weekly / biweekly / monthly - rebalancing
+# dominance - yield (long top 10%, short bottom 90%)
+
+# stablecoin (convenience yield)
+# non-stablecoin (price)
