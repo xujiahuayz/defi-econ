@@ -5,7 +5,7 @@ Functions to help with asset pricing
 from typing import Literal, Optional
 
 import matplotlib.pyplot as plt
-import seaborn as sns
+import matplotlib.ticker as ticker
 import pandas as pd
 
 from environ.constants import PROCESSED_DATA_PATH, STABLE_DICT
@@ -45,13 +45,33 @@ def _freq_conversion(
     """
 
     # check if the frequency is year or month
-    df_panel.sort_values(by=["Token", freq], ascending=True, inplace=True)
+    df_panel.sort_values(by=["Token", "Date"], ascending=True, inplace=True)
 
     # keep the last observation
     df_panel.drop_duplicates(subset=["Token", freq], keep="last", inplace=True)
 
     # calculate the return under the new frequency
     df_panel["ret"] = df_panel.groupby("Token")["dollar_exchange_rate"].pct_change()
+
+    return df_panel
+
+
+def _ret_winsorizing(
+    df_panel: pd.DataFrame,
+    threshold: float = 0.01,
+    ret_col: str = "ret",
+) -> pd.DataFrame:
+    """
+    Function to winsorize the DataFrame
+    """
+
+    # winsorize the return
+    df_panel.loc[
+        df_panel[ret_col] <= df_panel[ret_col].quantile(threshold), ret_col + "w"
+    ] = df_panel[ret_col].quantile(threshold)
+    df_panel.loc[
+        df_panel[ret_col] >= df_panel[ret_col].quantile(1 - threshold), ret_col + "w"
+    ] = df_panel[ret_col].quantile(1 - threshold)
 
     return df_panel
 
@@ -72,6 +92,9 @@ def _asset_pricing_preprocess(
     # convert the frequency
     df_panel = _freq_conversion(df_panel, freq)
 
+    # winsorize the return
+    df_panel = _ret_winsorizing(df_panel)
+
     # lag 1 unit for the dominance var and yield var to avoid information leakage
     df_panel = lag_variable_columns(
         data=df_panel,
@@ -79,8 +102,6 @@ def _asset_pricing_preprocess(
         time_variable="Date",
         entity_variable="Token",
     )
-
-    # plot the return of ethereum
 
     # split the series into stablecoin and nonstablecoin
     df_panel_stablecoin = df_panel[df_panel["Token"].isin(STABLE_DICT.keys())]
@@ -142,49 +163,78 @@ def _eval_port(
     Function to evaluate the portfolio
     """
 
-    match weight:
-        case "equal":
-            # calculate the equal weight portfolio for top and bottom
-            df_panel["retw"] = (
-                df_panel.groupby(
-                    [
-                        freq,
-                        "portfolio",
-                    ]
-                )["ret"]
-                .transform(lambda x: x.mean())
-                .copy()
-            )
-        case "mcap":
-            # calculate the market cap weight portfolio for top and bottom
-            df_panel["retw"] = (
-                df_panel.groupby(
-                    [
-                        freq,
-                        "portfolio",
-                    ]
-                )["ret"]
-                .transform(
-                    lambda x: (x * df_panel["mcap"]).sum() / df_panel["mcap"].sum()
-                )
-                .copy()
-            )
+    # sort the dataframe by the frequency and portfolio
+    df_panel.sort_values(by=[freq, "portfolio"], ascending=True, inplace=True)
 
-    # drop the duplicates
-    df_panel.drop_duplicates(subset=[freq, "portfolio"], inplace=True, keep="last")
+    # dict to store the portfolio return
+    ret_dict = {
+        "freq": [],
+        "top": [],
+        "bottom": [],
+    }
 
-    # print the dataframe
-    print(df_panel)
+    # iterate through the frequency
+    for period in df_panel[freq].unique():
+        # filter the dataframe
+        df_panel_period = df_panel[df_panel[freq] == period].copy()
 
-    # plot the weighted return separately
+        # calculate the equal weight portfolio for top and bottom
+        ret_dict["freq"].append(period)
+
+        match weight:
+            case "equal":
+                for portfolio in ["top", "bottom"]:
+                    ret_dict[portfolio].append(
+                        df_panel_period[df_panel_period["portfolio"] == portfolio][
+                            "ret"
+                        ].mean()
+                    )
+            case "mcap":
+                for portfolio in ["top", "bottom"]:
+                    # isolate the top and bottom portfolio
+                    df_portfolio = df_panel_period[
+                        df_panel_period["portfolio"] == portfolio
+                    ].copy()
+
+                    # calculate the market cap weight
+                    df_portfolio["weight"] = (
+                        df_portfolio["mcap"] / df_portfolio["mcap"].sum()
+                    )
+
+                    # calculate the return
+                    ret_dict[portfolio].append(
+                        (df_portfolio["weight"] * df_portfolio["ret"]).sum()
+                    )
+
+    # convert the dict to dataframe
+    df_ret = pd.DataFrame(ret_dict)
+
+    # sort the dataframe by the frequency
+    df_ret.sort_values(by="freq", ascending=True, inplace=True)
+
+    # convert the freq to string
+    df_ret["freq"] = df_ret["freq"].astype(str)
+
+    # calculate the cumulative return
+    df_ret["top"] = (df_ret["top"] + 1).cumprod()
+    df_ret["bottom"] = (df_ret["bottom"] + 1).cumprod()
+
+    print(df_ret)
+
+    # plot the return
     _, ax = plt.subplots(figsize=(10, 5))
-    sns.lineplot(
-        data=df_panel,
-        x=freq,
-        y="retw",
-        hue="portfolio",
-        ax=ax,
-    )
+
+    # plot the top portfolio
+    ax.plot(df_ret["freq"], df_ret["top"], label="top portfolio")
+
+    # plot the bottom portfolio
+    ax.plot(df_ret["freq"], df_ret["bottom"], label="bottom portfolio")
+
+    # make the xtick sparse
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(12))
+
+    # legend
+    ax.legend()
 
     # show the plot
     plt.show()
@@ -202,7 +252,7 @@ def asset_pricing() -> None:
 
     # print(reg_panel.keys())
     df_panel_stablecoin, df_panel_nonstablecoin = _asset_pricing_preprocess(
-        reg_panel, "volume_ultimate_share", YIELD_VAR_DICT, "year"
+        reg_panel, "volume_ultimate_share", YIELD_VAR_DICT, "month"
     )
 
     # sort the tokens based on the dominance
@@ -212,21 +262,21 @@ def asset_pricing() -> None:
                 df_panel=df_panel_stablecoin,
                 first_indicator="volume_ultimate_share",
                 second_indicator="supply_rates",
-                freq="year",
+                freq="month",
                 threshold=0.1,
             ),
             _double_sorting(
                 df_panel=df_panel_nonstablecoin,
                 first_indicator="volume_ultimate_share",
                 second_indicator="dollar_exchange_rate",
-                freq="year",
+                freq="month",
                 threshold=0.1,
             ),
         ]
     )
 
     # evaluate the portfolio
-    _eval_port(df_sample, freq="year", weight="equal")
+    _eval_port(df_sample, freq="month", weight="equal")
 
 
 if __name__ == "__main__":

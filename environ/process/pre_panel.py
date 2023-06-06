@@ -99,12 +99,18 @@ def construct_panel(merge_on: list[str]) -> pd.DataFrame:
     rolling_window_std = 30
     variable_log_return = name_log_return_variable(var, rolling_window_return)
 
-    grouped_data = panel_main.groupby(var)
+    # grouped_data = panel_main.groupby(var)
+    # # fill the missing values with the previous value with linear interpolation
+    # # add this to reg_panel
+    # panel_main[var] = grouped_data[var].fillna(method="ffill")
+    # # impute all na with the previous value
+    # panel_main[var] = panel_main[var].replace(0, np.nan).interpolate(method="linear")
+
     # fill the missing values with the previous value with linear interpolation
-    # add this to reg_panel
-    panel_main[var] = grouped_data[var].fillna(method="ffill")
-    # impute all na with the previous value
-    panel_main[var] = panel_main[var].replace(0, np.nan).interpolate(method="linear")
+    panel_main.sort_values(by=["Token", "Date"], inplace=True)
+    panel_main[var] = panel_main[var].replace(0, np.nan)
+    panel_main[var] = panel_main.groupby("Token")[var].fillna(method="ffill")
+
     panel_main[variable_log_return] = np.log(
         panel_main[var] / panel_main[var].shift(rolling_window_return)
     )
