@@ -2,14 +2,14 @@
 Functions to help with asset pricing
 """
 
+import warnings
 from typing import Literal, Optional
 
 import matplotlib.pyplot as plt
-from matplotlib import ticker
 import pandas as pd
-import warnings
 
 from environ.constants import PROCESSED_DATA_PATH, STABLE_DICT
+from environ.process.market.boom_bust import BOOM_BUST
 from environ.utils.variable_constructer import lag_variable_columns
 
 YIELD_VAR_DICT = {
@@ -255,44 +255,88 @@ def _eval_port(
     df_ret.sort_values(by="freq", ascending=True, inplace=True)
 
     # convert the freq to string
-    df_ret["freq"] = df_ret["freq"].astype(str)
+    df_ret["freq"] = pd.to_datetime(df_ret["freq"])
 
     # calculate the bottom minus top
     df_ret["bottom_minus_top"] = df_ret["bottom"] - df_ret["top"]
 
-    plot_list = [
-        "top",
-        "bottom",
-        "bottom_minus_top",
-        "stable_top",
-        "stable_bottom",
-        "nonstable_top",
-        "nonstable_bottom",
-    ]
+    plot_dict = {
+        "regular": [
+            "top",
+            "bottom",
+            "bottom_minus_top",
+        ],
+        "stable": [
+            "stable_top",
+            "stable_bottom",
+        ],
+        "nonstable": [
+            "nonstable_top",
+            "nonstable_bottom",
+        ],
+    }
 
     # calculate the cumulative return
-    for col in plot_list:
-        df_ret[col + "_cum"] = (df_ret[col] + 1).cumprod()
+    for _, lst in plot_dict.items():
+        for col_ret in lst:
+            df_ret[col_ret + "_cum"] = (df_ret[col_ret] + 1).cumprod()
 
-    # plot the return
-    _, ax_ret = plt.subplots(figsize=(10, 5))
+    # three subplots for cum ret sharing x axis
+    _, (ax_ret, ax_ret_stable, ax_ret_nonstable) = plt.subplots(
+        nrows=3, ncols=1, sharex=True, figsize=(12, 7)
+    )
 
-    # plot portfolios
-    for col in plot_list:
+    for col in plot_dict["regular"]:
         ax_ret.plot(df_ret["freq"], df_ret[col + "_cum"], label=col)
 
-    # make the xtick sparse
-    ax_ret.xaxis.set_major_locator(ticker.MultipleLocator(12))
+    for col in plot_dict["stable"]:
+        ax_ret_stable.plot(df_ret["freq"], df_ret[col + "_cum"], label=col)
+
+    for col in plot_dict["nonstable"]:
+        ax_ret_nonstable.plot(df_ret["freq"], df_ret[col + "_cum"], label=col)
+
+    # plot boom bust cycles
+    for cycle in BOOM_BUST:
+        if (
+            cycle["start"] >= df_ret["freq"].min()
+            and cycle["end"] <= df_ret["freq"].max()
+        ):
+            for ax in [ax_ret, ax_ret_stable, ax_ret_nonstable]:
+                ax.axvspan(
+                    cycle["start"],
+                    cycle["end"],
+                    alpha=0.1,
+                    color="red" if cycle["main_trend"] == "bust" else "green",
+                )
+
+        if (
+            cycle["start"] < df_ret["freq"].min()
+            and cycle["end"] > df_ret["freq"].min()
+        ):
+            for ax in [ax_ret, ax_ret_stable, ax_ret_nonstable]:
+                ax.axvspan(
+                    df_ret["freq"].min(),
+                    cycle["end"],
+                    alpha=0.1,
+                    color="red" if cycle["main_trend"] == "bust" else "green",
+                )
 
     # legend
     ax_ret.legend()
+    ax_ret_stable.legend()
+    ax_ret_nonstable.legend()
+
+    # tight layout
+    plt.tight_layout()
 
     # show the plot
     plt.show()
 
 
 def asset_pricing(
-    freq: Literal[14, 30] = 14, weight: Literal["mcap", "equal"] = "mcap"
+    dom: str = "volume_ultimate_share",
+    freq: Literal[14, 30] = 14,
+    weight: Literal["mcap", "equal"] = "mcap",
 ) -> None:
     """
     Aggregate function to create portfolios
@@ -305,7 +349,7 @@ def asset_pricing(
 
     # print(reg_panel.keys())
     df_panel_stablecoin, df_panel_nonstablecoin = _asset_pricing_preprocess(
-        reg_panel, "volume_ultimate_share", YIELD_VAR_DICT, freq
+        reg_panel, dom, YIELD_VAR_DICT, freq
     )
 
     # sort the tokens based on the dominance
@@ -313,14 +357,14 @@ def asset_pricing(
         [
             _double_sorting(
                 df_panel=df_panel_stablecoin,
-                first_indicator="volume_ultimate_share",
+                first_indicator=dom,
                 second_indicator="supply_rates",
                 threshold=0.1,
             ),
             _double_sorting(
                 df_panel=df_panel_nonstablecoin,
-                first_indicator="volume_ultimate_share",
-                second_indicator="dollar_exchange_rate",
+                first_indicator=dom,
+                second_indicator="dollar_exchange_rate_log_return_1",
                 threshold=0.1,
             ),
         ]
@@ -331,4 +375,4 @@ def asset_pricing(
 
 
 if __name__ == "__main__":
-    asset_pricing(14, "mcap")
+    asset_pricing("volume_ultimate_share", 14, "mcap")
