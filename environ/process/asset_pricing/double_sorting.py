@@ -11,10 +11,11 @@ import pandas as pd
 from environ.constants import PROCESSED_DATA_PATH, STABLE_DICT
 from environ.process.market.boom_bust import BOOM_BUST
 from environ.utils.variable_constructer import lag_variable_columns
+from environ.plot.plot_ma import plot_boom_bust
 
 YIELD_VAR_DICT = {
     "stablecoin": "supply_rates",
-    "nonstablecoin": "dollar_exchange_rate",
+    "nonstablecoin": "dollar_exchange_rate_log_return_1",
 }
 
 warnings.filterwarnings("ignore")
@@ -295,31 +296,10 @@ def _eval_port(
     for col in plot_dict["nonstable"]:
         ax_ret_nonstable.plot(df_ret["freq"], df_ret[col + "_cum"], label=col)
 
-    # plot boom bust cycles
-    for cycle in BOOM_BUST:
-        if (
-            cycle["start"] >= df_ret["freq"].min()
-            and cycle["end"] <= df_ret["freq"].max()
-        ):
-            for ax in [ax_ret, ax_ret_stable, ax_ret_nonstable]:
-                ax.axvspan(
-                    cycle["start"],
-                    cycle["end"],
-                    alpha=0.1,
-                    color="red" if cycle["main_trend"] == "bust" else "green",
-                )
-
-        if (
-            cycle["start"] < df_ret["freq"].min()
-            and cycle["end"] > df_ret["freq"].min()
-        ):
-            for ax in [ax_ret, ax_ret_stable, ax_ret_nonstable]:
-                ax.axvspan(
-                    df_ret["freq"].min(),
-                    cycle["end"],
-                    alpha=0.1,
-                    color="red" if cycle["main_trend"] == "bust" else "green",
-                )
+    for plt_subplot in [ax_ret, ax_ret_stable, ax_ret_nonstable]:
+        # plot boom bust cycles
+        plot_boom_bust(plt_subplot, boom_bust=BOOM_BUST)
+        plt_subplot.set_xlim(df_panel["Date"].min(), df_panel["Date"].max())
 
     # legend
     ax_ret.legend()
@@ -347,7 +327,6 @@ def asset_pricing(
         PROCESSED_DATA_PATH / "panel_main.pickle.zip", compression="zip"
     )
 
-    # print(reg_panel.keys())
     df_panel_stablecoin, df_panel_nonstablecoin = _asset_pricing_preprocess(
         reg_panel, dom, YIELD_VAR_DICT, freq
     )
@@ -358,13 +337,13 @@ def asset_pricing(
             _double_sorting(
                 df_panel=df_panel_stablecoin,
                 first_indicator=dom,
-                second_indicator="supply_rates",
+                second_indicator=YIELD_VAR_DICT["stablecoin"],
                 threshold=0.1,
             ),
             _double_sorting(
                 df_panel=df_panel_nonstablecoin,
                 first_indicator=dom,
-                second_indicator="dollar_exchange_rate_log_return_1",
+                second_indicator=YIELD_VAR_DICT["nonstablecoin"],
                 threshold=0.1,
             ),
         ]

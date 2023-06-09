@@ -64,6 +64,24 @@ def preprocess_ma(
     return df
 
 
+def plot_boom_bust(
+    ax_plot,
+    boom_bust: list[dict] = BOOM_BUST,
+) -> None:
+    """
+    Function to plot the boom bust period
+    """
+
+    # plot boom bust cycles
+    for cycle in boom_bust:
+        ax_plot.axvspan(
+            cycle["start"],
+            cycle["end"],
+            alpha=0.1,
+            color="red" if cycle["main_trend"] == "bust" else "green",
+        )
+
+
 def plot_time_series(
     df: pd.DataFrame,
     file_name: str,
@@ -81,13 +99,7 @@ def plot_time_series(
     df["time"] = df["Date"].apply(md.date2num)
 
     # plot boom bust cycles
-    for cycle in boom_bust:
-        plt.axvspan(
-            cycle["start"],
-            cycle["end"],
-            alpha=0.1,
-            color="red" if cycle["main_trend"] == "bust" else "green",
-        )
+    plot_boom_bust(ax_plot=plt, boom_bust=boom_bust)
 
     for event_date in event_date_list:
         # Compound attack of 2020
