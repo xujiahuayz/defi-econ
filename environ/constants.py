@@ -37,6 +37,45 @@ TEST_RESULT_PATH: Path = PROJECT_ROOT / "test_results"
 UNISWAP_V2_DATA_PATH: Path = PROJECT_ROOT / "data" / "data_uniswap_v2"
 UNISWAP_V3_DATA_PATH: Path = PROJECT_ROOT / "data" / "data_uniswap_v3"
 
+HTTP_V2 = "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2"
+HTTP_V3 = "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3"
+
+UNDERLYING_QUERY_V2 = """
+query($pair_address: String!)
+{
+  pair(id: $pair_address) {
+    token0 {
+      id
+      name
+      symbol
+    }
+    token1 {
+      id
+      name
+      symbol
+    }
+  }
+}
+"""
+
+UNDERLYING_QUERY_V3 = """
+query($pair_address: String!)  
+{
+  pool(id: $pair_address) {
+    token0 {
+      id
+      name
+      symbol
+    }
+    token1 {
+      id
+      name
+      symbol
+    }
+  }
+}
+"""
+
 # Information fo variables to be merged into the main panel
 PANEL_VAR_INFO = {
     "panel_var": [

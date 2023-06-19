@@ -22,7 +22,7 @@ def run_query(http: str, query_scripts: str) -> None:
     )
 
 
-def run_query_var(http: str, query_scripts: str, var: str) -> None:
+def run_query_var(http: str, query_scripts: str, var: dict[str, str]) -> None:
     """
     execute query with variable paramters
     """
