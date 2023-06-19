@@ -4,13 +4,13 @@ Script to implement asset pricing using dominance as indicator
 
 import pandas as pd
 from environ.process.asset_pricing.double_sorting import (
-    stable_nonstable_split,
     asset_pricing,
 )
 from environ.constants import (
     PROCESSED_DATA_PATH,
     FIGURE_PATH,
     DEPENDENT_VARIABLES,
+    STABLE_DICT,
 )
 
 
@@ -19,13 +19,9 @@ reg_panel = pd.read_pickle(
     PROCESSED_DATA_PATH / "panel_main.pickle.zip", compression="zip"
 )
 
-# split the dataframe into stablecoin and non stablecoin
-df_panel_stablecoin, df_panel_nonstablecoin = stable_nonstable_split(reg_panel)
-
-# stable non-stable info dict
 stable_nonstable_info = {
-    "stablecoin": df_panel_stablecoin,
-    "nonstablecoin": df_panel_nonstablecoin,
+    "stablecoin": reg_panel[reg_panel["Token"].isin(STABLE_DICT.keys())],
+    "nonstablecoin": reg_panel[~reg_panel["Token"].isin(STABLE_DICT.keys())],
 }
 
 # iterate through the dominance
