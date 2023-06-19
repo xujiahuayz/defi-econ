@@ -117,12 +117,10 @@ def stable_nonstable_split(
     """
 
     # split the series into stablecoin and nonstablecoin
-    df_stablecoin = df_panel[df_panel["Token"].isin(STABLE_DICT.keys())]
-    df_nonstablecoin = df_panel[~df_panel["Token"].isin(STABLE_DICT.keys())]
-    df_stablecoin["stable_status"] = "stable"
-    df_nonstablecoin["stable_status"] = "nonstable"
-
-    return df_stablecoin, df_nonstablecoin
+    return (
+        df_panel[df_panel["Token"].isin(STABLE_DICT.keys())],
+        df_panel[~df_panel["Token"].isin(STABLE_DICT.keys())],
+    )
 
 
 def _double_sorting(
