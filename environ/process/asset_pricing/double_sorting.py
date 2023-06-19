@@ -4,24 +4,19 @@ Functions to help with asset pricing
 
 import warnings
 
-from typing import Literal
 import matplotlib.pyplot as plt
 import pandas as pd
+from pathlib import Path
 
 from environ.constants import (
+    DEPENDENT_VARIABLES,
     FIGURE_PATH,
     PROCESSED_DATA_PATH,
     STABLE_DICT,
-    DEPENDENT_VARIABLES,
 )
 from environ.plot.plot_ma import plot_boom_bust
 from environ.process.market.boom_bust import BOOM_BUST
 from environ.utils.variable_constructer import lag_variable_columns
-
-YIELD_VAR_DICT = {
-    "stablecoin": "supply_rates",
-    "nonstablecoin": "supply_rates",
-}
 
 warnings.filterwarnings("ignore")
 
@@ -88,9 +83,9 @@ def _ret_winsorizing(
 def _asset_pricing_preprocess(
     df_panel: pd.DataFrame,
     dominance_var: str,
-    yield_var: None | dict[str, str],
     freq: int,
-) -> tuple[pd.DataFrame, pd.DataFrame]:
+    yield_var: str = "supply_rates",
+) -> pd.DataFrame:
     """
     Function to preprocess the dataframe
     """
@@ -107,15 +102,12 @@ def _asset_pricing_preprocess(
     # lag 1 unit for the dominance var and yield var to avoid information leakage
     df_panel = lag_variable_columns(
         data=df_panel,
-        variable=[dominance_var] + list(yield_var.values()),
+        variable=[dominance_var, yield_var],
         time_variable="Date",
         entity_variable="Token",
     )
 
-    # split the series into stablecoin and nonstablecoin
-    df_panel["is_stable"] = df_panel["Token"].isin(STABLE_DICT.keys())
-
-    return df_panel[df_panel["is_stable"]], df_panel[~df_panel["is_stable"]]
+    return df_panel
 
 
 def _double_sorting(
@@ -172,8 +164,7 @@ def _double_sorting(
 
 def _eval_port(
     df_panel: pd.DataFrame,
-    save_path: str,
-    weight: Literal["equal", "mcap"],
+    save_path: Path | str,
 ) -> None:
     """
     Function to evaluate the portfolio
@@ -187,10 +178,6 @@ def _eval_port(
         "freq": [],
         "top": [],
         "bottom": [],
-        "True_top": [],
-        "True_bottom": [],
-        "False_top": [],
-        "False_bottom": [],
     }
 
     # iterate through the frequency
@@ -201,56 +188,19 @@ def _eval_port(
         # calculate the equal weight portfolio for top and bottom
         ret_dict["freq"].append(period)
 
-        match weight:
-            case "equal":
-                for portfolio in ["top", "bottom"]:
-                    ret_dict[portfolio].append(
-                        df_panel_period[df_panel_period["portfolio"] == portfolio][
-                            "ret"
-                        ].mean()
-                    )
-                    for is_stable in [True, False]:
-                        ret_dict[f"{is_stable}_{portfolio}"].append(
-                            df_panel_period[
-                                (df_panel_period["portfolio"] == portfolio)
-                                & (df_panel_period["is_stable"] == is_stable)
-                            ]["ret"].mean()
-                        )
+        for portfolio in ["top", "bottom"]:
+            # isolate the top and bottom portfolio
+            df_portfolio = df_panel_period[
+                df_panel_period["portfolio"] == portfolio
+            ].copy()
 
-            case "mcap":
-                for portfolio in ["top", "bottom"]:
-                    # isolate the top and bottom portfolio
-                    df_portfolio = df_panel_period[
-                        df_panel_period["portfolio"] == portfolio
-                    ].copy()
+            # calculate the market cap weight
+            df_portfolio["weight"] = df_portfolio["mcap"] / df_portfolio["mcap"].sum()
 
-                    # calculate the market cap weight
-                    df_portfolio["weight"] = (
-                        df_portfolio["mcap"] / df_portfolio["mcap"].sum()
-                    )
-
-                    # calculate the return
-                    ret_dict[portfolio].append(
-                        (df_portfolio["weight"] * df_portfolio["ret"]).sum()
-                    )
-                    for is_stable in [True, False]:
-                        df_portfolio_stable = df_portfolio[
-                            df_portfolio["is_stable"] == is_stable
-                        ].copy()
-
-                        # recalculate the weight
-                        df_portfolio_stable["weight"] = (
-                            df_portfolio_stable["mcap"]
-                            / df_portfolio_stable["mcap"].sum()
-                        )
-
-                        # calculate the return
-                        ret_dict[f"{is_stable}_{portfolio}"].append(
-                            (
-                                df_portfolio_stable["weight"]
-                                * df_portfolio_stable["ret"]
-                            ).sum()
-                        )
+            # calculate the return
+            ret_dict[portfolio].append(
+                (df_portfolio["weight"] * df_portfolio["ret"]).sum()
+            )
 
     # convert the dict to dataframe
     df_ret = pd.DataFrame(ret_dict)
@@ -264,50 +214,27 @@ def _eval_port(
     # calculate the bottom minus top
     df_ret["top_minus_bottom"] = df_ret["top"] - df_ret["bottom"]
 
-    plot_dict = {
-        "regular": [
-            "top",
-            "bottom",
-            "top_minus_bottom",
-        ],
-        "stable": [
-            "True_top",
-            "True_bottom",
-        ],
-        "nonstable": [
-            "False_top",
-            "False_bottom",
-        ],
-    }
+    plot_lst = ["top", "bottom", "top_minus_bottom"]
 
     # calculate the cumulative return
-    for _, lst in plot_dict.items():
-        for col_ret in lst:
-            df_ret[col_ret + "_cum"] = (df_ret[col_ret] + 1).cumprod()
+    for col_ret in plot_lst:
+        df_ret[col_ret + "_cum"] = (df_ret[col_ret] + 1).cumprod()
 
     # three subplots for cum ret sharing x axis
-    _, (ax_ret, ax_ret_stable, ax_ret_nonstable) = plt.subplots(
-        nrows=3, ncols=1, sharex=True, figsize=(12, 7)
-    )
+    (
+        _,
+        ax_ret,
+    ) = plt.subplots(figsize=(12, 7))
 
-    for col in plot_dict["regular"]:
+    for col in plot_lst:
         ax_ret.plot(df_ret["freq"], df_ret[col + "_cum"], label=col)
 
-    for col in plot_dict["stable"]:
-        ax_ret_stable.plot(df_ret["freq"], df_ret[col + "_cum"], label=col)
-
-    for col in plot_dict["nonstable"]:
-        ax_ret_nonstable.plot(df_ret["freq"], df_ret[col + "_cum"], label=col)
-
-    for plt_subplot in [ax_ret, ax_ret_stable, ax_ret_nonstable]:
-        # plot boom bust cycles
-        plot_boom_bust(plt_subplot, boom_bust=BOOM_BUST)
-        plt_subplot.set_xlim(df_panel["Date"].min(), df_panel["Date"].max())
+    # plot boom bust cycles
+    plot_boom_bust(ax_ret, boom_bust=BOOM_BUST)
+    ax_ret.set_xlim(df_panel["Date"].min(), df_panel["Date"].max())
 
     # legend
     ax_ret.legend()
-    ax_ret_stable.legend()
-    ax_ret_nonstable.legend()
 
     # tight layout
     plt.tight_layout()
@@ -315,60 +242,58 @@ def _eval_port(
     # save the plot to the save path
     plt.savefig(save_path, dpi=300)
 
-    # show the plot
-    plt.show()
-
     # close the plot
     plt.close()
 
 
 def asset_pricing(
-    save_path: str,
-    dom: str = "volume_ultimate_share",
+    reg_panel: pd.DataFrame,
+    save_path: Path | str,
+    dom_var: str = "volume_ultimate_share",
+    yield_var: str = "supply_rates",
+    threshold: float = 0.1,
     freq: int = 14,
-    weight: Literal["mcap", "equal"] = "mcap",
 ) -> None:
     """
     Aggregate function to create portfolios
     """
 
+    # preprocess the dataframe
+    df_panel = _asset_pricing_preprocess(reg_panel, dom_var, freq, yield_var)
+
+    # sort the tokens based on the dominance
+    df_sample = _double_sorting(
+        df_panel=df_panel,
+        first_indicator=dom_var,
+        second_indicator=yield_var,
+        threshold=threshold,
+    )
+
+    # evaluate the performance of the portfolio
+    _eval_port(df_sample, save_path)
+
+
+if __name__ == "__main__":
     # load the regression panel dataset
     reg_panel = pd.read_pickle(
         PROCESSED_DATA_PATH / "panel_main.pickle.zip", compression="zip"
     )
 
-    df_panel_stablecoin, df_panel_nonstablecoin = _asset_pricing_preprocess(
-        reg_panel, dom, YIELD_VAR_DICT, freq
-    )
+    # stable non-stable info dict
+    stable_nonstable_info = {
+        "stablecoin": reg_panel[reg_panel["Token"].isin(STABLE_DICT.keys())],
+        "nonstablecoin": reg_panel[~reg_panel["Token"].isin(STABLE_DICT.keys())],
+    }
 
-    # sort the tokens based on the dominance
-    df_sample = pd.concat(
-        [
-            _double_sorting(
-                df_panel=df_panel_stablecoin,
-                first_indicator=dom,
-                second_indicator=YIELD_VAR_DICT["stablecoin"],
-                threshold=0.1,
-            ),
-            _double_sorting(
-                df_panel=df_panel_nonstablecoin,
-                first_indicator=dom,
-                second_indicator=YIELD_VAR_DICT["nonstablecoin"],
-                threshold=0.1,
-            ),
-        ]
-    )
-
-    # evaluate the portfolio
-    _eval_port(df_sample, save_path, weight=weight)
-
-
-if __name__ == "__main__":
-    for dominance in DEPENDENT_VARIABLES:
-        for frequency in [14, 30]:
-            asset_pricing(
-                str(FIGURE_PATH / f"asset_pricing_{dominance}_{frequency}.pdf"),
-                dominance,
-                frequency,
-                "mcap",
-            )
+    # iterate through the dominance
+    for panel_info, df_panel in stable_nonstable_info.items():
+        for dominance in DEPENDENT_VARIABLES:
+            for frequency in [14, 30]:
+                asset_pricing(
+                    df_panel,
+                    FIGURE_PATH / f"{panel_info}_{dominance}_{frequency}.pdf",
+                    dominance,
+                    "supply_rates",
+                    0.1,
+                    frequency,
+                )
