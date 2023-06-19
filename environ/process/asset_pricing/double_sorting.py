@@ -8,14 +8,19 @@ from typing import Literal
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from environ.constants import PROCESSED_DATA_PATH, STABLE_DICT
+from environ.constants import (
+    FIGURE_PATH,
+    PROCESSED_DATA_PATH,
+    STABLE_DICT,
+    DEPENDENT_VARIABLES,
+)
+from environ.plot.plot_ma import plot_boom_bust
 from environ.process.market.boom_bust import BOOM_BUST
 from environ.utils.variable_constructer import lag_variable_columns
-from environ.plot.plot_ma import plot_boom_bust
 
 YIELD_VAR_DICT = {
     "stablecoin": "supply_rates",
-    "nonstablecoin": "dollar_exchange_rate_log_return_1",
+    "nonstablecoin": "supply_rates",
 }
 
 warnings.filterwarnings("ignore")
@@ -167,6 +172,7 @@ def _double_sorting(
 
 def _eval_port(
     df_panel: pd.DataFrame,
+    save_path: str,
     weight: Literal["equal", "mcap"],
 ) -> None:
     """
@@ -256,13 +262,13 @@ def _eval_port(
     df_ret["freq"] = pd.to_datetime(df_ret["freq"])
 
     # calculate the bottom minus top
-    df_ret["bottom_minus_top"] = df_ret["bottom"] - df_ret["top"]
+    df_ret["top_minus_bottom"] = df_ret["top"] - df_ret["bottom"]
 
     plot_dict = {
         "regular": [
             "top",
             "bottom",
-            "bottom_minus_top",
+            "top_minus_bottom",
         ],
         "stable": [
             "True_top",
@@ -306,11 +312,18 @@ def _eval_port(
     # tight layout
     plt.tight_layout()
 
+    # save the plot to the save path
+    plt.savefig(save_path, dpi=300)
+
     # show the plot
     plt.show()
 
+    # close the plot
+    plt.close()
+
 
 def asset_pricing(
+    save_path: str,
     dom: str = "volume_ultimate_share",
     freq: int = 14,
     weight: Literal["mcap", "equal"] = "mcap",
@@ -347,8 +360,15 @@ def asset_pricing(
     )
 
     # evaluate the portfolio
-    _eval_port(df_sample, weight=weight)
+    _eval_port(df_sample, save_path, weight=weight)
 
 
 if __name__ == "__main__":
-    asset_pricing("volume_ultimate_share", 14, "mcap")
+    for dominance in DEPENDENT_VARIABLES:
+        for frequency in [14, 30]:
+            asset_pricing(
+                str(FIGURE_PATH / f"asset_pricing_{dominance}_{frequency}.pdf"),
+                dominance,
+                frequency,
+                "mcap",
+            )
