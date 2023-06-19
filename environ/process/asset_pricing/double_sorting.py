@@ -3,8 +3,8 @@ Functions to help with asset pricing
 """
 
 import warnings
-from typing import Literal, Optional
 
+from typing import Literal
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -113,12 +113,9 @@ def _asset_pricing_preprocess(
     )
 
     # split the series into stablecoin and nonstablecoin
-    df_panel_stablecoin = df_panel[df_panel["Token"].isin(STABLE_DICT.keys())]
-    df_panel_nonstablecoin = df_panel[~df_panel["Token"].isin(STABLE_DICT.keys())]
-    df_panel_stablecoin["stable_status"] = "stable"
-    df_panel_nonstablecoin["stable_status"] = "nonstable"
+    df_panel["is_stable"] = df_panel["Token"].isin(STABLE_DICT.keys())
 
-    return df_panel_stablecoin, df_panel_nonstablecoin
+    return df_panel[df_panel["is_stable"]], df_panel[~df_panel["is_stable"]]
 
 
 def _double_sorting(
@@ -190,10 +187,10 @@ def _eval_port(
         "freq": [],
         "top": [],
         "bottom": [],
-        "stable_top": [],
-        "stable_bottom": [],
-        "nonstable_top": [],
-        "nonstable_bottom": [],
+        "True_top": [],
+        "True_bottom": [],
+        "False_top": [],
+        "False_bottom": [],
     }
 
     # iterate through the frequency
@@ -212,11 +209,11 @@ def _eval_port(
                             "ret"
                         ].mean()
                     )
-                    for stable_status in ["stable", "nonstable"]:
-                        ret_dict[stable_status + "_" + portfolio].append(
+                    for is_stable in [True, False]:
+                        ret_dict[f"{is_stable}_{portfolio}"].append(
                             df_panel_period[
                                 (df_panel_period["portfolio"] == portfolio)
-                                & (df_panel_period["stable_status"] == stable_status)
+                                & (df_panel_period["is_stable"] == is_stable)
                             ]["ret"].mean()
                         )
 
@@ -236,9 +233,9 @@ def _eval_port(
                     ret_dict[portfolio].append(
                         (df_portfolio["weight"] * df_portfolio["ret"]).sum()
                     )
-                    for stable_status in ["stable", "nonstable"]:
+                    for is_stable in [True, False]:
                         df_portfolio_stable = df_portfolio[
-                            df_portfolio["stable_status"] == stable_status
+                            df_portfolio["is_stable"] == is_stable
                         ].copy()
 
                         # recalculate the weight
@@ -248,7 +245,7 @@ def _eval_port(
                         )
 
                         # calculate the return
-                        ret_dict[stable_status + "_" + portfolio].append(
+                        ret_dict[f"{is_stable}_{portfolio}"].append(
                             (
                                 df_portfolio_stable["weight"]
                                 * df_portfolio_stable["ret"]
@@ -274,12 +271,12 @@ def _eval_port(
             "top_minus_bottom",
         ],
         "stable": [
-            "stable_top",
-            "stable_bottom",
+            "True_top",
+            "True_bottom",
         ],
         "nonstable": [
-            "nonstable_top",
-            "nonstable_bottom",
+            "False_top",
+            "False_bottom",
         ],
     }
 
