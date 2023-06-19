@@ -6,6 +6,7 @@ import warnings
 
 import matplotlib.pyplot as plt
 import pandas as pd
+from pathlib import Path
 
 from environ.constants import (
     DEPENDENT_VARIABLES,
@@ -109,20 +110,6 @@ def _asset_pricing_preprocess(
     return df_panel
 
 
-def stable_nonstable_split(
-    df_panel: pd.DataFrame,
-) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Function to split the dataframe into stablecoin and nonstablecoin
-    """
-
-    # split the series into stablecoin and nonstablecoin
-    return (
-        df_panel[df_panel["Token"].isin(STABLE_DICT.keys())],
-        df_panel[~df_panel["Token"].isin(STABLE_DICT.keys())],
-    )
-
-
 def _double_sorting(
     df_panel: pd.DataFrame,
     first_indicator: str,
@@ -177,7 +164,7 @@ def _double_sorting(
 
 def _eval_port(
     df_panel: pd.DataFrame,
-    save_path: str,
+    save_path: Path | str,
 ) -> None:
     """
     Function to evaluate the portfolio
@@ -261,7 +248,7 @@ def _eval_port(
 
 def asset_pricing(
     reg_panel: pd.DataFrame,
-    save_path: str,
+    save_path: Path | str,
     dom_var: str = "volume_ultimate_share",
     yield_var: str = "supply_rates",
     threshold: float = 0.1,
@@ -292,13 +279,10 @@ if __name__ == "__main__":
         PROCESSED_DATA_PATH / "panel_main.pickle.zip", compression="zip"
     )
 
-    # split the dataframe into stablecoin and non stablecoin
-    df_panel_stablecoin, df_panel_nonstablecoin = stable_nonstable_split(reg_panel)
-
     # stable non-stable info dict
     stable_nonstable_info = {
-        "stablecoin": df_panel_stablecoin,
-        "nonstablecoin": df_panel_nonstablecoin,
+        "stablecoin": reg_panel[reg_panel["Token"].isin(STABLE_DICT.keys())],
+        "nonstablecoin": reg_panel[~reg_panel["Token"].isin(STABLE_DICT.keys())],
     }
 
     # iterate through the dominance
@@ -307,7 +291,7 @@ if __name__ == "__main__":
             for frequency in [14, 30]:
                 asset_pricing(
                     df_panel,
-                    str(FIGURE_PATH / f"{panel_info}_{dominance}_{frequency}.pdf"),
+                    FIGURE_PATH / f"{panel_info}_{dominance}_{frequency}.pdf",
                     dominance,
                     "supply_rates",
                     0.1,

@@ -34,7 +34,7 @@ for panel_info, df_panel in stable_nonstable_info.items():
         for frequency in [14, 30]:
             asset_pricing(
                 df_panel,
-                str(FIGURE_PATH / f"{panel_info}_{dominance}_{frequency}.pdf"),
+                FIGURE_PATH / f"{panel_info}_{dominance}_{frequency}.pdf",
                 dominance,
                 "supply_rates",
                 0.1,
