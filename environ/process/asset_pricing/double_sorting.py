@@ -28,7 +28,7 @@ warnings.filterwarnings("ignore")
 
 def _freq_col(
     df_panel: pd.DataFrame,
-    freq: int = 14,
+    freq: int,
     date_col: str = "Date",
 ) -> pd.DataFrame:
     """
@@ -88,8 +88,8 @@ def _ret_winsorizing(
 def _asset_pricing_preprocess(
     df_panel: pd.DataFrame,
     dominance_var: str,
-    yield_var: Optional[dict[str, str]],
-    freq: int = 14,
+    yield_var: None | dict[str, str],
+    freq: int,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Function to preprocess the dataframe
