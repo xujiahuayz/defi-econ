@@ -242,6 +242,8 @@ def _eval_port(
     # save the plot to the save path
     plt.savefig(save_path, dpi=300)
 
+    plt.show()
+
     # close the plot
     plt.close()
 
