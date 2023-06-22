@@ -234,7 +234,11 @@ def _eval_port(
     ax_ret.set_xlim(df_panel["Date"].min(), df_panel["Date"].max())
 
     # move legend to outside the plot, upper left
-    ax_ret.legend(bbox_to_anchor=(1.01, 1), loc="upper left")
+    plt.legend(bbox_to_anchor=(1.01, 1), loc="upper left")
+
+    # enlarge the font of ticker
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
 
     # rotate x axis label by 45 degree
     plt.xticks(rotation=45)
@@ -245,7 +249,7 @@ def _eval_port(
     # save the plot to the save path
     plt.savefig(save_path, dpi=300)
 
-    # plt.show()
+    plt.show()
 
     # close the plot
     plt.close()
