@@ -233,12 +233,14 @@ def _eval_port(
     plot_boom_bust(ax_ret, boom_bust=BOOM_BUST)
     ax_ret.set_xlim(df_panel["Date"].min(), df_panel["Date"].max())
 
-    # move legend to outside the plot, upper left
-    plt.legend(bbox_to_anchor=(1.01, 1), loc="upper left")
+    # place the legend outside the plot without border
+    plt.legend(
+        bbox_to_anchor=(1.01, 1), loc="upper left", borderaxespad=0.0, prop={"size": 20}
+    )
 
     # enlarge the font of ticker
-    plt.xticks(fontsize=12)
-    plt.yticks(fontsize=12)
+    plt.xticks(fontsize=20)
+    plt.yticks(fontsize=20)
 
     # rotate x axis label by 45 degree
     plt.xticks(rotation=45)
@@ -249,7 +251,7 @@ def _eval_port(
     # save the plot to the save path
     plt.savefig(save_path, dpi=300)
 
-    plt.show()
+    # plt.show()
 
     # close the plot
     plt.close()
