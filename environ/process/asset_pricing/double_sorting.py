@@ -3,10 +3,10 @@ Functions to help with asset pricing
 """
 
 import warnings
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pandas as pd
-from pathlib import Path
 
 from environ.constants import (
     DEPENDENT_VARIABLES,
@@ -233,8 +233,11 @@ def _eval_port(
     plot_boom_bust(ax_ret, boom_bust=BOOM_BUST)
     ax_ret.set_xlim(df_panel["Date"].min(), df_panel["Date"].max())
 
-    # legend
-    ax_ret.legend()
+    # move legend to outside the plot, upper left
+    ax_ret.legend(bbox_to_anchor=(1.01, 1), loc="upper left")
+
+    # rotate x axis label by 45 degree
+    plt.xticks(rotation=45)
 
     # tight layout
     plt.tight_layout()
@@ -242,7 +245,7 @@ def _eval_port(
     # save the plot to the save path
     plt.savefig(save_path, dpi=300)
 
-    plt.show()
+    # plt.show()
 
     # close the plot
     plt.close()
