@@ -256,6 +256,10 @@ def _eval_port(
     # save the plot to the save path
     plt.savefig(save_path, dpi=300)
 
+    # add the y axis label
+    ax_ret.set_ylabel("Cumulative Return", fontsize=FONT_SIZE)
+
+    # show the plot
     plt.show()
 
     # close the plot
