@@ -20,6 +20,8 @@ from environ.utils.variable_constructer import lag_variable_columns
 
 warnings.filterwarnings("ignore")
 
+FONT_SIZE = 25
+
 
 def _freq_col(
     df_panel: pd.DataFrame,
@@ -235,12 +237,15 @@ def _eval_port(
 
     # place the legend outside the plot without border
     plt.legend(
-        bbox_to_anchor=(1.01, 1), loc="upper left", borderaxespad=0.0, prop={"size": 20}
+        bbox_to_anchor=(1.01, 1),
+        loc="upper left",
+        borderaxespad=0.0,
+        prop={"size": FONT_SIZE},
     )
 
     # enlarge the font of ticker
-    plt.xticks(fontsize=20)
-    plt.yticks(fontsize=20)
+    plt.xticks(fontsize=FONT_SIZE)
+    plt.yticks(fontsize=FONT_SIZE)
 
     # rotate x axis label by 45 degree
     plt.xticks(rotation=45)
@@ -251,7 +256,7 @@ def _eval_port(
     # save the plot to the save path
     plt.savefig(save_path, dpi=300)
 
-    # plt.show()
+    plt.show()
 
     # close the plot
     plt.close()
