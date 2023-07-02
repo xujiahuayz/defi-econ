@@ -276,7 +276,7 @@ def asset_pricing(
     dom_var: str = "volume_ultimate_share",
     n_port: int = 3,
     freq: int = 14,
-) -> None:
+) -> pd.DataFrame:
     """
     Aggregate function to create portfolios
     """
@@ -292,7 +292,7 @@ def asset_pricing(
     )
 
     # evaluate the performance of the portfolio
-    _eval_port(df_sample, freq)
+    return _eval_port(df_sample, freq)
 
 
 if __name__ == "__main__":

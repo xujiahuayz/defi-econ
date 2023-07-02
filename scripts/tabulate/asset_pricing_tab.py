@@ -12,11 +12,27 @@ reg_panel = pd.read_pickle(
     PROCESSED_DATA_PATH / "panel_main.pickle.zip", compression="zip"
 )
 
+# table to store the results
+df_tab = pd.DataFrame()
+
 for dominance in DEPENDENT_VARIABLES:
     for frequency in [14, 30]:
-        asset_pricing(
+        df_ap = asset_pricing(
             reg_panel,
             dominance,
             3,
             frequency,
         )
+
+        # add the dominance and frequency
+        df_ap["dominance"] = dominance
+        df_ap["frequency"] = frequency
+
+        # append to the table
+        df_tab = pd.concat([df_tab, df_ap], axis=0)
+
+# transpose the table
+df_tab = df_tab.set_index(["dominance", "frequency"]).T
+
+# save the table in latex format
+df_tab.to_latex(TABLE_PATH / "asset_pricing.tex", escape=False)
