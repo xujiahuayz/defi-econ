@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pandas as pd
 import scipy.stats as stats
+import statsmodels.api as sm
 
 from environ.constants import (
     DEPENDENT_VARIABLES,
@@ -14,6 +15,7 @@ from environ.constants import (
     PROCESSED_DATA_PATH,
     STABLE_DICT,
 )
+from environ.process.market.risk_free_rate import df_rf
 from environ.utils.variable_constructer import lag_variable_columns
 
 warnings.filterwarnings("ignore")
@@ -56,6 +58,7 @@ def _freq_conversion(
 
     # calculate the return under the new frequency
     df_panel["ret"] = df_panel.groupby("Token")["dollar_exchange_rate"].pct_change()
+    df_panel["mret"] = df_panel.groupby("Token")["S&P"].pct_change()
 
     return df_panel
 
@@ -170,8 +173,7 @@ def _sorting(
 def _eval_port(
     df_panel: pd.DataFrame,
     freq: int,
-    save_path: Path | str,
-) -> None:
+) -> pd.DataFrame:
     """
     Function to evaluate the portfolio
     """
@@ -217,34 +219,60 @@ def _eval_port(
     # convert the freq to string
     df_ret["freq"] = pd.to_datetime(df_ret["freq"])
 
+    # read the risk free rate
+    df_rf_ap = df_rf.copy()
+
+    # rename the Date toe freq
+    df_rf_ap.rename(columns={"Date": "freq"}, inplace=True)
+
+    # convert the freq of the risk free rate
+    df_rf_ap["RF"] = (1 + df_rf_ap["RF"]) ** freq - 1
+
+    # merge the dataframe
+    df_ret = df_ret.merge(df_rf_ap, on="freq", how="left")
+
+    # calculate the excess return
+    for portfolio in [f"P{port}" for port in range(1, n_port + 1)]:
+        df_ret[portfolio] = df_ret[portfolio] - df_ret["RF"]
+
     # calculate the bottom minus top
     df_ret[f"P{n_port} - P1"] = df_ret[f"P{n_port}"] - df_ret["P1"]
+
+    portfolio_col = [f"P{port}" for port in range(1, n_port + 1)] + [f"P{n_port} - P1"]
 
     # a new dataframe to store the averag return for each portfolio
     df_ret_avg = pd.DataFrame(
         {
-            "portfolio": [f"P{port}" for port in range(1, n_port + 1)]
-            + [f"P{n_port} - P1"],
-            "avg_return": df_ret[[f"P{port}" for port in range(1, n_port + 1)]]
-            .mean()
-            .to_list()
-            + [df_ret[f"P{n_port} - P1"].mean()],
-            "t-stat": df_ret[[f"P{port}" for port in range(1, n_port + 1)]]
+            # portfolio name
+            "portfolio": portfolio_col,
+            # average return
+            "avg_return": df_ret[portfolio_col].mean().to_list(),
+            # t-stat of the average return
+            "t-stat": df_ret[portfolio_col]
             .apply(lambda x: stats.ttest_1samp(x, 0)[0])
-            .to_list()
-            + [stats.ttest_1samp(df_ret[f"P{n_port} - P1"], 0)[0]],
+            .to_list(),
+            # standard deviation of the return
+            "stdev": df_ret[portfolio_col].std().to_list(),
+            # sharpe ratio
+            "sharpe": (
+                df_ret[portfolio_col].mean() / df_ret[portfolio_col].std()
+            ).to_list(),
+            # alpha of the portfolio
+            "alpha": df_ret[portfolio_col]
+            .apply(lambda x: sm.OLS(x, df_ret["RF"]).fit().params[0])
+            .to_list(),
+            # t-stat of the alpha
+            "alpha_t": df_ret[portfolio_col]
+            .apply(lambda x: sm.OLS(x, df_ret["RF"]).fit().tvalues[0])
+            .to_list(),
         }
     )
 
-    # annualize the return
-    df_ret_avg["avg_return"] = (1 + df_ret_avg["avg_return"]) ** (365 / freq) - 1
-
-    print(df_ret_avg)
+    return df_ret_avg
 
 
 def asset_pricing(
     reg_panel: pd.DataFrame,
-    save_path: Path | str,
     dom_var: str = "volume_ultimate_share",
     n_port: int = 3,
     freq: int = 14,
@@ -264,7 +292,7 @@ def asset_pricing(
     )
 
     # evaluate the performance of the portfolio
-    _eval_port(df_sample, freq, save_path)
+    _eval_port(df_sample, freq)
 
 
 if __name__ == "__main__":
@@ -272,6 +300,7 @@ if __name__ == "__main__":
     reg_panel = pd.read_pickle(
         PROCESSED_DATA_PATH / "panel_main.pickle.zip", compression="zip"
     )
+
     # stable non-stable info dict
     stable_nonstable_info = {
         "stablecoin": reg_panel[reg_panel["Token"].isin(STABLE_DICT.keys())],
@@ -285,7 +314,6 @@ if __name__ == "__main__":
                 print(f"Processing {panel_info} {dominance} {frequency}")
                 asset_pricing(
                     df_panel,
-                    FIGURE_PATH / f"{panel_info}_{dominance}_{frequency}.pdf",
                     dominance,
                     3,
                     frequency,
