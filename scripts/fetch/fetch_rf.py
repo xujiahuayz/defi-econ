@@ -2,16 +2,21 @@
 Script to fetch the risk-free rate from the Fama French library
 """
 
-import pandas as pd
-from environ.constants import (
-    DATA_PATH,
-)
+import ssl
 
+import pandas as pd
+
+from environ.constants import DATA_PATH
 
 FAMA_FRENCH_THREE_FACTORS_DAILY = (
     "https://mba.tuck.dartmouth.edu/pages/faculty/"
     + "ken.french/ftp/F-F_Research_Data_Factors_daily_CSV.zip"
 )
+
+
+# Create an SSL context that ignores SSL certificate verification
+ssl._create_default_https_context = ssl._create_unverified_context
+
 
 # read the data and ignore the first and last three rows
 df_rf = pd.read_csv(
@@ -43,4 +48,4 @@ df_rf = pd.merge(df_date_range, df_rf, on="Date", how="left")
 df_rf["RF"].fillna(method="ffill", inplace=True)
 
 # save the DataFrame
-df_rf.to_csv(f"{DATA_PATH}/data_global/risk_free_rate/risk_free_rate.csv", index=False)
+df_rf.to_csv(DATA_PATH / "data_global/risk_free_rate/risk_free_rate.csv", index=False)
