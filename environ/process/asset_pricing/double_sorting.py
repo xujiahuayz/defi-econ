@@ -8,7 +8,6 @@ import warnings
 import pandas as pd
 import scipy.stats as stats
 import statsmodels.api as sm
-from tqdm import tqdm
 
 from environ.constants import DEPENDENT_VARIABLES, PROCESSED_DATA_PATH, STABLE_DICT
 from environ.process.market.risk_free_rate import df_rf
@@ -19,7 +18,7 @@ warnings.filterwarnings("ignore")
 FONT_SIZE = 25
 
 
-def _apy_return(
+def _apr_return(
     df_panel: pd.DataFrame,
     freq: int,
 ) -> pd.DataFrame:
@@ -27,17 +26,14 @@ def _apy_return(
     Function to calculate the APY return
     """
 
-    # TODO: check whether the supply rates are compounded daily
     # convert annalized supply rates to daily supply rates
     df_panel["supply_rates"] = df_panel["supply_rates"] / 365
 
     # sort the dataframe by Token and Date
     df_panel.sort_values(by=["Token", "Date"], ascending=True, inplace=True)
 
-    # TODO:
-
     # iterate through the Token
-    for token in tqdm(df_panel["Token"].unique()):
+    for token in df_panel["Token"].unique():
         # isolate the dataframe by Token
         df_token = df_panel[df_panel["Token"] == token]
 
@@ -53,8 +49,8 @@ def _apy_return(
             ].copy()
 
             # compound the apy
-            cum_apy = (df_date["supply_rates"] + 1).cumprod() - 1
-            print(cum_apy)
+            cum_apy = (df_date["supply_rates"] + 1).prod() - 1
+
             df_panel.loc[
                 (df_panel["Token"] == token) & (df_panel["Date"] == date), "cum_apy"
             ] = cum_apy
@@ -67,6 +63,12 @@ def _apy_return(
                 & (df_panel["Date"] == (date - datetime.timedelta(days=freq))),
                 "dollar_exchange_rate",
             ]
+
+    # calculate the DPY return
+    df_panel["apr_ret"] = (1 + df_panel["cum_apy"]) * (df_panel["dollar_ret"] + 1) - 1
+
+    # calculate the aggregate return
+    df_panel["ret"] = df_panel["apr_ret"] + df_panel["dollar_ret"]
 
     return df_panel
 
@@ -95,7 +97,9 @@ def _freq_conversion(
     df_panel.sort_values(by=["Token", "Date"], ascending=True, inplace=True)
 
     # calculate the return under the new frequency
-    df_panel["ret"] = df_panel.groupby("Token")["dollar_exchange_rate"].pct_change()
+    df_panel["dollar_ret"] = df_panel.groupby("Token")[
+        "dollar_exchange_rate"
+    ].pct_change()
     df_panel["mret"] = df_panel.groupby("Token")["S&P"].pct_change()
 
     return df_panel
@@ -104,7 +108,7 @@ def _freq_conversion(
 def _ret_winsorizing(
     df_panel: pd.DataFrame,
     threshold: float = 0.01,
-    ret_col: str = "ret",
+    ret_col: str = "dollar_ret",
 ) -> pd.DataFrame:
     """
     Function to winsorize the DataFrame
@@ -135,6 +139,9 @@ def _asset_pricing_preprocess(
 
     # winsorize the return
     df_panel = _ret_winsorizing(df_panel)
+
+    # apr return
+    df_panel = _apr_return(df_panel, freq=freq)
 
     # lag 1 unit for the dominance var and yield var to avoid information leakage
     df_panel = lag_variable_columns(
@@ -338,22 +345,23 @@ if __name__ == "__main__":
         PROCESSED_DATA_PATH / "panel_main.pickle.zip", compression="zip"
     )
 
-    # a dict to separate the stablecoin and non-stablecoin
-    df_stablecoin = {
-        "stablecoin": reg_panel[reg_panel["stablecoin"] == 1].copy(),
-        "non_stablecoin": reg_panel[reg_panel["stablecoin"] == 0].copy(),
+    # stable non-stable info dict
+    stable_nonstable_info = {
+        "stablecoin": reg_panel[reg_panel["Token"].isin(STABLE_DICT.keys())],
+        "non-stablecoin": reg_panel[~reg_panel["Token"].isin(STABLE_DICT.keys())],
     }
 
     # iterate through the dominance
-    for dominance in DEPENDENT_VARIABLES + ["ret"]:
-        for frequency in [14, 30]:
-            print(f"Processing {dominance} {frequency}")
+    for panel_info, df_panel in stable_nonstable_info.items():
+        for dominance in DEPENDENT_VARIABLES + ["ret"]:
+            for frequency in [14, 30]:
+                print(f"Processing {panel_info} {dominance} {frequency}")
 
-            print(
-                asset_pricing(
-                    reg_panel,
-                    dominance,
-                    3,
-                    frequency,
+                print(
+                    asset_pricing(
+                        df_panel,
+                        dominance,
+                        3,
+                        frequency,
+                    )
                 )
-            )
