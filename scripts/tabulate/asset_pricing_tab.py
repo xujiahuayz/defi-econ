@@ -15,7 +15,7 @@ reg_panel = pd.read_pickle(
 # table to store the results
 df_tab = pd.DataFrame()
 
-for dominance in DEPENDENT_VARIABLES:
+for dominance in DEPENDENT_VARIABLES + ["ret"]:
     for frequency in [14, 30]:
         df_ap = asset_pricing(
             reg_panel,

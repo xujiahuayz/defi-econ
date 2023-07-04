@@ -2,34 +2,82 @@
 Functions to help with asset pricing
 """
 
+import datetime
 import warnings
-from pathlib import Path
 
 import pandas as pd
 import scipy.stats as stats
 import statsmodels.api as sm
+from tqdm import tqdm
 
-from environ.constants import (
-    DEPENDENT_VARIABLES,
-    FIGURE_PATH,
-    PROCESSED_DATA_PATH,
-    STABLE_DICT,
-)
+from environ.constants import DEPENDENT_VARIABLES, PROCESSED_DATA_PATH, STABLE_DICT
 from environ.process.market.risk_free_rate import df_rf
-from environ.utils.variable_constructer import lag_variable_columns
+from environ.utils.variable_constructer import lag_variable_columns, name_lag_variable
 
 warnings.filterwarnings("ignore")
 
 FONT_SIZE = 25
 
 
-def _freq_col(
+def _apy_return(
+    df_panel: pd.DataFrame,
+    freq: int,
+) -> pd.DataFrame:
+    """
+    Function to calculate the APY return
+    """
+
+    # TODO: check whether the supply rates are compounded daily
+    # convert annalized supply rates to daily supply rates
+    df_panel["supply_rates"] = df_panel["supply_rates"] / 365
+
+    # sort the dataframe by Token and Date
+    df_panel.sort_values(by=["Token", "Date"], ascending=True, inplace=True)
+
+    # TODO:
+
+    # iterate through the Token
+    for token in tqdm(df_panel["Token"].unique()):
+        # isolate the dataframe by Token
+        df_token = df_panel[df_panel["Token"] == token]
+
+        # get the list of date when the frequency is True
+        date_list = df_token[df_token["freq"]]["Date"].tolist()
+
+        # iterate through the date list
+        for date in date_list:
+            # isolate the dataframe between the date and the date - freq + 1
+            df_date = df_token[
+                (df_token["Date"] <= date)
+                & (df_token["Date"] > date - datetime.timedelta(days=freq))
+            ].copy()
+
+            # compound the apy
+            cum_apy = (df_date["supply_rates"] + 1).cumprod() - 1
+            print(cum_apy)
+            df_panel.loc[
+                (df_panel["Token"] == token) & (df_panel["Date"] == date), "cum_apy"
+            ] = cum_apy
+
+            df_panel.loc[
+                (df_panel["Token"] == token) & (df_panel["Date"] == date),
+                "dollar_exchange_rate_mom",
+            ] = df_panel.loc[
+                (df_panel["Token"] == token)
+                & (df_panel["Date"] == (date - datetime.timedelta(days=freq))),
+                "dollar_exchange_rate",
+            ]
+
+    return df_panel
+
+
+def _freq_conversion(
     df_panel: pd.DataFrame,
     freq: int,
     date_col: str = "Date",
 ) -> pd.DataFrame:
     """
-    Function to reconstruct the frequency columns of a series
+    Function to convert the frequency of a series from daily to a given frequency
     """
 
     # convert the date to datetime
@@ -39,16 +87,6 @@ def _freq_col(
     df_panel["freq"] = (
         (df_panel["timestamp"] - df_panel["timestamp"].min()) % (freq * 24 * 60 * 60)
     ) == 0
-
-    return df_panel
-
-
-def _freq_conversion(
-    df_panel: pd.DataFrame,
-) -> pd.DataFrame:
-    """
-    Function to convert the frequency of a series from daily to a given frequency
-    """
 
     # keep the row with freq == True
     df_panel = df_panel[df_panel["freq"]]
@@ -92,11 +130,8 @@ def _asset_pricing_preprocess(
     Function to preprocess the dataframe
     """
 
-    # reconstruct the frequency columns
-    df_panel = _freq_col(df_panel, freq)
-
     # convert the frequency
-    df_panel = _freq_conversion(df_panel)
+    df_panel = _freq_conversion(df_panel, freq=freq)
 
     # winsorize the return
     df_panel = _ret_winsorizing(df_panel)
@@ -138,7 +173,9 @@ def _sorting(
         df_panel_period = df_panel[df_panel["Date"] == period].copy()
 
         # sort the dataframe based on the risk factor
-        df_panel_period = df_panel_period.sort_values(by=risk_factor, ascending=True)
+        df_panel_period = df_panel_period.sort_values(
+            by=name_lag_variable(risk_factor), ascending=True
+        )
 
         # rows per partition
         n_threasold = len(df_panel_period) // n_port
@@ -288,7 +325,7 @@ def asset_pricing(
     df_sample = _sorting(
         df_panel=df_panel,
         risk_factor=dom_var,
-        n_port=3,
+        n_port=n_port,
     )
 
     # evaluate the performance of the portfolio
@@ -301,20 +338,22 @@ if __name__ == "__main__":
         PROCESSED_DATA_PATH / "panel_main.pickle.zip", compression="zip"
     )
 
-    # stable non-stable info dict
-    stable_nonstable_info = {
-        "stablecoin": reg_panel[reg_panel["Token"].isin(STABLE_DICT.keys())],
-        "nonstablecoin": reg_panel[~reg_panel["Token"].isin(STABLE_DICT.keys())],
+    # a dict to separate the stablecoin and non-stablecoin
+    df_stablecoin = {
+        "stablecoin": reg_panel[reg_panel["stablecoin"] == 1].copy(),
+        "non_stablecoin": reg_panel[reg_panel["stablecoin"] == 0].copy(),
     }
 
     # iterate through the dominance
-    for panel_info, df_panel in stable_nonstable_info.items():
-        for dominance in DEPENDENT_VARIABLES:
-            for frequency in [14, 30]:
-                print(f"Processing {panel_info} {dominance} {frequency}")
+    for dominance in DEPENDENT_VARIABLES + ["ret"]:
+        for frequency in [14, 30]:
+            print(f"Processing {dominance} {frequency}")
+
+            print(
                 asset_pricing(
-                    df_panel,
+                    reg_panel,
                     dominance,
                     3,
                     frequency,
                 )
+            )
