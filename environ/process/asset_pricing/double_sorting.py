@@ -8,6 +8,7 @@ import warnings
 import pandas as pd
 import scipy.stats as stats
 import statsmodels.api as sm
+from tqdm import tqdm
 
 from environ.constants import DEPENDENT_VARIABLES, PROCESSED_DATA_PATH, STABLE_DICT
 from environ.process.market.risk_free_rate import df_rf
@@ -33,7 +34,7 @@ def _apr_return(
     df_panel.sort_values(by=["Token", "Date"], ascending=True, inplace=True)
 
     # iterate through the Token
-    for token in df_panel["Token"].unique():
+    for token in tqdm(df_panel["Token"].unique()):
         # isolate the dataframe by Token
         df_token = df_panel[df_panel["Token"] == token]
 
