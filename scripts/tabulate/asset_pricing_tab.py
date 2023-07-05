@@ -64,13 +64,13 @@ table = pd.concat(subtables.values(), axis=1, keys=subtables.keys())
 # Transpose the table
 table = table.swapaxes(0, 1)
 
-print(table)
-
 # Save the table in latex format
 table.to_latex(
     TABLE_PATH / "asset_pricing.tex",
     column_format="rcl",
     escape=False,
     header=False,
-    longtable=True,
 )
+
+# Save the table in pickle format
+table.to_pickle(PROCESSED_DATA_PATH / "asset_pricing.pickle.zip", compression="zip")

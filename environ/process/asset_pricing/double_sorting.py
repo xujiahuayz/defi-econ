@@ -180,6 +180,20 @@ def _sorting(
         # filter the dataframe
         df_panel_period = df_panel[df_panel["Date"] == period].copy()
 
+        # isolate the portfolio with zero dominance
+        df_zero_dom = df_panel_period[
+            df_panel_period[name_lag_variable(risk_factor)] == 0
+        ].copy()
+
+        df_zero_dom["portfolio"] = "P1"
+
+        df_portfolio.append(df_zero_dom)
+
+        # remove the tokens with zero dominance
+        df_panel_period = df_panel_period[
+            df_panel_period[name_lag_variable(risk_factor)] != 0
+        ].copy()
+
         # sort the dataframe based on the risk factor
         df_panel_period = df_panel_period.sort_values(
             by=name_lag_variable(risk_factor), ascending=True
@@ -188,14 +202,14 @@ def _sorting(
         # rows per partition
         n_threasold = len(df_panel_period) // n_port
 
-        for port in range(n_port - 1):
+        for port in range(n_port - 2):
             # isolate the portfolio
             df_portfolio_period = df_panel_period.iloc[
                 port * n_threasold : (port + 1) * n_threasold
             ].copy()
 
             # add the portfolio column
-            df_portfolio_period["portfolio"] = f"P{port + 1}"
+            df_portfolio_period["portfolio"] = f"P{port + 2}"
 
             # append the dataframe
             df_portfolio.append(df_portfolio_period)
