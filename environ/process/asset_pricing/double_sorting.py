@@ -2,34 +2,85 @@
 Functions to help with asset pricing
 """
 
+import datetime
 import warnings
-from pathlib import Path
 
-import matplotlib.pyplot as plt
 import pandas as pd
+import scipy.stats as stats
+import statsmodels.api as sm
+from tqdm import tqdm
 
-from environ.constants import (
-    DEPENDENT_VARIABLES,
-    FIGURE_PATH,
-    PROCESSED_DATA_PATH,
-    STABLE_DICT,
-)
-from environ.plot.plot_ma import plot_boom_bust
-from environ.process.market.boom_bust import BOOM_BUST
-from environ.utils.variable_constructer import lag_variable_columns
+from environ.constants import DEPENDENT_VARIABLES, PROCESSED_DATA_PATH, STABLE_DICT
+from environ.process.market.risk_free_rate import df_rf
+from environ.utils.variable_constructer import lag_variable_columns, name_lag_variable
 
 warnings.filterwarnings("ignore")
 
 FONT_SIZE = 25
 
 
-def _freq_col(
+def _apr_return(
+    df_panel: pd.DataFrame,
+    freq: int,
+) -> pd.DataFrame:
+    """
+    Function to calculate the APY return
+    """
+
+    # convert annalized supply rates to daily supply rates
+    df_panel["supply_rates"] = df_panel["supply_rates"] / 365
+
+    # sort the dataframe by Token and Date
+    df_panel.sort_values(by=["Token", "Date"], ascending=True, inplace=True)
+
+    # iterate through the Token
+    for token in tqdm(df_panel["Token"].unique()):
+        # isolate the dataframe by Token
+        df_token = df_panel[df_panel["Token"] == token]
+
+        # get the list of date when the frequency is True
+        date_list = df_token[df_token["freq"]]["Date"].tolist()
+
+        # iterate through the date list
+        for date in date_list:
+            # isolate the dataframe between the date and the date - freq + 1
+            df_date = df_token[
+                (df_token["Date"] <= date)
+                & (df_token["Date"] > date - datetime.timedelta(days=freq))
+            ].copy()
+
+            # compound the apy
+            cum_apy = (df_date["supply_rates"] + 1).prod() - 1
+
+            df_panel.loc[
+                (df_panel["Token"] == token) & (df_panel["Date"] == date), "cum_apy"
+            ] = cum_apy
+
+            df_panel.loc[
+                (df_panel["Token"] == token) & (df_panel["Date"] == date),
+                "dollar_exchange_rate_mom",
+            ] = df_panel.loc[
+                (df_panel["Token"] == token)
+                & (df_panel["Date"] == (date - datetime.timedelta(days=freq))),
+                "dollar_exchange_rate",
+            ]
+
+    # calculate the DPY return
+    df_panel["apr_ret"] = (1 + df_panel["cum_apy"]) * (df_panel["dollar_ret"] + 1) - 1
+
+    # calculate the aggregate return
+    df_panel["ret"] = df_panel["apr_ret"] + df_panel["dollar_ret"]
+
+    return df_panel
+
+
+def _freq_conversion(
     df_panel: pd.DataFrame,
     freq: int,
     date_col: str = "Date",
 ) -> pd.DataFrame:
     """
-    Function to reconstruct the frequency columns of a series
+    Function to convert the frequency of a series from daily to a given frequency
     """
 
     # convert the date to datetime
@@ -40,16 +91,6 @@ def _freq_col(
         (df_panel["timestamp"] - df_panel["timestamp"].min()) % (freq * 24 * 60 * 60)
     ) == 0
 
-    return df_panel
-
-
-def _freq_conversion(
-    df_panel: pd.DataFrame,
-) -> pd.DataFrame:
-    """
-    Function to convert the frequency of a series from daily to a given frequency
-    """
-
     # keep the row with freq == True
     df_panel = df_panel[df_panel["freq"]]
 
@@ -57,7 +98,10 @@ def _freq_conversion(
     df_panel.sort_values(by=["Token", "Date"], ascending=True, inplace=True)
 
     # calculate the return under the new frequency
-    df_panel["ret"] = df_panel.groupby("Token")["dollar_exchange_rate"].pct_change()
+    df_panel["dollar_ret"] = df_panel.groupby("Token")[
+        "dollar_exchange_rate"
+    ].pct_change()
+    df_panel["mret"] = df_panel.groupby("Token")["S&P"].pct_change()
 
     return df_panel
 
@@ -65,7 +109,7 @@ def _freq_conversion(
 def _ret_winsorizing(
     df_panel: pd.DataFrame,
     threshold: float = 0.01,
-    ret_col: str = "ret",
+    ret_col: str = "dollar_ret",
 ) -> pd.DataFrame:
     """
     Function to winsorize the DataFrame
@@ -86,25 +130,24 @@ def _asset_pricing_preprocess(
     df_panel: pd.DataFrame,
     dominance_var: str,
     freq: int,
-    yield_var: str = "supply_rates",
 ) -> pd.DataFrame:
     """
     Function to preprocess the dataframe
     """
 
-    # reconstruct the frequency columns
-    df_panel = _freq_col(df_panel, freq)
-
     # convert the frequency
-    df_panel = _freq_conversion(df_panel)
+    df_panel = _freq_conversion(df_panel, freq=freq)
 
     # winsorize the return
     df_panel = _ret_winsorizing(df_panel)
 
+    # apr return
+    df_panel = _apr_return(df_panel, freq=freq)
+
     # lag 1 unit for the dominance var and yield var to avoid information leakage
     df_panel = lag_variable_columns(
         data=df_panel,
-        variable=[dominance_var, yield_var],
+        variable=[dominance_var],
         time_variable="Date",
         entity_variable="Token",
     )
@@ -112,11 +155,10 @@ def _asset_pricing_preprocess(
     return df_panel
 
 
-def _double_sorting(
+def _sorting(
     df_panel: pd.DataFrame,
-    first_indicator: str,
-    second_indicator: str,
-    threshold: float = 0.1,
+    risk_factor: str,
+    n_port: int = 3,
 ) -> pd.DataFrame:
     """
     Function to sort the tokens based on the dominance
@@ -138,25 +180,34 @@ def _double_sorting(
         # filter the dataframe
         df_panel_period = df_panel[df_panel["Date"] == period].copy()
 
-        # calculate the threshold
-        n_threasold = int(df_panel_period.shape[0] * threshold)
-
-        # sort the dataframe based on the first and second indicator
+        # sort the dataframe based on the risk factor
         df_panel_period = df_panel_period.sort_values(
-            by=[first_indicator, second_indicator], ascending=False
+            by=name_lag_variable(risk_factor), ascending=True
         )
 
-        # create the top portfolio
-        df_top_portfolio = df_panel_period.head(n_threasold).copy()
-        df_top_portfolio["portfolio"] = "top"
+        # rows per partition
+        n_threasold = len(df_panel_period) // n_port
 
-        # create the bottom portfolio
-        df_bottom_portfolio = df_panel_period.tail(n_threasold).copy()
-        df_bottom_portfolio["portfolio"] = "bottom"
+        for port in range(n_port - 1):
+            # isolate the portfolio
+            df_portfolio_period = df_panel_period.iloc[
+                port * n_threasold : (port + 1) * n_threasold
+            ].copy()
 
-        # append the portfolio
-        df_portfolio.append(df_top_portfolio)
-        df_portfolio.append(df_bottom_portfolio)
+            # add the portfolio column
+            df_portfolio_period["portfolio"] = f"P{port + 1}"
+
+            # append the dataframe
+            df_portfolio.append(df_portfolio_period)
+
+        # isolate the portfolio
+        df_portfolio_period = df_panel_period.iloc[(n_port - 1) * n_threasold :].copy()
+
+        # add the portfolio column
+        df_portfolio_period["portfolio"] = f"P{n_port}"
+
+        # append the dataframe
+        df_portfolio.append(df_portfolio_period)
 
     # concatenate the dataframe
     df_sample = pd.concat(df_portfolio)
@@ -166,8 +217,8 @@ def _double_sorting(
 
 def _eval_port(
     df_panel: pd.DataFrame,
-    save_path: Path | str,
-) -> None:
+    freq: int,
+) -> pd.DataFrame:
     """
     Function to evaluate the portfolio
     """
@@ -175,12 +226,12 @@ def _eval_port(
     # sort the dataframe by the frequency and portfolio
     df_panel.sort_values(by=["Date", "portfolio"], ascending=True, inplace=True)
 
-    # dict to store the portfolio return
-    ret_dict = {
-        "freq": [],
-        "top": [],
-        "bottom": [],
-    }
+    # check how many portfolio
+    n_port = len(df_panel["portfolio"].unique())
+
+    # dict to store the freq and portfolio return
+    ret_dict = {f"P{port}": [] for port in range(1, n_port + 1)}
+    ret_dict["freq"] = []
 
     # iterate through the frequency
     for period in df_panel["Date"].unique():
@@ -190,7 +241,7 @@ def _eval_port(
         # calculate the equal weight portfolio for top and bottom
         ret_dict["freq"].append(period)
 
-        for portfolio in ["top", "bottom"]:
+        for portfolio in [f"P{port}" for port in range(1, n_port + 1)]:
             # isolate the top and bottom portfolio
             df_portfolio = df_panel_period[
                 df_panel_period["portfolio"] == portfolio
@@ -213,84 +264,80 @@ def _eval_port(
     # convert the freq to string
     df_ret["freq"] = pd.to_datetime(df_ret["freq"])
 
+    # read the risk free rate
+    df_rf_ap = df_rf.copy()
+
+    # rename the Date toe freq
+    df_rf_ap.rename(columns={"Date": "freq"}, inplace=True)
+
+    # convert the freq of the risk free rate
+    df_rf_ap["RF"] = (1 + df_rf_ap["RF"]) ** freq - 1
+
+    # merge the dataframe
+    df_ret = df_ret.merge(df_rf_ap, on="freq", how="left")
+
+    # calculate the excess return
+    for portfolio in [f"P{port}" for port in range(1, n_port + 1)]:
+        df_ret[portfolio] = df_ret[portfolio] - df_ret["RF"]
+
     # calculate the bottom minus top
-    df_ret["top_minus_bottom"] = df_ret["top"] - df_ret["bottom"]
+    df_ret[f"P{n_port} - P1"] = df_ret[f"P{n_port}"] - df_ret["P1"]
 
-    plot_lst = ["top", "bottom", "top_minus_bottom"]
+    portfolio_col = [f"P{port}" for port in range(1, n_port + 1)] + [f"P{n_port} - P1"]
 
-    # calculate the cumulative return
-    for col_ret in plot_lst:
-        df_ret[col_ret + "_cum"] = (df_ret[col_ret] + 1).cumprod()
-
-    # three subplots for cum ret sharing x axis
-    (
-        _,
-        ax_ret,
-    ) = plt.subplots(figsize=(12, 7))
-
-    for col in plot_lst:
-        ax_ret.plot(df_ret["freq"], df_ret[col + "_cum"], label=col)
-
-    # plot boom bust cycles
-    plot_boom_bust(ax_ret, boom_bust=BOOM_BUST)
-    ax_ret.set_xlim(df_panel["Date"].min(), df_panel["Date"].max())
-
-    # place the legend outside the plot without border
-    plt.legend(
-        bbox_to_anchor=(1.01, 1),
-        loc="upper left",
-        borderaxespad=0.0,
-        prop={"size": FONT_SIZE},
+    # a new dataframe to store the averag return for each portfolio
+    df_ret_avg = pd.DataFrame(
+        {
+            # portfolio name
+            "portfolio": portfolio_col,
+            # average return
+            "avg_return": df_ret[portfolio_col].mean().to_list(),
+            # t-stat of the average return
+            "t-stat": df_ret[portfolio_col]
+            .apply(lambda x: stats.ttest_1samp(x, 0)[0])
+            .to_list(),
+            # standard deviation of the return
+            "stdev": df_ret[portfolio_col].std().to_list(),
+            # sharpe ratio
+            "sharpe": (
+                df_ret[portfolio_col].mean() / df_ret[portfolio_col].std()
+            ).to_list(),
+            # alpha of the portfolio
+            "alpha": df_ret[portfolio_col]
+            .apply(lambda x: sm.OLS(x, df_ret["RF"]).fit().params[0])
+            .to_list(),
+            # t-stat of the alpha
+            "alpha_t": df_ret[portfolio_col]
+            .apply(lambda x: sm.OLS(x, df_ret["RF"]).fit().tvalues[0])
+            .to_list(),
+        }
     )
 
-    # enlarge the font of ticker
-    plt.xticks(fontsize=FONT_SIZE)
-    plt.yticks(fontsize=FONT_SIZE)
-
-    # rotate x axis label by 45 degree
-    plt.xticks(rotation=45)
-
-    # add the y label
-    ax_ret.set_ylabel("Cumulative Return", fontsize=FONT_SIZE)
-
-    # tight layout
-    plt.tight_layout()
-
-    # save the plot to the save path
-    plt.savefig(save_path, dpi=300)
-
-    # show the plot
-    plt.show()
-
-    # close the plot
-    plt.close()
+    return df_ret_avg
 
 
 def asset_pricing(
     reg_panel: pd.DataFrame,
-    save_path: Path | str,
     dom_var: str = "volume_ultimate_share",
-    yield_var: str = "supply_rates",
-    threshold: float = 0.1,
+    n_port: int = 3,
     freq: int = 14,
-) -> None:
+) -> pd.DataFrame:
     """
     Aggregate function to create portfolios
     """
 
     # preprocess the dataframe
-    df_panel = _asset_pricing_preprocess(reg_panel, dom_var, freq, yield_var)
+    df_panel = _asset_pricing_preprocess(reg_panel, dom_var, freq)
 
     # sort the tokens based on the dominance
-    df_sample = _double_sorting(
+    df_sample = _sorting(
         df_panel=df_panel,
-        first_indicator=dom_var,
-        second_indicator=yield_var,
-        threshold=threshold,
+        risk_factor=dom_var,
+        n_port=n_port,
     )
 
     # evaluate the performance of the portfolio
-    _eval_port(df_sample, save_path)
+    return _eval_port(df_sample, freq)
 
 
 if __name__ == "__main__":
@@ -302,18 +349,20 @@ if __name__ == "__main__":
     # stable non-stable info dict
     stable_nonstable_info = {
         "stablecoin": reg_panel[reg_panel["Token"].isin(STABLE_DICT.keys())],
-        "nonstablecoin": reg_panel[~reg_panel["Token"].isin(STABLE_DICT.keys())],
+        "non-stablecoin": reg_panel[~reg_panel["Token"].isin(STABLE_DICT.keys())],
     }
 
     # iterate through the dominance
     for panel_info, df_panel in stable_nonstable_info.items():
-        for dominance in DEPENDENT_VARIABLES:
+        for dominance in DEPENDENT_VARIABLES + ["ret"]:
             for frequency in [14, 30]:
-                asset_pricing(
-                    df_panel,
-                    FIGURE_PATH / f"{panel_info}_{dominance}_{frequency}.pdf",
-                    dominance,
-                    "supply_rates",
-                    0.1,
-                    frequency,
+                print(f"Processing {panel_info} {dominance} {frequency}")
+
+                print(
+                    asset_pricing(
+                        df_panel,
+                        dominance,
+                        3,
+                        frequency,
+                    )
                 )

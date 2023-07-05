@@ -79,7 +79,12 @@ def construct_panel(merge_on: list[str]) -> pd.DataFrame:
 
     # fill the na values
     # NOTE: NA must be processed BEFORE constructing the share variables
-    var_without_na = PANEL_VAR_INFO["share_var"] + ["stableshare", "Supply_share"]
+    var_without_na = PANEL_VAR_INFO["share_var"] + [
+        "stableshare",
+        "Supply_share",
+        "borrow_rate",
+        "supply_rates",
+    ]
 
     panel_main[var_without_na] = panel_main[var_without_na].fillna(0)
     panel_main[var_without_na] = panel_main[var_without_na].clip(lower=0)
