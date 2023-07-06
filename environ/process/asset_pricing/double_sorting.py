@@ -155,6 +155,7 @@ def _asset_pricing_preprocess(
     return df_panel
 
 
+# TODO:
 def _sorting(
     df_panel: pd.DataFrame,
     risk_factor: str,
@@ -177,10 +178,12 @@ def _sorting(
     # remove the first date
     date_list.remove(df_panel["Date"].min())
 
+    # TODO: make the function more general (signal: for loop!!)
     for period in date_list:
         # filter the dataframe
         df_panel_period = df_panel[df_panel["Date"] == period].copy()
 
+        # TODO: make it a func
         if zero_value_portfolio:
             # isolate the portfolio with zero dominance
             df_zero_dom = df_panel_period[
@@ -250,6 +253,7 @@ def _eval_port(
     # dict to store the freq and portfolio return
     ret_dict = {f"P{port}": [] for port in range(1, n_port + 1)}
     ret_dict["freq"] = []
+    ret_dict["mret"] = []
 
     # iterate through the frequency
     for period in df_panel["Date"].unique():
@@ -258,6 +262,7 @@ def _eval_port(
 
         # calculate the equal weight portfolio for top and bottom
         ret_dict["freq"].append(period)
+        ret_dict["mret"].append(df_panel_period["mret"].mean())
 
         for portfolio in [f"P{port}" for port in range(1, n_port + 1)]:
             # isolate the top and bottom portfolio
@@ -309,11 +314,16 @@ def _eval_port(
             # portfolio name
             "Portfolios": portfolio_col,
             # average return
-            "Mean": df_ret[portfolio_col].mean().to_list(),
+            "Mean": [round(num, 3) for num in df_ret[portfolio_col].mean().to_list()],
             # t-stat of the average return
             "t-stat of mean": df_ret[portfolio_col]
             .apply(lambda x: stats.ttest_1samp(x, 0)[0])
             .to_list(),
+            # p-value of the average return
+            "p-value of mean": df_ret[portfolio_col]
+            .apply(lambda x: stats.ttest_1samp(x, 0)[1])
+            .to_list(),
+            # median of the return
             # standard deviation of the return
             "Stdev": df_ret[portfolio_col].std().to_list(),
             # sharpe ratio
@@ -322,11 +332,11 @@ def _eval_port(
             ).to_list(),
             # alpha of the portfolio
             "Alpha": df_ret[portfolio_col]
-            .apply(lambda x: sm.OLS(x, df_ret["RF"]).fit().params[0])
+            .apply(lambda x: sm.OLS(x, df_ret["mret"] - df_ret["RF"]).fit().params[0])
             .to_list(),
             # t-stat of the alpha
             "t-stat of alpha": df_ret[portfolio_col]
-            .apply(lambda x: sm.OLS(x, df_ret["RF"]).fit().tvalues[0])
+            .apply(lambda x: sm.OLS(x, df_ret["mret"] - df_ret["RF"]).fit().tvalues[0])
             .to_list(),
         }
     )

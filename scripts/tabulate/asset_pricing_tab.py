@@ -41,9 +41,10 @@ for panel_info, df_panel in stable_nonstable_info.items():
                 .T
             )
 
-            # save the results
+            # save the results in latex keep the index and keep three decimal places
             df_ap.to_latex(
                 TABLE_PATH / f"asset_pricing_{panel_info}_{dominance}_{frequency}.tex",
-                escape=False,
                 index=True,
+                escape=False,
+                float_format="{:0.3f}".format,
             )
