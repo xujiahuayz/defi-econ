@@ -31,16 +31,19 @@ for panel_info, df_panel in stable_nonstable_info.items():
         for frequency in [14, 30]:
             print(f"Processing {panel_info} {dominance} {frequency}")
 
-            df_ap = asset_pricing(
-                df_panel,
-                dominance,
-                3,
-                frequency,
-            ).T
+            df_ap = (
+                asset_pricing(df_panel, dominance, 3, frequency, True)
+                .set_index("Portfolios")
+                .T
+                if dominance != "ret"
+                else asset_pricing(df_panel, dominance, 2, frequency, False)
+                .set_index("Portfolios")
+                .T
+            )
 
             # save the results
             df_ap.to_latex(
                 TABLE_PATH / f"asset_pricing_{panel_info}_{dominance}_{frequency}.tex",
                 escape=False,
-                header=False,
+                index=True,
             )

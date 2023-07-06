@@ -159,6 +159,7 @@ def _sorting(
     df_panel: pd.DataFrame,
     risk_factor: str,
     n_port: int = 3,
+    zero_value_portfolio: bool = True,
 ) -> pd.DataFrame:
     """
     Function to sort the tokens based on the dominance
@@ -180,19 +181,20 @@ def _sorting(
         # filter the dataframe
         df_panel_period = df_panel[df_panel["Date"] == period].copy()
 
-        # isolate the portfolio with zero dominance
-        df_zero_dom = df_panel_period[
-            df_panel_period[name_lag_variable(risk_factor)] == 0
-        ].copy()
+        if zero_value_portfolio:
+            # isolate the portfolio with zero dominance
+            df_zero_dom = df_panel_period[
+                df_panel_period[name_lag_variable(risk_factor)] == 0
+            ].copy()
 
-        df_zero_dom["portfolio"] = "P1"
+            df_zero_dom["portfolio"] = "P1"
 
-        df_portfolio.append(df_zero_dom)
+            df_portfolio.append(df_zero_dom)
 
-        # remove the tokens with zero dominance
-        df_panel_period = df_panel_period[
-            df_panel_period[name_lag_variable(risk_factor)] != 0
-        ].copy()
+            # remove the tokens with zero dominance
+            df_panel_period = df_panel_period[
+                df_panel_period[name_lag_variable(risk_factor)] != 0
+            ].copy()
 
         # sort the dataframe based on the risk factor
         df_panel_period = df_panel_period.sort_values(
@@ -202,14 +204,16 @@ def _sorting(
         # rows per partition
         n_threasold = len(df_panel_period) // n_port
 
-        for port in range(n_port - 2):
+        for port in range(n_port - 2) if zero_value_portfolio else range(n_port - 1):
             # isolate the portfolio
             df_portfolio_period = df_panel_period.iloc[
                 port * n_threasold : (port + 1) * n_threasold
             ].copy()
 
             # add the portfolio column
-            df_portfolio_period["portfolio"] = f"P{port + 2}"
+            df_portfolio_period["portfolio"] = (
+                f"P{port + 2}" if zero_value_portfolio else f"P{port + 1}"
+            )
 
             # append the dataframe
             df_portfolio.append(df_portfolio_period)
@@ -303,25 +307,25 @@ def _eval_port(
     df_ret_avg = pd.DataFrame(
         {
             # portfolio name
-            "portfolio": portfolio_col,
+            "Portfolios": portfolio_col,
             # average return
-            "avg_return": df_ret[portfolio_col].mean().to_list(),
+            "Mean": df_ret[portfolio_col].mean().to_list(),
             # t-stat of the average return
-            "t-stat": df_ret[portfolio_col]
+            "t-stat of mean": df_ret[portfolio_col]
             .apply(lambda x: stats.ttest_1samp(x, 0)[0])
             .to_list(),
             # standard deviation of the return
-            "stdev": df_ret[portfolio_col].std().to_list(),
+            "Stdev": df_ret[portfolio_col].std().to_list(),
             # sharpe ratio
-            "sharpe": (
+            "Sharpe": (
                 df_ret[portfolio_col].mean() / df_ret[portfolio_col].std()
             ).to_list(),
             # alpha of the portfolio
-            "alpha": df_ret[portfolio_col]
+            "Alpha": df_ret[portfolio_col]
             .apply(lambda x: sm.OLS(x, df_ret["RF"]).fit().params[0])
             .to_list(),
             # t-stat of the alpha
-            "alpha_t": df_ret[portfolio_col]
+            "t-stat of alpha": df_ret[portfolio_col]
             .apply(lambda x: sm.OLS(x, df_ret["RF"]).fit().tvalues[0])
             .to_list(),
         }
@@ -335,6 +339,7 @@ def asset_pricing(
     dom_var: str = "volume_ultimate_share",
     n_port: int = 3,
     freq: int = 14,
+    zero_value_portfolio: bool = True,
 ) -> pd.DataFrame:
     """
     Aggregate function to create portfolios
@@ -348,6 +353,7 @@ def asset_pricing(
         df_panel=df_panel,
         risk_factor=dom_var,
         n_port=n_port,
+        zero_value_portfolio=zero_value_portfolio,
     )
 
     # evaluate the performance of the portfolio
