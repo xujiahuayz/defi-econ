@@ -155,148 +155,115 @@ def _asset_pricing_preprocess(
     return df_panel
 
 
-# TODO:
+def _sort_zero_value_port(
+    df_panel_period: pd.DataFrame,
+    risk_factor: str,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Function to isolate zero-value dominance portfolio
+    """
+
+    # isolate the portfolio with zero dominance
+    df_zero_dom = df_panel_period[
+        df_panel_period[name_lag_variable(risk_factor)] == 0
+    ].copy()
+
+    df_zero_dom["portfolio"] = "P1"
+
+    # remove the tokens with zero dominance
+    df_panel_period = df_panel_period[
+        df_panel_period[name_lag_variable(risk_factor)] != 0
+    ].copy()
+
+    return df_panel_period, df_zero_dom
+
+
 def _sorting(
-    df_panel: pd.DataFrame,
+    df_panel_period: pd.DataFrame,
     risk_factor: str,
     n_port: int = 3,
     zero_value_portfolio: bool = True,
 ) -> pd.DataFrame:
     """
-    Function to sort the tokens based on the dominance
+    Function to implement the asset pricing for one period
     """
 
     # a list to store the top portfolio and bottom portfolio
     df_portfolio = []
 
-    # sort the dataframe based on the Date
-    df_panel = df_panel.sort_values(by=["Date"], ascending=True)
-
-    # a list to store the date
-    date_list = list(df_panel["Date"].unique())
-
-    # remove the first date
-    date_list.remove(df_panel["Date"].min())
-
-    # TODO: make the function more general (signal: for loop!!)
-    for period in date_list:
-        # filter the dataframe
-        df_panel_period = df_panel[df_panel["Date"] == period].copy()
-
-        # TODO: make it a func
-        if zero_value_portfolio:
-            # isolate the portfolio with zero dominance
-            df_zero_dom = df_panel_period[
-                df_panel_period[name_lag_variable(risk_factor)] == 0
-            ].copy()
-
-            df_zero_dom["portfolio"] = "P1"
-
-            df_portfolio.append(df_zero_dom)
-
-            # remove the tokens with zero dominance
-            df_panel_period = df_panel_period[
-                df_panel_period[name_lag_variable(risk_factor)] != 0
-            ].copy()
-
-        # sort the dataframe based on the risk factor
-        df_panel_period = df_panel_period.sort_values(
-            by=name_lag_variable(risk_factor), ascending=True
+    if zero_value_portfolio:
+        # isolate the zero-value portfolio
+        df_panel_period, df_zero_dom = _sort_zero_value_port(
+            df_panel_period=df_panel_period, risk_factor=risk_factor
         )
+        df_portfolio.append(df_zero_dom)
 
-        # rows per partition
-        n_threasold = len(df_panel_period) // n_port
+    # sort the dataframe based on the risk factor
+    df_panel_period = df_panel_period.sort_values(
+        by=name_lag_variable(risk_factor), ascending=True
+    )
 
-        for port in range(n_port - 2) if zero_value_portfolio else range(n_port - 1):
-            # isolate the portfolio
-            df_portfolio_period = df_panel_period.iloc[
-                port * n_threasold : (port + 1) * n_threasold
-            ].copy()
+    # rows per partition
+    n_threasold = len(df_panel_period) // n_port
 
-            # add the portfolio column
-            df_portfolio_period["portfolio"] = (
-                f"P{port + 2}" if zero_value_portfolio else f"P{port + 1}"
-            )
-
-            # append the dataframe
-            df_portfolio.append(df_portfolio_period)
-
+    for port in range(n_port - 2) if zero_value_portfolio else range(n_port - 1):
         # isolate the portfolio
-        df_portfolio_period = df_panel_period.iloc[(n_port - 1) * n_threasold :].copy()
+        df_portfolio_period = df_panel_period.iloc[
+            port * n_threasold : (port + 1) * n_threasold
+        ].copy()
 
         # add the portfolio column
-        df_portfolio_period["portfolio"] = f"P{n_port}"
+        df_portfolio_period["portfolio"] = (
+            f"P{port + 2}" if zero_value_portfolio else f"P{port + 1}"
+        )
 
         # append the dataframe
         df_portfolio.append(df_portfolio_period)
 
-    # concatenate the dataframe
-    df_sample = pd.concat(df_portfolio)
+    # isolate the portfolio
+    df_portfolio_period = df_panel_period.iloc[(n_port - 1) * n_threasold :].copy()
 
-    return df_sample
+    # add the portfolio column
+    df_portfolio_period["portfolio"] = f"P{n_port}"
+
+    # append the dataframe
+    df_portfolio.append(df_portfolio_period)
+
+    return pd.concat(df_portfolio)
+
+
+def _mcap_weight(df_portfolio: pd.DataFrame, ret_dict: dict) -> dict:
+    """
+    Function to calculate the market cap weight
+    """
+
+    # check how many portfolio
+    n_port = len(df_panel["portfolio"].unique())
+    for portfolio in [f"P{port}" for port in range(1, n_port + 1)]:
+        # calculate the market cap weight
+        df_portfolio["weight"] = df_portfolio["mcap"] / df_portfolio["mcap"].sum()
+        ret_dict[portfolio].append((df_portfolio["weight"] * df_portfolio["ret"]).sum())
+
+    return ret_dict
 
 
 def _eval_port(
-    df_panel: pd.DataFrame,
+    df_ret: pd.DataFrame,
     freq: int,
+    n_port: int,
 ) -> pd.DataFrame:
     """
     Function to evaluate the portfolio
     """
 
-    # sort the dataframe by the frequency and portfolio
-    df_panel.sort_values(by=["Date", "portfolio"], ascending=True, inplace=True)
-
-    # check how many portfolio
-    n_port = len(df_panel["portfolio"].unique())
-
-    # dict to store the freq and portfolio return
-    ret_dict = {f"P{port}": [] for port in range(1, n_port + 1)}
-    ret_dict["freq"] = []
-    ret_dict["mret"] = []
-
-    # iterate through the frequency
-    for period in df_panel["Date"].unique():
-        # filter the dataframe
-        df_panel_period = df_panel[df_panel["Date"] == period].copy()
-
-        # calculate the equal weight portfolio for top and bottom
-        ret_dict["freq"].append(period)
-        ret_dict["mret"].append(df_panel_period["mret"].mean())
-
-        for portfolio in [f"P{port}" for port in range(1, n_port + 1)]:
-            # isolate the top and bottom portfolio
-            df_portfolio = df_panel_period[
-                df_panel_period["portfolio"] == portfolio
-            ].copy()
-
-            # calculate the market cap weight
-            df_portfolio["weight"] = df_portfolio["mcap"] / df_portfolio["mcap"].sum()
-
-            # calculate the return
-            ret_dict[portfolio].append(
-                (df_portfolio["weight"] * df_portfolio["ret"]).sum()
-            )
-
-    # convert the dict to dataframe
-    df_ret = pd.DataFrame(ret_dict)
-
-    # sort the dataframe by the frequency
+    # prepare the dataframe
     df_ret.sort_values(by="freq", ascending=True, inplace=True)
-
-    # convert the freq to string
     df_ret["freq"] = pd.to_datetime(df_ret["freq"])
 
-    # read the risk free rate
+    # include the risk free rate
     df_rf_ap = df_rf.copy()
-
-    # rename the Date toe freq
     df_rf_ap.rename(columns={"Date": "freq"}, inplace=True)
-
-    # convert the freq of the risk free rate
     df_rf_ap["RF"] = (1 + df_rf_ap["RF"]) ** freq - 1
-
-    # merge the dataframe
     df_ret = df_ret.merge(df_rf_ap, on="freq", how="left")
 
     # calculate the excess return
@@ -323,7 +290,6 @@ def _eval_port(
             "p-value of mean": df_ret[portfolio_col]
             .apply(lambda x: stats.ttest_1samp(x, 0)[1])
             .to_list(),
-            # median of the return
             # standard deviation of the return
             "Stdev": df_ret[portfolio_col].std().to_list(),
             # sharpe ratio
@@ -358,16 +324,33 @@ def asset_pricing(
     # preprocess the dataframe
     df_panel = _asset_pricing_preprocess(reg_panel, dom_var, freq)
 
-    # sort the tokens based on the dominance
-    df_sample = _sorting(
-        df_panel=df_panel,
-        risk_factor=dom_var,
-        n_port=n_port,
-        zero_value_portfolio=zero_value_portfolio,
-    )
+    # prepare the dataframe to store the portfolio
+    df_panel = df_panel.sort_values(by=["Date"], ascending=True)
+    date_list = list(df_panel["Date"].unique())
+    date_list.remove(df_panel["Date"].min())
+    # dict to store the freq and portfolio return
+    ret_dict = {f"P{port}": [] for port in range(1, n_port + 1)}
+    ret_dict["freq"] = []
+    ret_dict["mret"] = []
+
+    # loop through the date
+    for period in date_list:
+        # asset pricing
+        df_panel_period = df_panel[df_panel["Date"] == period].copy()
+        df_portfolio = _sorting(
+            df_panel_period=df_panel_period,
+            risk_factor=dom_var,
+            n_port=n_port,
+            zero_value_portfolio=zero_value_portfolio,
+        )
+
+        # mcap weight
+        ret_dict["freq"].append(period)
+        ret_dict["mret"].append(df_panel_period["mret"].mean())
+        ret_dict = _mcap_weight(df_portfolio, ret_dict)
 
     # evaluate the performance of the portfolio
-    return _eval_port(df_sample, freq)
+    return _eval_port(pd.DataFrame(ret_dict), freq, n_port)
 
 
 if __name__ == "__main__":
