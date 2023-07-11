@@ -238,7 +238,8 @@ def _mcap_weight(df_portfolio: pd.DataFrame, ret_dict: dict) -> dict:
     """
 
     # check how many portfolio
-    n_port = len(df_panel["portfolio"].unique())
+    n_port = len(df_portfolio["portfolio"].unique())
+
     for portfolio in [f"P{port}" for port in range(1, n_port + 1)]:
         # calculate the market cap weight
         df_portfolio["weight"] = df_portfolio["mcap"] / df_portfolio["mcap"].sum()
