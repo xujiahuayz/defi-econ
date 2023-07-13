@@ -18,6 +18,7 @@ from environ.utils.variable_constructer import lag_variable_columns, name_lag_va
 warnings.filterwarnings("ignore")
 
 FONT_SIZE = 25
+REFERENCE_DOM = "betweenness_centrality_count"
 
 
 def _apr_return(
@@ -152,7 +153,7 @@ def _asset_pricing_preprocess(
     # lag 1 unit for the dominance var and yield var to avoid information leakage
     df_panel = lag_variable_columns(
         data=df_panel,
-        variable=[dominance_var],
+        variable=[dominance_var, REFERENCE_DOM],
         time_variable="Date",
         entity_variable="Token",
     )
@@ -161,8 +162,7 @@ def _asset_pricing_preprocess(
 
 
 def _sort_zero_value_port(
-    df_panel_period: pd.DataFrame,
-    risk_factor: str,
+    df_panel_period: pd.DataFrame, risk_factor: str
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Function to isolate zero-value dominance portfolio
@@ -173,12 +173,25 @@ def _sort_zero_value_port(
         df_panel_period[name_lag_variable(risk_factor)] == 0
     ].copy()
 
-    df_zero_dom["portfolio"] = "P1"
-
     # remove the tokens with zero dominance
     df_panel_period = df_panel_period[
         df_panel_period[name_lag_variable(risk_factor)] != 0
     ].copy()
+
+    # if the length of df_zero_dom is 0
+    if len(df_zero_dom) == 0:
+        n_treashold_zero = df_panel_period.loc[
+            df_panel_period[name_lag_variable(REFERENCE_DOM)] == 0
+        ].shape[0]
+
+        # isolate the portfolio
+        df_zero_dom = df_panel_period.iloc[:n_treashold_zero].copy()
+
+        # remove the portfolio from the original dataframe
+        df_panel_period = df_panel_period.iloc[n_treashold_zero:].copy()
+
+    # add the portfolio column
+    df_zero_dom["portfolio"] = "P1"
 
     return df_panel_period, df_zero_dom
 
@@ -196,6 +209,11 @@ def _sorting(
     # a list to store the top portfolio and bottom portfolio
     df_portfolio = []
 
+    # sort the dataframe based on the risk factor
+    df_panel_period = df_panel_period.sort_values(
+        by=name_lag_variable(risk_factor), ascending=True
+    )
+
     if zero_value_portfolio:
         # isolate the zero-value portfolio
         df_panel_period, df_zero_dom = _sort_zero_value_port(
@@ -203,13 +221,12 @@ def _sorting(
         )
         df_portfolio.append(df_zero_dom)
 
-    # sort the dataframe based on the risk factor
-    df_panel_period = df_panel_period.sort_values(
-        by=name_lag_variable(risk_factor), ascending=True
-    )
-
     # rows per partition
-    n_threasold = len(df_panel_period) // n_port
+    n_threasold = (
+        len(df_panel_period) // (n_port - 1)
+        if zero_value_portfolio
+        else len(df_panel_period) // n_port
+    )
 
     for port in range(n_port - 2) if zero_value_portfolio else range(n_port - 1):
         # isolate the portfolio
@@ -226,7 +243,11 @@ def _sorting(
         df_portfolio.append(df_portfolio_period)
 
     # isolate the portfolio
-    df_portfolio_period = df_panel_period.iloc[(n_port - 1) * n_threasold :].copy()
+    df_portfolio_period = (
+        df_panel_period.iloc[(n_port - 2) * n_threasold :].copy()
+        if zero_value_portfolio
+        else df_panel_period.iloc[(n_port - 1) * n_threasold :].copy()
+    )
 
     # add the portfolio column
     df_portfolio_period["portfolio"] = f"P{n_port}"
@@ -234,7 +255,9 @@ def _sorting(
     # append the dataframe
     df_portfolio.append(df_portfolio_period)
 
-    return pd.concat(df_portfolio)
+    df_portfolio = pd.concat(df_portfolio)
+
+    return df_portfolio
 
 
 def _mcap_weight(df_portfolio: pd.DataFrame, ret_dict: dict) -> dict:
