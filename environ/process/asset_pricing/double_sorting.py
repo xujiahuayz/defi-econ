@@ -5,6 +5,7 @@ Functions to help with asset pricing
 import datetime
 import warnings
 
+import numpy as np
 import pandas as pd
 import scipy.stats as stats
 import statsmodels.api as sm
@@ -66,10 +67,14 @@ def _apr_return(
             ]
 
     # calculate the DPY return
-    df_panel["apr_ret"] = (1 + df_panel["cum_apy"]) * (df_panel["dollar_ret"] + 1) - 1
+    df_panel["apr_ret"] = np.log(
+        (1 + df_panel["cum_apy"]) * (df_panel["dollar_ret"] + 1) - 1
+    )
 
     # calculate the aggregate return
-    df_panel["ret"] = df_panel["apr_ret"] + df_panel["dollar_ret"]
+    df_panel["ret"] = np.log(
+        (1 + df_panel["apr_ret"]) * (1 + df_panel["dollar_ret"]) - 1
+    )
 
     return df_panel
 
@@ -97,7 +102,7 @@ def _freq_conversion(
     # check if the frequency is year or month
     df_panel.sort_values(by=["Token", "Date"], ascending=True, inplace=True)
 
-    # calculate the return under the new frequency
+    # calculate the percentage return under the new frequency
     df_panel["dollar_ret"] = df_panel.groupby("Token")[
         "dollar_exchange_rate"
     ].pct_change()
@@ -181,8 +186,8 @@ def _sort_zero_value_port(
 def _sorting(
     df_panel_period: pd.DataFrame,
     risk_factor: str,
-    n_port: int = 3,
-    zero_value_portfolio: bool = True,
+    n_port: int,
+    zero_value_portfolio: bool,
 ) -> pd.DataFrame:
     """
     Function to implement the asset pricing for one period
