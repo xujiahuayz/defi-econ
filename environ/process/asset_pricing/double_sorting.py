@@ -260,15 +260,18 @@ def _sorting(
     return df_portfolio
 
 
-def _mcap_weight(df_portfolio: pd.DataFrame, ret_dict: dict) -> dict:
+def _mcap_weight(df_period: pd.DataFrame, ret_dict: dict) -> dict:
     """
     Function to calculate the market cap weight
     """
 
     # check how many portfolio
-    n_port = len(df_portfolio["portfolio"].unique())
+    n_port = len(df_period["portfolio"].unique())
 
     for portfolio in [f"P{port}" for port in range(1, n_port + 1)]:
+        # isolate the portfolio
+        df_portfolio = df_period[df_period["portfolio"] == portfolio].copy()
+
         # calculate the market cap weight
         df_portfolio["weight"] = df_portfolio["mcap"] / df_portfolio["mcap"].sum()
         ret_dict[portfolio].append((df_portfolio["weight"] * df_portfolio["ret"]).sum())
