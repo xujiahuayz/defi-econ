@@ -12,7 +12,7 @@ import scipy.stats as stats
 import statsmodels.api as sm
 from tqdm import tqdm
 
-from environ.constants import DEPENDENT_VARIABLES, PROCESSED_DATA_PATH, STABLE_DICT
+from environ.constants import PROCESSED_DATA_PATH
 from environ.process.market.risk_free_rate import df_rf
 from environ.utils.variable_constructer import lag_variable_columns, name_lag_variable
 
@@ -25,7 +25,7 @@ REFERENCE_DOM = "betweenness_centrality_count"
 # 1. Check the dollar exchange rate and mcap
 
 
-def _apr_return(
+def _ret_cal(
     df_panel: pd.DataFrame,
     freq: int,
 ) -> pd.DataFrame:
@@ -42,7 +42,7 @@ def _apr_return(
     # iterate through the Token
     for token in tqdm(df_panel["Token"].unique()):
         # isolate the dataframe by Token
-        df_token = df_panel[df_panel["Token"] == token]
+        df_token = df_panel[df_panel["Token"] == token].copy()
 
         # get the list of date when the frequency is True
         date_list = df_token[df_token["freq"]]["Date"].tolist()
@@ -62,14 +62,17 @@ def _apr_return(
                 (df_panel["Token"] == token) & (df_panel["Date"] == date), "cum_apy"
             ] = cum_apy
 
-            df_panel.loc[
-                (df_panel["Token"] == token) & (df_panel["Date"] == date),
-                "dollar_exchange_rate_mom",
-            ] = df_panel.loc[
-                (df_panel["Token"] == token)
-                & (df_panel["Date"] == (date - datetime.timedelta(days=freq))),
-                "dollar_exchange_rate",
-            ]
+    # keep the row with freq == True
+    df_panel = df_panel[df_panel["freq"]]
+
+    # sort the dataframe by Token and Date
+    df_panel.sort_values(by=["Token", "Date"], ascending=True, inplace=True)
+
+    # calculate the percentage return under the new frequency
+    df_panel["dollar_ret"] = df_panel.groupby("Token")[
+        "dollar_exchange_rate"
+    ].pct_change()
+    df_panel["mret"] = df_panel.groupby("Token")["S&P"].pct_change()
 
     # calculate the DPY return
     df_panel["ret"] = np.log(
@@ -96,18 +99,6 @@ def _freq_conversion(
         (df_panel["timestamp"] - df_panel["timestamp"].min()) % (freq * 24 * 60 * 60)
     ) == 0
 
-    # keep the row with freq == True
-    df_panel = df_panel[df_panel["freq"]]
-
-    # check if the frequency is year or month
-    df_panel.sort_values(by=["Token", "Date"], ascending=True, inplace=True)
-
-    # calculate the percentage return under the new frequency
-    df_panel["dollar_ret"] = df_panel.groupby("Token")[
-        "dollar_exchange_rate"
-    ].pct_change()
-    df_panel["mret"] = df_panel.groupby("Token")["S&P"].pct_change()
-
     return df_panel
 
 
@@ -122,10 +113,10 @@ def _ret_winsorizing(
 
     # winsorize the return
     df_panel.loc[
-        df_panel[ret_col] <= df_panel[ret_col].quantile(threshold), ret_col + "w"
+        df_panel[ret_col] <= df_panel[ret_col].quantile(threshold), ret_col
     ] = df_panel[ret_col].quantile(threshold)
     df_panel.loc[
-        df_panel[ret_col] >= df_panel[ret_col].quantile(1 - threshold), ret_col + "w"
+        df_panel[ret_col] >= df_panel[ret_col].quantile(1 - threshold), ret_col
     ] = df_panel[ret_col].quantile(1 - threshold)
 
     return df_panel
@@ -143,11 +134,11 @@ def _asset_pricing_preprocess(
     # convert the frequency
     df_panel = _freq_conversion(df_panel, freq=freq)
 
-    # winsorize the return
-    df_panel = _ret_winsorizing(df_panel)
+    # # winsorize the return
+    # df_panel = _ret_winsorizing(df_panel)
 
     # apr return
-    df_panel = _apr_return(df_panel, freq=freq)
+    df_panel = _ret_cal(df_panel, freq=freq)
 
     # lag 1 unit for the dominance var and yield var to avoid information leakage
     df_panel = lag_variable_columns(
@@ -405,10 +396,14 @@ if __name__ == "__main__":
                 [
                     "2021-01-01",
                     "2021-01-01",
+                    "2021-01-01",
+                    "2021-01-02",
                     "2021-01-02",
                     "2021-01-02",
                     "2021-01-14",
                     "2021-01-14",
+                    "2021-01-14",
+                    "2021-01-15",
                     "2021-01-15",
                     "2021-01-15",
                 ]
@@ -416,17 +411,39 @@ if __name__ == "__main__":
             "Token": [
                 "LDO",
                 "Aave",
+                "Comp",
                 "LDO",
                 "Aave",
+                "Comp",
                 "LDO",
                 "Aave",
+                "Comp",
                 "LDO",
                 "Aave",
+                "Comp",
             ],
-            "dollar_exchange_rate": [1, 2, 3, 4, 5, 6, 7, 8],
-            "S&P": [1, 2, 3, 4, 5, 6, 7, 8],
+            "dollar_exchange_rate": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+            "S&P": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+            "supply_rates": [
+                0.365,
+                0.365,
+                0.365,
+                0.365,
+                0.365,
+                0.365,
+                0.365,
+                0.365,
+                0.365,
+                0.365,
+                0.365,
+                0.365,
+            ],
         }
     )
 
     df = _freq_conversion(df, 14, "Date")
+    print(df)
+
+    # test the func ret_calculation: error here
+    df = _ret_cal(df, freq=14)
     print(df)
