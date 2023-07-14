@@ -5,6 +5,7 @@ Functions to help with asset pricing
 import datetime
 import warnings
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy.stats as stats
@@ -19,6 +20,9 @@ warnings.filterwarnings("ignore")
 
 FONT_SIZE = 25
 REFERENCE_DOM = "betweenness_centrality_count"
+
+# Logic check
+# 1. Check the dollar exchange rate and mcap
 
 
 def _apr_return(
@@ -68,13 +72,8 @@ def _apr_return(
             ]
 
     # calculate the DPY return
-    df_panel["apr_ret"] = np.log(
-        (1 + df_panel["cum_apy"]) * (df_panel["dollar_ret"] + 1) - 1
-    )
-
-    # calculate the aggregate return
     df_panel["ret"] = np.log(
-        (1 + df_panel["apr_ret"]) * (1 + df_panel["dollar_ret"]) - 1
+        (1 + df_panel["cum_apy"]) * (df_panel["dollar_ret"] + 1) - 1
     )
 
     return df_panel
@@ -295,7 +294,7 @@ def _eval_port(
     # include the risk free rate
     df_rf_ap = df_rf.copy()
     df_rf_ap.rename(columns={"Date": "freq"}, inplace=True)
-    df_rf_ap["RF"] = (1 + df_rf_ap["RF"]) ** freq - 1
+    df_rf_ap["RF"] = np.log((1 + df_rf_ap["RF"]) ** freq - 1)
     df_ret = df_ret.merge(df_rf_ap, on="freq", how="left")
 
     # calculate the excess return
@@ -391,23 +390,43 @@ if __name__ == "__main__":
         PROCESSED_DATA_PATH / "panel_main.pickle.zip", compression="zip"
     )
 
-    # stable non-stable info dict
-    stable_nonstable_info = {
-        "stablecoin": reg_panel[reg_panel["Token"].isin(STABLE_DICT.keys())],
-        "non-stablecoin": reg_panel[~reg_panel["Token"].isin(STABLE_DICT.keys())],
-    }
+    # # check the data correctness: pass
+    # reg_panel.loc[reg_panel["Token"] == "LDO"].set_index("Date")[
+    #     "dollar_exchange_rate"
+    # ].plot()
+    # plt.show()
+    # reg_panel.loc[reg_panel["Token"] == "LDO"].set_index("Date")["mcap"].plot()
+    # plt.show()
 
-    # iterate through the dominance
-    for panel_info, df_panel in stable_nonstable_info.items():
-        for dominance in DEPENDENT_VARIABLES + ["ret"]:
-            for frequency in [14, 30]:
-                print(f"Processing {panel_info} {dominance} {frequency}")
+    # test the func freq_conversion: pass
+    df = pd.DataFrame(
+        {
+            "Date": pd.to_datetime(
+                [
+                    "2021-01-01",
+                    "2021-01-01",
+                    "2021-01-02",
+                    "2021-01-02",
+                    "2021-01-14",
+                    "2021-01-14",
+                    "2021-01-15",
+                    "2021-01-15",
+                ]
+            ),
+            "Token": [
+                "LDO",
+                "Aave",
+                "LDO",
+                "Aave",
+                "LDO",
+                "Aave",
+                "LDO",
+                "Aave",
+            ],
+            "dollar_exchange_rate": [1, 2, 3, 4, 5, 6, 7, 8],
+            "S&P": [1, 2, 3, 4, 5, 6, 7, 8],
+        }
+    )
 
-                print(
-                    asset_pricing(
-                        df_panel,
-                        dominance,
-                        3,
-                        frequency,
-                    )
-                )
+    df = _freq_conversion(df, 14, "Date")
+    print(df)
