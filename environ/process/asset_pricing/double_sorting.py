@@ -23,6 +23,8 @@ REFERENCE_DOM = "betweenness_centrality_count"
 
 # Logic check
 # 1. Check the dollar exchange rate and mcap
+# 2. Check the return calculation
+pd.set_option("display.max_columns", None)
 
 
 def _ret_cal(
@@ -389,7 +391,6 @@ if __name__ == "__main__":
     # reg_panel.loc[reg_panel["Token"] == "LDO"].set_index("Date")["mcap"].plot()
     # plt.show()
 
-    # test the func freq_conversion: pass
     df = pd.DataFrame(
         {
             "Date": pd.to_datetime(
@@ -467,13 +468,57 @@ if __name__ == "__main__":
                 0.365,
                 0.365,
             ],
-            "volume_ultimate_share": [0, 0, 2, 4, 0, 0, 2, 4, 0, 0, 2, 4],
+            "volume_ultimate_share": [
+                0,
+                0,
+                2,
+                4,
+                0,
+                0,
+                4,
+                8,
+                0,
+                0,
+                8,
+                16,
+                0,
+                0,
+                16,
+                32,
+            ],
+            "betweenness_centrality_count": [
+                0,
+                0,
+                2,
+                4,
+                0,
+                0,
+                4,
+                8,
+                0,
+                0,
+                8,
+                16,
+                0,
+                0,
+                16,
+                32,
+            ],
         }
     )
 
+    # test the func freq_conversion: pass
     df = _freq_conversion(df, 14, "Date")
-    print(df)
 
     # test the func ret_calculation: error here
     df = _ret_cal(df, freq=14)
+
+    # lag 1 unit for the dominance var and yield var to avoid information leakage
+    df = lag_variable_columns(
+        data=df,
+        variable=["volume_ultimate_share", REFERENCE_DOM],
+        time_variable="Date",
+        entity_variable="Token",
+    )
+
     print(df)
