@@ -391,6 +391,8 @@ if __name__ == "__main__":
     # reg_panel.loc[reg_panel["Token"] == "LDO"].set_index("Date")["mcap"].plot()
     # plt.show()
 
+    n_port = 3
+    zero_value_portfolio = True
     df = pd.DataFrame(
         {
             "Date": pd.to_datetime(
@@ -449,7 +451,8 @@ if __name__ == "__main__":
                 15,
                 16,
             ],
-            "S&P": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+            "mcap": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            "S&P": [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4],
             "supply_rates": [
                 0.365,
                 0.365,
@@ -513,7 +516,7 @@ if __name__ == "__main__":
     # test the func ret_calculation: error here
     df = _ret_cal(df, freq=14)
 
-    # lag 1 unit for the dominance var and yield var to avoid information leakage
+    # test the func lag: pass
     df = lag_variable_columns(
         data=df,
         variable=["volume_ultimate_share", REFERENCE_DOM],
@@ -521,4 +524,31 @@ if __name__ == "__main__":
         entity_variable="Token",
     )
 
+    # test the date_list: pass
+    df = df.sort_values(by=["Date"], ascending=True)
+    date_list = list(df["Date"].unique())
+    date_list.remove(df["Date"].min())
+
+    # test the dict: pass
+    ret_dict = {f"P{port}": [] for port in range(1, n_port + 1)}
+    ret_dict["freq"] = []
+    ret_dict["mret"] = []
+
+    # test the func _sorting: pass
+    for period in date_list:
+        # asset pricing
+        df_panel_period = df[df["Date"] == period].copy()
+        df_portfolio = _sorting(
+            df_panel_period=df_panel_period,
+            risk_factor="volume_ultimate_share",
+            n_port=n_port,
+            zero_value_portfolio=zero_value_portfolio,
+        )
+
+        # mcap weight
+        ret_dict["freq"].append(period)
+        ret_dict["mret"].append(df_panel_period["mret"].mean())
+        ret_dict = _mcap_weight(df_portfolio, ret_dict)
+
     print(df)
+    print(ret_dict)
