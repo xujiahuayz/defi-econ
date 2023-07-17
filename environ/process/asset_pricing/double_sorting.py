@@ -21,10 +21,13 @@ warnings.filterwarnings("ignore")
 FONT_SIZE = 25
 REFERENCE_DOM = "betweenness_centrality_count"
 
+# pd.set_option("display.max_columns", None)
+
 # Logic check
 # 1. Check the dollar exchange rate and mcap
 # 2. Check the return calculation
-pd.set_option("display.max_columns", None)
+# 3. Check the sorting process
+# 4. Check the portfolio evaluation process
 
 
 def _ret_cal(
@@ -76,9 +79,9 @@ def _ret_cal(
     ].pct_change()
     df_panel["mret"] = df_panel.groupby("Token")["S&P"].pct_change()
 
-    # calculate the DPY return
+    # calculate the DPY return (mint the conversion between log ret and simple ret)
     df_panel["ret"] = np.log(
-        (1 + df_panel["cum_apy"]) * (df_panel["dollar_ret"] + 1) - 1
+        (1 + df_panel["cum_apy"]) * (df_panel["dollar_ret"] + 1) - 1 + 1
     )
 
     return df_panel
@@ -206,6 +209,8 @@ def _sorting(
         by=name_lag_variable(risk_factor), ascending=True
     )
 
+    # print(df_panel_period)
+
     if zero_value_portfolio:
         # isolate the zero-value portfolio
         df_panel_period, df_zero_dom = _sort_zero_value_port(
@@ -259,6 +264,8 @@ def _mcap_weight(df_period: pd.DataFrame, ret_dict: dict) -> dict:
 
     # check how many portfolio
     n_port = len(df_period["portfolio"].unique())
+
+    # print(df_period["portfolio"].unique())
 
     for portfolio in [f"P{port}" for port in range(1, n_port + 1)]:
         # isolate the portfolio
@@ -322,14 +329,14 @@ def _eval_port(
             "Sharpe": (
                 df_ret[portfolio_col].mean() / df_ret[portfolio_col].std()
             ).to_list(),
-            # # alpha of the portfolio
-            # "Alpha": df_ret[portfolio_col]
-            # .apply(lambda x: sm.OLS(x, df_ret["mret"] - df_ret["RF"]).fit().params[0])
-            # .to_list(),
-            # # t-stat of the alpha
-            # "t-stat of alpha": df_ret[portfolio_col]
-            # .apply(lambda x: sm.OLS(x, df_ret["mret"] - df_ret["RF"]).fit().tvalues[0])
-            # .to_list(),
+            # alpha of the portfolio
+            "Alpha": df_ret[portfolio_col]
+            .apply(lambda x: sm.OLS(x, df_ret["mret"] - df_ret["RF"]).fit().params[0])
+            .to_list(),
+            # t-stat of the alpha
+            "t-stat of alpha": df_ret[portfolio_col]
+            .apply(lambda x: sm.OLS(x, df_ret["mret"] - df_ret["RF"]).fit().tvalues[0])
+            .to_list(),
         }
     )
 
@@ -545,7 +552,7 @@ if __name__ == "__main__":
         entity_variable="Token",
     )
 
-    # test the date_list: pass
+    # test the date_list: failed, error in log return
     df = df.sort_values(by=["Date"], ascending=True)
     date_list = list(df["Date"].unique())
     date_list.remove(df["Date"].min())
@@ -572,7 +579,7 @@ if __name__ == "__main__":
         ret_dict = _mcap_weight(df_portfolio, ret_dict)
 
     # print(df)
-    print(ret_dict)
+    # print(ret_dict)
 
     # test the func _eval_port, please mute regression part: failed
     # print(_eval_port(pd.DataFrame(ret_dict), freq, n_port))
@@ -587,7 +594,7 @@ if __name__ == "__main__":
     df_rf_ap.rename(columns={"Date": "freq"}, inplace=True)
     df_rf_ap["RF"] = (1 + df_rf_ap["RF"]) ** freq - 1
 
-    print(df_rf_ap)
+    # print(df_rf_ap)
     # df_ret = df_ret.merge(df_rf_ap, on="freq", how="left")
     df_ret["RF"] = df_rf_ap.loc[
         df_rf_ap["freq"] == df_ret["freq"].values[0], "RF"
@@ -600,7 +607,7 @@ if __name__ == "__main__":
     # calculate the bottom minus top
     df_ret[f"P{n_port} - P1"] = df_ret[f"P{n_port}"] - df_ret["P1"]
 
-    print(df_ret)
+    # print(df_ret)
 
     portfolio_col = [f"P{port}" for port in range(1, n_port + 1)] + [f"P{n_port} - P1"]
 
