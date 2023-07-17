@@ -287,8 +287,10 @@ def _eval_port(
     # include the risk free rate
     df_rf_ap = df_rf.copy()
     df_rf_ap.rename(columns={"Date": "freq"}, inplace=True)
-    df_rf_ap["RF"] = np.log((1 + df_rf_ap["RF"]) ** freq - 1)
-    df_ret = df_ret.merge(df_rf_ap, on="freq", how="left")
+    df_rf_ap["RF"] = (1 + df_rf_ap["RF"]) ** freq - 1
+    df_ret["RF"] = df_rf_ap.loc[
+        df_rf_ap["freq"] == df_ret["freq"].values[0], "RF"
+    ].values[0]
 
     # calculate the excess return
     for portfolio in [f"P{port}" for port in range(1, n_port + 1)]:
@@ -320,14 +322,14 @@ def _eval_port(
             "Sharpe": (
                 df_ret[portfolio_col].mean() / df_ret[portfolio_col].std()
             ).to_list(),
-            # alpha of the portfolio
-            "Alpha": df_ret[portfolio_col]
-            .apply(lambda x: sm.OLS(x, df_ret["mret"] - df_ret["RF"]).fit().params[0])
-            .to_list(),
-            # t-stat of the alpha
-            "t-stat of alpha": df_ret[portfolio_col]
-            .apply(lambda x: sm.OLS(x, df_ret["mret"] - df_ret["RF"]).fit().tvalues[0])
-            .to_list(),
+            # # alpha of the portfolio
+            # "Alpha": df_ret[portfolio_col]
+            # .apply(lambda x: sm.OLS(x, df_ret["mret"] - df_ret["RF"]).fit().params[0])
+            # .to_list(),
+            # # t-stat of the alpha
+            # "t-stat of alpha": df_ret[portfolio_col]
+            # .apply(lambda x: sm.OLS(x, df_ret["mret"] - df_ret["RF"]).fit().tvalues[0])
+            # .to_list(),
         }
     )
 
@@ -393,6 +395,7 @@ if __name__ == "__main__":
 
     n_port = 3
     zero_value_portfolio = True
+    freq = 14
     df = pd.DataFrame(
         {
             "Date": pd.to_datetime(
@@ -489,6 +492,24 @@ if __name__ == "__main__":
                 16,
                 32,
             ],
+            # "volume_ultimate_share": [
+            #     1,
+            #     1,
+            #     2,
+            #     4,
+            #     1,
+            #     1,
+            #     4,
+            #     8,
+            #     1,
+            #     1,
+            #     8,
+            #     16,
+            #     1,
+            #     1,
+            #     16,
+            #     32,
+            # ],
             "betweenness_centrality_count": [
                 0,
                 0,
@@ -513,7 +534,7 @@ if __name__ == "__main__":
     # test the func freq_conversion: pass
     df = _freq_conversion(df, 14, "Date")
 
-    # test the func ret_calculation: error here
+    # test the func ret_calculation: failed, error here
     df = _ret_cal(df, freq=14)
 
     # test the func lag: pass
@@ -534,7 +555,7 @@ if __name__ == "__main__":
     ret_dict["freq"] = []
     ret_dict["mret"] = []
 
-    # test the func _sorting: pass
+    # test the func _sorting: pass (alphabetical order)
     for period in date_list:
         # asset pricing
         df_panel_period = df[df["Date"] == period].copy()
@@ -550,5 +571,67 @@ if __name__ == "__main__":
         ret_dict["mret"].append(df_panel_period["mret"].mean())
         ret_dict = _mcap_weight(df_portfolio, ret_dict)
 
-    print(df)
+    # print(df)
     print(ret_dict)
+
+    # test the func _eval_port, please mute regression part: failed
+    # print(_eval_port(pd.DataFrame(ret_dict), freq, n_port))
+
+    # prepare the dataframe
+    df_ret = pd.DataFrame(ret_dict)
+    df_ret.sort_values(by="freq", ascending=True, inplace=True)
+    df_ret["freq"] = pd.to_datetime(df_ret["freq"])
+
+    # include the risk free rate
+    df_rf_ap = df_rf.copy()
+    df_rf_ap.rename(columns={"Date": "freq"}, inplace=True)
+    df_rf_ap["RF"] = (1 + df_rf_ap["RF"]) ** freq - 1
+
+    print(df_rf_ap)
+    # df_ret = df_ret.merge(df_rf_ap, on="freq", how="left")
+    df_ret["RF"] = df_rf_ap.loc[
+        df_rf_ap["freq"] == df_ret["freq"].values[0], "RF"
+    ].values[0]
+
+    # calculate the excess return
+    for portfolio in [f"P{port}" for port in range(1, n_port + 1)]:
+        df_ret[portfolio] = df_ret[portfolio] - df_ret["RF"]
+
+    # calculate the bottom minus top
+    df_ret[f"P{n_port} - P1"] = df_ret[f"P{n_port}"] - df_ret["P1"]
+
+    print(df_ret)
+
+    portfolio_col = [f"P{port}" for port in range(1, n_port + 1)] + [f"P{n_port} - P1"]
+
+    # a new dataframe to store the averag return for each portfolio
+    df_ret_avg = pd.DataFrame(
+        {
+            # portfolio name
+            "Portfolios": portfolio_col,
+            # average return
+            "Mean": [round(num, 3) for num in df_ret[portfolio_col].mean().to_list()],
+            # t-stat of the average return
+            "t-stat of mean": df_ret[portfolio_col]
+            .apply(lambda x: stats.ttest_1samp(x, 0)[0])
+            .to_list(),
+            # p-value of the average return
+            "p-value of mean": df_ret[portfolio_col]
+            .apply(lambda x: stats.ttest_1samp(x, 0)[1])
+            .to_list(),
+            # standard deviation of the return
+            "Stdev": df_ret[portfolio_col].std().to_list(),
+            # sharpe ratio
+            "Sharpe": (
+                df_ret[portfolio_col].mean() / df_ret[portfolio_col].std()
+            ).to_list(),
+            # # alpha of the portfolio
+            # "Alpha": df_ret[portfolio_col]
+            # .apply(lambda x: sm.OLS(x, df_ret["mret"] - df_ret["RF"]).fit().params[0])
+            # .to_list(),
+            # # t-stat of the alpha
+            # "t-stat of alpha": df_ret[portfolio_col]
+            # .apply(lambda x: sm.OLS(x, df_ret["mret"] - df_ret["RF"]).fit().tvalues[0])
+            # .to_list(),
+        }
+    )
