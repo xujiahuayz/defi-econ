@@ -36,7 +36,7 @@ for panel_info, df_panel in stable_nonstable_info.items():
                 .set_index("Portfolios")
                 .T
                 if dominance != "ret"
-                else asset_pricing(df_panel, dominance, 2, frequency, False)
+                else asset_pricing(df_panel, dominance, 3, frequency, False)
                 .set_index("Portfolios")
                 .T
             )
