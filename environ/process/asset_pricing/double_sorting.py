@@ -5,7 +5,6 @@ Functions to help with asset pricing
 import datetime
 import warnings
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy.stats as stats
@@ -79,11 +78,8 @@ def _ret_cal(
     ].pct_change()
     df_panel["mret"] = df_panel.groupby("Token")["S&P"].pct_change()
 
-    # calculate the DPY return (mint the conversion between log ret and simple ret)
-    df_panel["ret"] = np.log(
-        (1 + df_panel["cum_apy"]) * (df_panel["dollar_ret"] + 1) - 1 + 1
-    )
-
+    # calculate the DPY return
+    df_panel["ret"] = (1 + df_panel["cum_apy"]) * (df_panel["dollar_ret"] + 1)
     return df_panel
 
 
@@ -196,13 +192,11 @@ def _sorting(
     risk_factor: str,
     n_port: int,
     zero_value_portfolio: bool,
-) -> pd.DataFrame:
+    ret_dict: dict,
+) -> dict:
     """
     Function to implement the asset pricing for one period
     """
-
-    # a list to store the top portfolio and bottom portfolio
-    df_portfolio = []
 
     # sort the dataframe based on the risk factor
     df_panel_period = df_panel_period.sort_values(
@@ -216,7 +210,12 @@ def _sorting(
         df_panel_period, df_zero_dom = _sort_zero_value_port(
             df_panel_period=df_panel_period, risk_factor=risk_factor
         )
-        df_portfolio.append(df_zero_dom)
+
+        ret_dict = _mcap_weight(
+            df_portfolio=df_zero_dom,
+            ret_dict=ret_dict,
+            port_idx=1,
+        )
 
     # rows per partition
     n_threasold = (
@@ -231,13 +230,11 @@ def _sorting(
             port * n_threasold : (port + 1) * n_threasold
         ].copy()
 
-        # add the portfolio column
-        df_portfolio_period["portfolio"] = (
-            f"P{port + 2}" if zero_value_portfolio else f"P{port + 1}"
+        ret_dict = _mcap_weight(
+            df_portfolio=df_portfolio_period,
+            ret_dict=ret_dict,
+            port_idx=port + 2 if zero_value_portfolio else port + 1,
         )
-
-        # append the dataframe
-        df_portfolio.append(df_portfolio_period)
 
     # isolate the portfolio
     df_portfolio_period = (
@@ -246,34 +243,25 @@ def _sorting(
         else df_panel_period.iloc[(n_port - 1) * n_threasold :].copy()
     )
 
-    # add the portfolio column
-    df_portfolio_period["portfolio"] = f"P{n_port}"
+    ret_dict = _mcap_weight(
+        df_portfolio=df_portfolio_period,
+        ret_dict=ret_dict,
+        port_idx=n_port,
+    )
 
-    # append the dataframe
-    df_portfolio.append(df_portfolio_period)
-
-    df_portfolio = pd.concat(df_portfolio)
-
-    return df_portfolio
+    return ret_dict
 
 
-def _mcap_weight(df_period: pd.DataFrame, ret_dict: dict) -> dict:
+def _mcap_weight(df_portfolio: pd.DataFrame, ret_dict: dict, port_idx: int) -> dict:
     """
     Function to calculate the market cap weight
     """
 
-    # check how many portfolio
-    n_port = len(df_period["portfolio"].unique())
-
-    # print(df_period["portfolio"].unique())
-
-    for portfolio in [f"P{port}" for port in range(1, n_port + 1)]:
-        # isolate the portfolio
-        df_portfolio = df_period[df_period["portfolio"] == portfolio].copy()
-
-        # calculate the market cap weight
-        df_portfolio["weight"] = df_portfolio["mcap"] / df_portfolio["mcap"].sum()
-        ret_dict[portfolio].append((df_portfolio["weight"] * df_portfolio["ret"]).sum())
+    # calculate the market cap weight
+    df_portfolio["weight"] = df_portfolio["mcap"] / df_portfolio["mcap"].sum()
+    ret_dict[f"P{port_idx}"].append(
+        (df_portfolio["weight"] * df_portfolio["ret"]).sum()
+    )
 
     return ret_dict
 
@@ -301,7 +289,7 @@ def _eval_port(
 
     # calculate the excess return
     for portfolio in [f"P{port}" for port in range(1, n_port + 1)]:
-        df_ret[portfolio] = df_ret[portfolio] - df_ret["RF"]
+        df_ret[portfolio] = np.log(df_ret[portfolio] + 1) - np.log(df_ret["RF"] + 1)
 
     # calculate the bottom minus top
     df_ret[f"P{n_port} - P1"] = df_ret[f"P{n_port}"] - df_ret["P1"]
@@ -331,11 +319,23 @@ def _eval_port(
             ).to_list(),
             # alpha of the portfolio
             "Alpha": df_ret[portfolio_col]
-            .apply(lambda x: sm.OLS(x, df_ret["mret"] - df_ret["RF"]).fit().params[0])
+            .apply(
+                lambda x: sm.OLS(
+                    x, np.log(df_ret["mret"] + 1) - np.log(df_ret["RF"] + 1)
+                )
+                .fit()
+                .params[0]
+            )
             .to_list(),
             # t-stat of the alpha
             "t-stat of alpha": df_ret[portfolio_col]
-            .apply(lambda x: sm.OLS(x, df_ret["mret"] - df_ret["RF"]).fit().tvalues[0])
+            .apply(
+                lambda x: sm.OLS(
+                    x, np.log(df_ret["mret"] + 1) - np.log(df_ret["RF"] + 1)
+                )
+                .fit()
+                .tvalues[0]
+            )
             .to_list(),
         }
     )
@@ -370,17 +370,17 @@ def asset_pricing(
     for period in date_list:
         # asset pricing
         df_panel_period = df_panel[df_panel["Date"] == period].copy()
-        df_portfolio = _sorting(
+        ret_dict = _sorting(
             df_panel_period=df_panel_period,
             risk_factor=dom_var,
             n_port=n_port,
             zero_value_portfolio=zero_value_portfolio,
+            ret_dict=ret_dict,
         )
 
         # mcap weight
         ret_dict["freq"].append(period)
         ret_dict["mret"].append(df_panel_period["mret"].mean())
-        ret_dict = _mcap_weight(df_portfolio, ret_dict)
 
     # evaluate the performance of the portfolio
     return _eval_port(pd.DataFrame(ret_dict), freq, n_port)
