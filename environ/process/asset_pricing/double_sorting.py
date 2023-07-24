@@ -184,8 +184,6 @@ def _sorting(
         by=name_lag_variable(risk_factor), ascending=True
     )
 
-    # print(df_panel_period)
-
     if zero_value_portfolio:
         # isolate the zero-value portfolio
         df_panel_period, df_zero_dom = _sort_zero_value_port(
