@@ -11,6 +11,7 @@ import scipy.stats as stats
 import statsmodels.api as sm
 from tqdm import tqdm
 
+from environ.constants import PROCESSED_DATA_PATH
 from environ.process.market.risk_free_rate import df_rf
 from environ.utils.variable_constructer import lag_variable_columns, name_lag_variable
 
@@ -31,7 +32,7 @@ REFERENCE_DOM = "betweenness_centrality_count"
 def _ret_cal(
     df_panel: pd.DataFrame,
     freq: int,
-) -> tuple[pd.DataFrame, pd.DataFrame]:
+) -> pd.DataFrame:
     """
     Function to calculate the APY return
     """
@@ -41,9 +42,6 @@ def _ret_cal(
 
     # sort the dataframe by Token and Date
     df_panel.sort_values(by=["Token", "Date"], ascending=True, inplace=True)
-
-    # copy the dataframe
-    df_panel_vol = df_panel.copy()
 
     # iterate through the Token
     for token in tqdm(df_panel["Token"].unique()):
@@ -83,7 +81,7 @@ def _ret_cal(
     # calculate the DPY plus dollar ret return
     df_panel["ret"] = (1 + df_panel["cum_apy"]) * (df_panel["dollar_ret"] + 1) - 1
 
-    return df_panel, df_panel_vol
+    return df_panel
 
 
 def _freq_conversion(
@@ -110,7 +108,7 @@ def _asset_pricing_preprocess(
     df_panel: pd.DataFrame,
     dominance_var: str,
     freq: int,
-) -> tuple[pd.DataFrame, pd.DataFrame]:
+) -> pd.DataFrame:
     """
     Function to preprocess the dataframe
     """
@@ -122,7 +120,7 @@ def _asset_pricing_preprocess(
     # df_panel = _ret_winsorizing(df_panel)
 
     # apr return
-    df_panel, df_panel_vol = _ret_cal(df_panel, freq=freq)
+    df_panel = _ret_cal(df_panel, freq=freq)
 
     # lag 1 unit for the dominance var and yield var to avoid information leakage
     df_panel = lag_variable_columns(
@@ -132,7 +130,7 @@ def _asset_pricing_preprocess(
         entity_variable="Token",
     )
 
-    return df_panel, df_panel_vol
+    return df_panel
 
 
 def _sort_zero_value_port(
@@ -176,8 +174,6 @@ def _sorting(
     n_port: int,
     zero_value_portfolio: bool,
     ret_dict: dict,
-    freq: int,
-    df_panel_vol: pd.DataFrame,
 ) -> dict:
     """
     Function to implement the asset pricing for one period
@@ -194,19 +190,8 @@ def _sorting(
             df_panel_period=df_panel_period, risk_factor=risk_factor
         )
 
-        # calculate the return
-        ret_dict, df_weight = _mcap_weight(
+        ret_dict = _mcap_weight(
             df_portfolio=df_zero_dom,
-            ret_dict=ret_dict,
-            port_idx=1,
-        )
-
-        # calculate the volatility
-        ret_dict = _vol_cal(
-            token_weight_df=df_weight,
-            date=df_zero_dom["Date"].values[0],
-            freq=freq,
-            df_panel_vol=df_panel_vol,
             ret_dict=ret_dict,
             port_idx=1,
         )
@@ -224,19 +209,8 @@ def _sorting(
             port * n_threasold : (port + 1) * n_threasold
         ].copy()
 
-        # calculate the return
-        ret_dict, df_weight = _mcap_weight(
+        ret_dict = _mcap_weight(
             df_portfolio=df_portfolio_period,
-            ret_dict=ret_dict,
-            port_idx=port + 2 if zero_value_portfolio else port + 1,
-        )
-
-        # calculate the volatility
-        ret_dict = _vol_cal(
-            token_weight_df=df_weight,
-            date=df_portfolio_period["Date"].values[0],
-            freq=freq,
-            df_panel_vol=df_panel_vol,
             ret_dict=ret_dict,
             port_idx=port + 2 if zero_value_portfolio else port + 1,
         )
@@ -248,64 +222,16 @@ def _sorting(
         else df_panel_period.iloc[(n_port - 1) * n_threasold :].copy()
     )
 
-    # calculate the return
-    ret_dict, df_weight = _mcap_weight(
+    ret_dict = _mcap_weight(
         df_portfolio=df_portfolio_period,
         ret_dict=ret_dict,
         port_idx=n_port,
     )
 
-    # calculate the volatility
-    ret_dict = _vol_cal(
-        token_weight_df=df_weight,
-        date=df_portfolio_period["Date"].values[0],
-        freq=freq,
-        df_panel_vol=df_panel_vol,
-        ret_dict=ret_dict,
-        port_idx=n_port,
-    )
-
     return ret_dict
 
 
-def _vol_cal(
-    token_weight_df: pd.DataFrame,
-    date: datetime.datetime,
-    freq: int,
-    df_panel_vol: pd.DataFrame,
-    ret_dict: dict,
-    port_idx: int,
-) -> dict:
-    """
-    Function to calculate the volatility
-    """
-
-    # isolate the dataframe
-    df_panel_vol_portfolio = df_panel_vol[
-        (df_panel_vol["Token"].isin(list(token_weight_df["Token"].unique())))
-        & (df_panel_vol["Date"] <= date)
-        & (df_panel_vol["Date"] > date - datetime.timedelta(days=freq))
-    ].copy()
-
-    # merge the dataframe
-    df_panel_vol_portfolio = df_panel_vol_portfolio.merge(
-        token_weight_df, on="Token", how="left"
-    )
-
-    # groupby the date, calculate the portfolio return
-    df_panel_vol_portfolio = df_panel_vol_portfolio.groupby("Date").apply(
-        lambda x: (x["weight"] * x["ret"]).sum()
-    )
-
-    # calculate the volatility
-    ret_dict[f"P{port_idx}_vol"].append(df_panel_vol_portfolio.std())
-
-    return ret_dict
-
-
-def _mcap_weight(
-    df_portfolio: pd.DataFrame, ret_dict: dict, port_idx: int
-) -> tuple[dict, pd.DataFrame]:
+def _mcap_weight(df_portfolio: pd.DataFrame, ret_dict: dict, port_idx: int) -> dict:
     """
     Function to calculate the market cap weight
     """
@@ -316,7 +242,7 @@ def _mcap_weight(
         (df_portfolio["weight"] * df_portfolio["ret"]).sum()
     )
 
-    return ret_dict, df_portfolio[["Token", "weight"]]
+    return ret_dict
 
 
 def _eval_port(
@@ -348,7 +274,6 @@ def _eval_port(
     df_ret[f"P{n_port} - P1"] = df_ret[f"P{n_port}"] - df_ret["P1"]
 
     portfolio_col = [f"P{port}" for port in range(1, n_port + 1)] + [f"P{n_port} - P1"]
-    vol_col = [f"P{port}_vol" for port in range(1, n_port + 1)]
 
     # a new dataframe to store the averag return for each portfolio
     df_ret_avg = pd.DataFrame(
@@ -366,7 +291,7 @@ def _eval_port(
             .apply(lambda x: stats.ttest_1samp(x, 0)[1])
             .to_list(),
             # standard deviation of the return
-            "Stdev": [round(num, 3) for num in df_ret[vol_col].mean().to_list()],
+            "Stdev": df_ret[portfolio_col].std().to_list(),
             # sharpe ratio
             "Sharpe": (
                 df_ret[portfolio_col].mean() / df_ret[portfolio_col].std()
@@ -409,21 +334,14 @@ def asset_pricing(
     """
 
     # preprocess the dataframe
-    df_panel, df_panel_vol = _asset_pricing_preprocess(reg_panel, dom_var, freq)
+    df_panel = _asset_pricing_preprocess(reg_panel, dom_var, freq)
 
     # prepare the dataframe to store the portfolio
     df_panel = df_panel.sort_values(by=["Date"], ascending=True)
     date_list = list(df_panel["Date"].unique())
     date_list.remove(df_panel["Date"].min())
-
     # dict to store the freq and portfolio return
-    ret_dict = {}
-
-    # add the P{port}_vol
-    for port in range(1, n_port + 1):
-        ret_dict[f"P{port}"] = []
-        ret_dict[f"P{port}_vol"] = []
-
+    ret_dict = {f"P{port}": [] for port in range(1, n_port + 1)}
     ret_dict["freq"] = []
     ret_dict["mret"] = []
 
@@ -437,8 +355,6 @@ def asset_pricing(
             n_port=n_port,
             zero_value_portfolio=zero_value_portfolio,
             ret_dict=ret_dict,
-            freq=freq,
-            df_panel_vol=df_panel_vol,
         )
 
         # mcap weight
