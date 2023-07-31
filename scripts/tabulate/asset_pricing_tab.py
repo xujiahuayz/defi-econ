@@ -32,11 +32,11 @@ for panel_info, df_panel in stable_nonstable_info.items():
             print(f"Processing {panel_info} {dominance} {frequency}")
 
             df_ap = (
-                asset_pricing(df_panel, dominance, 3, frequency, True)
+                asset_pricing(df_panel, dominance, 2, frequency, False, [0.2, 0.8])
                 .set_index("Portfolios")
                 .T
                 if dominance != "ret"
-                else asset_pricing(df_panel, dominance, 3, frequency, False)
+                else asset_pricing(df_panel, dominance, 2, frequency, False, [0.2, 0.8])
                 .set_index("Portfolios")
                 .T
             )
