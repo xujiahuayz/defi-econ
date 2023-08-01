@@ -224,7 +224,7 @@ def _eval_port(
     df_ret_avg = pd.DataFrame(
         {
             "Portfolios": portfolio_col,
-            "Mean": [round(num, 3) for num in df_ret[portfolio_col].mean().to_list()],
+            "Mean": df_ret[portfolio_col].mean().to_list(),
             "t-stat of mean": df_ret[portfolio_col]
             .apply(lambda x: stats.ttest_1samp(x, 0)[0])
             .to_list(),
