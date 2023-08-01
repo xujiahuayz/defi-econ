@@ -271,7 +271,7 @@ def asset_pricing(
     """
 
     n_port = len(brk_pt_lst) + 2 if zero_value_portfolio else len(brk_pt_lst) + 1
-    df_panel = _asset_pricing_preprocess(reg_panel, dom_var, freq)›
+    df_panel = _asset_pricing_preprocess(reg_panel, dom_var, freq)
 
     # prepare the dataframe to store the portfolio
     df_panel = df_panel.sort_values(by=["Date"], ascending=True)
