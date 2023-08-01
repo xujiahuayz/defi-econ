@@ -4,7 +4,6 @@ Functions to help with asset pricing
 
 import datetime
 import warnings
-from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -12,7 +11,6 @@ import scipy.stats as stats
 import statsmodels.api as sm
 from tqdm import tqdm
 
-from environ.constants import PROCESSED_DATA_PATH
 from environ.process.market.risk_free_rate import df_rf
 from environ.utils.variable_constructer import lag_variable_columns, name_lag_variable
 
@@ -20,14 +18,6 @@ warnings.filterwarnings("ignore")
 
 FONT_SIZE = 25
 REFERENCE_DOM = "betweenness_centrality_count"
-
-# pd.set_option("display.max_columns", None)
-
-# Logic check
-# 1. Check the dollar exchange rate and mcap
-# 2. Check the return calculation
-# 3. Check the sorting process
-# 4. Check the portfolio evaluation process
 
 
 def _ret_cal(
@@ -172,31 +162,13 @@ def _sort_zero_value_port(
 def _sorting(
     df_panel_period: pd.DataFrame,
     risk_factor: str,
-    n_port: int,
     zero_value_portfolio: bool,
     ret_dict: dict,
-    pct_lst: Optional[list] = None,
+    brk_pt_lst: list,
 ) -> dict:
     """
     Function to implement the asset pricing for one period
     """
-
-    def _cum_sum(input_list) -> list:
-        """
-        Internal function to calculate the cumulative sum of a list
-        for example:
-        input: [0.2, 0.3, 0.5]
-        output: [0, 0.2, 0.5]
-        """
-
-        cum_sum_lst = []
-        current_sum = 0
-
-        for num in input_list:
-            cum_sum_lst.append(current_sum)
-            current_sum += num
-
-        return cum_sum_lst
 
     # sort the dataframe based on the risk factor
     df_panel_period = df_panel_period.sort_values(
@@ -215,52 +187,22 @@ def _sorting(
             port_idx=1,
         )
 
-    # rows per partition
-    n_threasold = (
-        len(df_panel_period) // (n_port - 1)
-        if zero_value_portfolio
-        else len(df_panel_period) // n_port
-    )
+    # add zero and one to the list
+    brk_pt_lst = [0] + brk_pt_lst + [1]
 
-    for port in range(n_port - 2) if zero_value_portfolio else range(n_port - 1):
-        if pct_lst is None:
-            # isolate the portfolio in equal interval
-            df_portfolio_period = df_panel_period.iloc[
-                port * n_threasold : (port + 1) * n_threasold
-            ].copy()
-
-        else:
-            # isolate the portfolio in given ratio
-            df_portfolio_period = df_panel_period.iloc[
-                int(len(df_panel_period) * _cum_sum(pct_lst)[port]) : int(
-                    len(df_panel_period) * _cum_sum(pct_lst)[port + 1]
-                )
-            ].copy()
+    for port in range(len(brk_pt_lst) - 1):
+        # isolate the portfolio in given ratio
+        df_portfolio_period = df_panel_period.iloc[
+            int(len(df_panel_period) * brk_pt_lst[port]) : int(
+                len(df_panel_period) * brk_pt_lst[port + 1]
+            )
+        ].copy()
 
         ret_dict = _mcap_weight(
             df_portfolio=df_portfolio_period,
             ret_dict=ret_dict,
             port_idx=port + 2 if zero_value_portfolio else port + 1,
         )
-
-    if pct_lst is not None:
-        # isolate the last portfolio in equal interval
-        df_portfolio_period = (
-            df_panel_period.iloc[(n_port - 2) * n_threasold :].copy()
-            if zero_value_portfolio
-            else df_panel_period.iloc[(n_port - 1) * n_threasold :].copy()
-        )
-    else:
-        # isolate the last portfolio in given ratio
-        df_portfolio_period = df_panel_period.iloc[
-            int(len(df_panel_period) * _cum_sum(pct_lst)[-1]) :
-        ].copy()
-
-    ret_dict = _mcap_weight(
-        df_portfolio=df_portfolio_period,
-        ret_dict=ret_dict,
-        port_idx=n_port,
-    )
 
     return ret_dict
 
@@ -358,15 +300,17 @@ def _eval_port(
 
 def asset_pricing(
     reg_panel: pd.DataFrame,
+    brk_pt_lst: list,
     dom_var: str = "volume_ultimate_share",
-    n_port: int = 3,
     freq: int = 14,
     zero_value_portfolio: bool = True,
-    pct_lst: Optional[list] = None,
 ) -> pd.DataFrame:
     """
     Aggregate function to create portfolios
     """
+
+    # number of portfolio
+    n_port = len(brk_pt_lst) + 2 if zero_value_portfolio else len(brk_pt_lst) + 1
 
     # preprocess the dataframe
     df_panel = _asset_pricing_preprocess(reg_panel, dom_var, freq)
@@ -387,10 +331,9 @@ def asset_pricing(
         ret_dict = _sorting(
             df_panel_period=df_panel_period,
             risk_factor=dom_var,
-            n_port=n_port,
             zero_value_portfolio=zero_value_portfolio,
             ret_dict=ret_dict,
-            pct_lst=pct_lst,
+            brk_pt_lst=brk_pt_lst,
         )
 
         # mcap weight
