@@ -137,7 +137,7 @@ def _sorting(
     risk_factor: str,
     zero_value_portfolio: bool,
     ret_dict: dict,
-    brk_pt_lst: list,
+    brk_pt_lst: list[float],
 ) -> dict:
     """
     Function to implement the asset pricing for one period
@@ -261,7 +261,7 @@ def _eval_port(
 
 def asset_pricing(
     reg_panel: pd.DataFrame,
-    brk_pt_lst: list,
+    brk_pt_lst: list[float],
     dom_var: str = "volume_ultimate_share",
     freq: int = 14,
     zero_value_portfolio: bool = True,
@@ -271,7 +271,7 @@ def asset_pricing(
     """
 
     n_port = len(brk_pt_lst) + 2 if zero_value_portfolio else len(brk_pt_lst) + 1
-    df_panel = _asset_pricing_preprocess(reg_panel, dom_var, freq)
+    df_panel = _asset_pricing_preprocess(reg_panel, dom_var, freq)›
 
     # prepare the dataframe to store the portfolio
     df_panel = df_panel.sort_values(by=["Date"], ascending=True)

@@ -35,10 +35,6 @@ for panel_info, df_panel in stable_nonstable_info.items():
                 asset_pricing(df_panel, [0.8], dominance, frequency, False)
                 .set_index("Portfolios")
                 .T
-                if dominance != "ret"
-                else asset_pricing(df_panel, [0.8], dominance, frequency, False)
-                .set_index("Portfolios")
-                .T
             )
 
             # save the results in latex keep the index and keep three decimal places
