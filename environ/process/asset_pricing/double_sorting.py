@@ -16,7 +16,6 @@ from environ.utils.variable_constructer import lag_variable_columns, name_lag_va
 
 warnings.filterwarnings("ignore")
 
-FONT_SIZE = 25
 REFERENCE_DOM = "betweenness_centrality_count"
 
 
@@ -32,22 +31,13 @@ def _ret_cal(
     df_panel["supply_rates"] = df_panel["supply_rates"] / 365
     df_panel.sort_values(by=["Token", "Date"], ascending=True, inplace=True)
 
-    # calculate the compound APY
-    for token in tqdm(df_panel["Token"].unique()):
-        df_token = df_panel[df_panel["Token"] == token].copy()
-        date_list = df_token[df_token["freq"]]["Date"].tolist()
-
-        for date in date_list:
-            df_date = df_token[
-                (df_token["Date"] <= date)
-                & (df_token["Date"] > date - datetime.timedelta(days=freq))
-            ].copy()
-
-            cum_apy = (df_date["supply_rates"] + 1).prod() - 1
-
-            df_panel.loc[
-                (df_panel["Token"] == token) & (df_panel["Date"] == date), "cum_apy"
-            ] = cum_apy
+    # caculate rolling freq-day sum of supply rates for each token
+    df_panel["cum_supply_rates"] = (
+        df_panel.groupby("Token")["supply_rates"]
+        .rolling(freq)
+        .sum()
+        .reset_index(0)["supply_rates"]
+    )
 
     # data frequent conversion and sorting
     df_panel = df_panel[df_panel["freq"]]
@@ -60,7 +50,9 @@ def _ret_cal(
     df_panel["mret"] = df_panel.groupby("Token")["S&P"].pct_change()
 
     # calculate the DPY plus dollar return
-    df_panel["ret"] = (1 + df_panel["cum_apy"]) * (df_panel["dollar_ret"] + 1) - 1
+    df_panel["ret"] = (1 + df_panel["cum_supply_rates"]) * (
+        df_panel["dollar_ret"] + 1
+    ) - 1
 
     return df_panel
 
