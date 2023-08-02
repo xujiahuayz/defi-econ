@@ -4,7 +4,6 @@ Functions to help with asset pricing
 
 import warnings
 
-import numpy as np
 import pandas as pd
 import scipy.stats as stats
 
@@ -48,8 +47,6 @@ def calculate_period_return(
     df_panel["dollar_ret"] = df_panel.groupby("Token")[
         "dollar_exchange_rate"
     ].pct_change()
-
-    # df_panel["mret"] = df_panel.groupby("Token")["S&P"].pct_change()
 
     # calculate only the convenience yield
     df_panel["ret"] = (
@@ -156,20 +153,12 @@ def _eval_port(
     Function to evaluate the portfolio
     """
 
-    df_ret.sort_values(by="freq", ascending=True, inplace=True)
-    df_ret["freq"] = pd.to_datetime(df_ret["freq"])
+    df_ret.sort_values(by="Date", ascending=True, inplace=True)
+    df_ret["Date"] = pd.to_datetime(df_ret["Date"])
 
-    # include the risk free rate
-    df_rf_ap = df_rf.copy()
-    df_rf_ap.rename(columns={"Date": "freq"}, inplace=True)
-    df_rf_ap["RF"] = (1 + df_rf_ap["RF"]) ** freq - 1
-    df_ret["RF"] = df_rf_ap.loc[
-        df_rf_ap["freq"] == df_ret["freq"].values[0], "RF"
-    ].values[0]
-
-    # calculate the excess return
+    # annualize return
     for portfolio in [f"P{port}" for port in range(1, n_port + 1)]:
-        df_ret[portfolio] = np.log(df_ret[portfolio] + 1) - np.log(df_ret["RF"] + 1)
+        df_ret[portfolio] = df_ret[portfolio] * 365.2425 / freq
 
     # calculate the bottom minus top
     df_ret[f"P{n_port} - P1"] = df_ret[f"P{n_port}"] - df_ret["P1"]
@@ -191,24 +180,6 @@ def _eval_port(
             "Sharpe": (
                 df_ret[portfolio_col].mean() / df_ret[portfolio_col].std()
             ).to_list(),
-            # "Alpha": df_ret[portfolio_col]
-            # .apply(
-            #     lambda x: sm.OLS(
-            #         x, np.log(df_ret["mret"] + 1) - np.log(df_ret["RF"] + 1)
-            #     )
-            #     .fit()
-            #     .params[0]
-            # )
-            # .to_list(),
-            # "t-stat of alpha": df_ret[portfolio_col]
-            # .apply(
-            #     lambda x: sm.OLS(
-            #         x, np.log(df_ret["mret"] + 1) - np.log(df_ret["RF"] + 1)
-            #     )
-            #     .fit()
-            #     .tvalues[0]
-            # )
-            # .to_list(),
         }
     )
 
@@ -230,14 +201,12 @@ def asset_pricing(
     df_panel = calculate_period_return(df_panel=reg_panel, freq=freq)
 
     # prepare the dataframe to store the portfolio
-    # df_panel = df_panel.sort_values(by=["Date"], ascending=True)
     date_list = list(df_panel["Date"].unique())
     date_list.remove(df_panel["Date"].min())
 
     # dict to store the freq and portfolio return
     ret_dict = {f"P{port}": [] for port in range(1, n_port + 1)}
-    ret_dict["freq"] = []
-    # ret_dict["mret"] = []
+    ret_dict["Date"] = []
 
     df_panel = lag_variable_columns(
         data=df_panel,
@@ -257,8 +226,7 @@ def asset_pricing(
             ret_dict=ret_dict,
             brk_pt_lst=brk_pt_lst,
         )
-        ret_dict["freq"].append(period)
-        # ret_dict["mret"].append(df_panel_period["mret"].mean())
+        ret_dict["Date"].append(period)
 
     # evaluate the performance of the portfolio
     return _eval_port(pd.DataFrame(ret_dict), freq, n_port)
