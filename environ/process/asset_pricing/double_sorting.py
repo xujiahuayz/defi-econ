@@ -2,14 +2,13 @@
 Functions to help with asset pricing
 """
 
-import datetime
 import warnings
 
 import numpy as np
 import pandas as pd
 import scipy.stats as stats
-import statsmodels.api as sm
-from tqdm import tqdm
+
+# import statsmodels.api as sm
 
 from environ.process.market.risk_free_rate import df_rf
 from environ.utils.variable_constructer import lag_variable_columns, name_lag_variable
@@ -19,79 +18,44 @@ warnings.filterwarnings("ignore")
 REFERENCE_DOM = "betweenness_centrality_count"
 
 
-def _ret_cal(
+def calculate_period_return(
     df_panel: pd.DataFrame,
     freq: int,
+    date_col: str = "Date",
+    daily_supply_rate_col: str = "daily_supply_return",
 ) -> pd.DataFrame:
     """
-    Function to calculate the APY return
+    Function to calculate the period return, where the period length is specified by freq
     """
 
-    # convert annalized supply rates to daily supply rates
-    df_panel["supply_rates"] = df_panel["supply_rates"] / 365
+    df_panel["timestamp"] = df_panel[date_col].apply(lambda x: int(x.timestamp()))
     df_panel.sort_values(by=["Token", "Date"], ascending=True, inplace=True)
 
     # caculate rolling freq-day sum of supply rates for each token
     df_panel["cum_supply_rates"] = (
-        df_panel.groupby("Token")["supply_rates"]
+        df_panel.groupby("Token")[daily_supply_rate_col]
         .rolling(freq)
         .sum()
-        .reset_index(0)["supply_rates"]
+        .reset_index(0)[daily_supply_rate_col]
     )
 
-    # data frequent conversion and sorting
-    df_panel = df_panel[df_panel["freq"]]
-    df_panel.sort_values(by=["Token", "Date"], ascending=True, inplace=True)
+    df_panel = df_panel[
+        ((df_panel["timestamp"] - df_panel["timestamp"].min()) % (freq * 24 * 60 * 60))
+        == 0
+    ]
 
     # calculate simple dollar return
     df_panel["dollar_ret"] = df_panel.groupby("Token")[
         "dollar_exchange_rate"
     ].pct_change()
-    df_panel["mret"] = df_panel.groupby("Token")["S&P"].pct_change()
 
-    # calculate the DPY plus dollar return
-    df_panel["ret"] = (1 + df_panel["cum_supply_rates"]) * (
-        df_panel["dollar_ret"] + 1
-    ) - 1
+    # df_panel["mret"] = df_panel.groupby("Token")["S&P"].pct_change()
 
-    return df_panel
-
-
-def _freq_conversion(
-    df_panel: pd.DataFrame,
-    freq: int,
-    date_col: str = "Date",
-) -> pd.DataFrame:
-    """
-    Function to convert the frequency of a series from daily to a given frequency
-    """
-
-    df_panel["timestamp"] = df_panel[date_col].apply(lambda x: int(x.timestamp()))
-
-    # create a freq column where True if the timestamp is a multiple of freq
-    df_panel["freq"] = (
-        (df_panel["timestamp"] - df_panel["timestamp"].min()) % (freq * 24 * 60 * 60)
-    ) == 0
-
-    return df_panel
-
-
-def _asset_pricing_preprocess(
-    df_panel: pd.DataFrame,
-    dominance_var: str,
-    freq: int,
-) -> pd.DataFrame:
-    """
-    Function to preprocess the dataframe
-    """
-
-    df_panel = _freq_conversion(df_panel, freq=freq)
-    df_panel = _ret_cal(df_panel, freq=freq)
-    df_panel = lag_variable_columns(
-        data=df_panel,
-        variable=[dominance_var, REFERENCE_DOM],
-        time_variable="Date",
-        entity_variable="Token",
+    # calculate only the convenience yield
+    df_panel["ret"] = (
+        (1 + df_panel["cum_supply_rates"]) * (df_panel["dollar_ret"] + 1)
+        - 1
+        - df_panel["dollar_ret"]
     )
 
     return df_panel
@@ -137,7 +101,7 @@ def _sorting(
 
     df_panel_period = df_panel_period.sort_values(
         by=name_lag_variable(risk_factor), ascending=True
-    )
+    ).reset_index(drop=True)
 
     if zero_value_portfolio:
         df_panel_period, df_zero_dom = _sort_zero_value_port(
@@ -227,24 +191,24 @@ def _eval_port(
             "Sharpe": (
                 df_ret[portfolio_col].mean() / df_ret[portfolio_col].std()
             ).to_list(),
-            "Alpha": df_ret[portfolio_col]
-            .apply(
-                lambda x: sm.OLS(
-                    x, np.log(df_ret["mret"] + 1) - np.log(df_ret["RF"] + 1)
-                )
-                .fit()
-                .params[0]
-            )
-            .to_list(),
-            "t-stat of alpha": df_ret[portfolio_col]
-            .apply(
-                lambda x: sm.OLS(
-                    x, np.log(df_ret["mret"] + 1) - np.log(df_ret["RF"] + 1)
-                )
-                .fit()
-                .tvalues[0]
-            )
-            .to_list(),
+            # "Alpha": df_ret[portfolio_col]
+            # .apply(
+            #     lambda x: sm.OLS(
+            #         x, np.log(df_ret["mret"] + 1) - np.log(df_ret["RF"] + 1)
+            #     )
+            #     .fit()
+            #     .params[0]
+            # )
+            # .to_list(),
+            # "t-stat of alpha": df_ret[portfolio_col]
+            # .apply(
+            #     lambda x: sm.OLS(
+            #         x, np.log(df_ret["mret"] + 1) - np.log(df_ret["RF"] + 1)
+            #     )
+            #     .fit()
+            #     .tvalues[0]
+            # )
+            # .to_list(),
         }
     )
 
@@ -254,7 +218,7 @@ def _eval_port(
 def asset_pricing(
     reg_panel: pd.DataFrame,
     brk_pt_lst: list[float],
-    dom_var: str = "volume_ultimate_share",
+    dominance_var: str = "volume_ultimate_share",
     freq: int = 14,
     zero_value_portfolio: bool = True,
 ) -> pd.DataFrame:
@@ -263,17 +227,24 @@ def asset_pricing(
     """
 
     n_port = len(brk_pt_lst) + 2 if zero_value_portfolio else len(brk_pt_lst) + 1
-    df_panel = _asset_pricing_preprocess(reg_panel, dom_var, freq)
+    df_panel = calculate_period_return(df_panel=reg_panel, freq=freq)
 
     # prepare the dataframe to store the portfolio
-    df_panel = df_panel.sort_values(by=["Date"], ascending=True)
+    # df_panel = df_panel.sort_values(by=["Date"], ascending=True)
     date_list = list(df_panel["Date"].unique())
     date_list.remove(df_panel["Date"].min())
 
     # dict to store the freq and portfolio return
     ret_dict = {f"P{port}": [] for port in range(1, n_port + 1)}
     ret_dict["freq"] = []
-    ret_dict["mret"] = []
+    # ret_dict["mret"] = []
+
+    df_panel = lag_variable_columns(
+        data=df_panel,
+        variable=[dominance_var, REFERENCE_DOM],
+        time_variable="Date",
+        entity_variable="Token",
+    )
 
     # loop through the date
     for period in date_list:
@@ -281,13 +252,13 @@ def asset_pricing(
         df_panel_period = df_panel[df_panel["Date"] == period].copy()
         ret_dict = _sorting(
             df_panel_period=df_panel_period,
-            risk_factor=dom_var,
+            risk_factor=dominance_var,
             zero_value_portfolio=zero_value_portfolio,
             ret_dict=ret_dict,
             brk_pt_lst=brk_pt_lst,
         )
         ret_dict["freq"].append(period)
-        ret_dict["mret"].append(df_panel_period["mret"].mean())
+        # ret_dict["mret"].append(df_panel_period["mret"].mean())
 
     # evaluate the performance of the portfolio
     return _eval_port(pd.DataFrame(ret_dict), freq, n_port)

@@ -17,13 +17,13 @@ reg_panel = pd.read_pickle(
     PROCESSED_DATA_PATH / "panel_main.pickle.zip", compression="zip"
 )
 
-# table to store the results
-df_tab = pd.DataFrame()
+reg_panel["daily_supply_return"] = reg_panel["supply_rates"] / 365.2425
 
 # stable non-stable info dict
 stable_nonstable_info = {
     "stablecoin": reg_panel[reg_panel["Token"].isin(STABLE_DICT.keys())],
     "non-stablecoin": reg_panel[~reg_panel["Token"].isin(STABLE_DICT.keys())],
+    "all": reg_panel,
 }
 
 for panel_info, df_panel in stable_nonstable_info.items():
@@ -42,5 +42,5 @@ for panel_info, df_panel in stable_nonstable_info.items():
                 TABLE_PATH / f"asset_pricing_{panel_info}_{dominance}_{frequency}.tex",
                 index=True,
                 escape=False,
-                float_format="{:0.3f}".format,
+                float_format="{:0.4f}".format,
             )
