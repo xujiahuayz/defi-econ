@@ -2,17 +2,17 @@
 Functions to help with asset pricing
 """
 
-import warnings
+# import warnings
 
 import pandas as pd
 import scipy.stats as stats
 
 # import statsmodels.api as sm
 
-from environ.process.market.risk_free_rate import df_rf
+# from environ.process.market.risk_free_rate import df_rf
 from environ.utils.variable_constructer import lag_variable_columns, name_lag_variable
 
-warnings.filterwarnings("ignore")
+# warnings.filterwarnings("ignore")
 
 REFERENCE_DOM = "betweenness_centrality_count"
 
@@ -22,6 +22,7 @@ def calculate_period_return(
     freq: int,
     date_col: str = "Date",
     daily_supply_rate_col: str = "daily_supply_return",
+    simple_dollar_ret: bool = False,
 ) -> pd.DataFrame:
     """
     Function to calculate the period return, where the period length is specified by freq
@@ -48,12 +49,15 @@ def calculate_period_return(
         "dollar_exchange_rate"
     ].pct_change()
 
-    # calculate only the convenience yield
-    df_panel["ret"] = (
-        (1 + df_panel["cum_supply_rates"]) * (df_panel["dollar_ret"] + 1)
-        - 1
-        - df_panel["dollar_ret"]
-    )
+    if simple_dollar_ret:
+        df_panel["ret"] = df_panel["dollar_ret"]
+    else:
+        # calculate only the convenience yield
+        df_panel["ret"] = (
+            (1 + df_panel["cum_supply_rates"]) * (df_panel["dollar_ret"] + 1)
+            - 1
+            - df_panel["dollar_ret"]
+        )
 
     return df_panel
 
@@ -192,13 +196,16 @@ def asset_pricing(
     dominance_var: str = "volume_ultimate_share",
     freq: int = 14,
     zero_value_portfolio: bool = True,
+    simple_dollar_ret: bool = False,
 ) -> pd.DataFrame:
     """
     Aggregate function to create portfolios
     """
 
     n_port = len(brk_pt_lst) + 2 if zero_value_portfolio else len(brk_pt_lst) + 1
-    df_panel = calculate_period_return(df_panel=reg_panel, freq=freq)
+    df_panel = calculate_period_return(
+        df_panel=reg_panel, freq=freq, simple_dollar_ret=simple_dollar_ret
+    )
 
     # prepare the dataframe to store the portfolio
     date_list = list(df_panel["Date"].unique())

@@ -27,20 +27,29 @@ stable_nonstable_info = {
 }
 
 for panel_info, df_panel in stable_nonstable_info.items():
-    for dominance in DEPENDENT_VARIABLES + ["ret"]:
-        for frequency in [14, 30]:
-            print(f"Processing {panel_info} {dominance} {frequency}")
+    for simple_dollar_ret in [True, False]:
+        for dominance in DEPENDENT_VARIABLES + ["ret"]:
+            for frequency in [14, 30]:
+                print(f"Processing {panel_info} {dominance} {frequency}")
 
-            df_ap = (
-                asset_pricing(df_panel, [0.8], dominance, frequency, False)
-                .set_index("Portfolios")
-                .T
-            )
+                df_ap = (
+                    asset_pricing(
+                        reg_panel=df_panel,
+                        brk_pt_lst=[0.8],
+                        dominance_var=dominance,
+                        freq=frequency,
+                        zero_value_portfolio=False,
+                        simple_dollar_ret=simple_dollar_ret,
+                    )
+                    .set_index("Portfolios")
+                    .T
+                )
 
-            # save the results in latex keep the index and keep three decimal places
-            df_ap.to_latex(
-                TABLE_PATH / f"asset_pricing_{panel_info}_{dominance}_{frequency}.tex",
-                index=True,
-                escape=False,
-                float_format="{:0.4f}".format,
-            )
+                # save the results in latex keep the index and keep three decimal places
+                df_ap.to_latex(
+                    TABLE_PATH
+                    / f"asset_pricing_{panel_info}_{dominance}_{frequency}_{'dollar' if simple_dollar_ret else 'convenience'}.tex",
+                    index=True,
+                    escape=False,
+                    float_format="{:0.4f}".format,
+                )
