@@ -6,7 +6,7 @@ Functions to help with asset pricing
 
 import pandas as pd
 import scipy.stats as stats
-
+import statsmodels.formula.api as smf
 # import statsmodels.api as sm
 
 # from environ.process.market.risk_free_rate import df_rf
@@ -299,3 +299,45 @@ def build_weekly_portfolios(
     df_ret[f"P{n_port} - P1"] = df_ret[f"P{n_port}"] - df_ret["P1"]
 
     return df_ret
+
+
+
+def reg_fama_macbeth(data_fama_macbeth:pd.DataFrame,
+formula_factors: str = "ret ~ Mkt-RF + SMB + HML",               
+)-> pd.DataFrame:
+risk_premia = (data_fama_macbeth
+  .groupby(["Year", "Week"])
+  .apply(lambda x: smf.ols(
+      formula= formula_factors, 
+      data=x
+    ).fit()
+    .params
+  )
+  .reset_index()
+)
+
+price_of_risk = (risk_premia
+  .melt(id_vars="date", var_name="factor", value_name="estimate")
+  .groupby("factor")["estimate"]
+  .apply(lambda x: pd.Series({
+      "risk_premium": 100*x.mean(),
+      "t_statistic": x.mean()/x.std()*np.sqrt(len(x))
+    })
+  )
+  .reset_index()
+  .pivot(index="factor", columns="level_1", values="estimate")
+  .reset_index()
+)
+
+price_of_risk_newey_west = (risk_premia
+  .melt(id_vars="date", var_name="factor", value_name="estimate")
+  .groupby("factor")
+  .apply(lambda x: (
+      x["estimate"].mean()/ 
+        smf.ols("estimate ~ 1", x)
+        .fit(cov_type="HAC", cov_kwds={"maxlags": 6}).bse
+    )
+  )
+  .reset_index()
+  .rename(columns={"Intercept": "t_statistic_newey_west"})
+)
