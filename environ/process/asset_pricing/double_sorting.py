@@ -6,7 +6,7 @@ Functions to help with asset pricing
 
 import pandas as pd
 import scipy.stats as stats
-import statsmodels.formula.api as smf
+
 # import statsmodels.api as sm
 
 # from environ.process.market.risk_free_rate import df_rf
@@ -239,105 +239,5 @@ def asset_pricing(
     return _eval_port(pd.DataFrame(ret_dict), freq, n_port)
 
 
-def build_weekly_portfolios(
-    reg_panel: pd.DataFrame,
-    brk_pt_lst: list[float],
-    dominance_var: str = "volume_ultimate_share",
-    zero_value_portfolio: bool = True,
-    simple_dollar_ret: bool = False,
-) -> pd.DataFrame:
-    """
-    Aggregate function to create portfolios by week of the year
-    """
-
-    n_port = len(brk_pt_lst) + 2 if zero_value_portfolio else len(brk_pt_lst) + 1
-    df_panel = calculate_period_return(
-        df_panel=reg_panel, freq=7, simple_dollar_ret=simple_dollar_ret
-    )
-
-    # Add columns for the week and year
-    df_panel['Week'] = df_panel['Date'].dt.isocalendar().week
-    df_panel['Year'] = df_panel['Date'].dt.isocalendar().year
-
-    # Prepare the dataframe to store the portfolio
-    week_year_list = df_panel[['Year', 'Week']].drop_duplicates().sort_values(by=['Year', 'Week']).values.tolist()
-
-    # Dict to store the weekly portfolio return
-    ret_dict = {f"P{port}": [] for port in range(1, n_port + 1)}
-    ret_dict["Year"] = []
-    ret_dict["Week"] = []
-
-    df_panel = lag_variable_columns(
-        data=df_panel,
-        variable=[dominance_var, REFERENCE_DOM],
-        time_variable="Date",
-        entity_variable="Token",
-    )
-
-    # Loop through the weeks
-    for year, week in week_year_list:
-        # Asset pricing
-        df_panel_week = df_panel[(df_panel['Year'] == year) & (df_panel['Week'] == week)].copy()
-        ret_dict = _sorting(
-            df_panel_period=df_panel_week,
-            risk_factor=dominance_var,
-            zero_value_portfolio=zero_value_portfolio,
-            ret_dict=ret_dict,
-            brk_pt_lst=brk_pt_lst,
-        )
-        ret_dict["Year"].append(year)
-        ret_dict["Week"].append(week)
-
-    df_ret = pd.DataFrame(ret_dict)
-    df_ret.sort_values(by=["Year", "Week"], ascending=True, inplace=True)
-
-    # Annualize return
-    for portfolio in [f"P{port}" for port in range(1, n_port + 1)]:
-        df_ret[portfolio] = df_ret[portfolio] * 52  # 52 weeks in a year
-
-    # Calculate the bottom minus top
-    df_ret[f"P{n_port} - P1"] = df_ret[f"P{n_port}"] - df_ret["P1"]
-
-    return df_ret
 
 
-
-def reg_fama_macbeth(data_fama_macbeth:pd.DataFrame,
-formula_factors: str = "ret ~ Mkt-RF + SMB + HML",               
-)-> pd.DataFrame:
-risk_premia = (data_fama_macbeth
-  .groupby(["Year", "Week"])
-  .apply(lambda x: smf.ols(
-      formula= formula_factors, 
-      data=x
-    ).fit()
-    .params
-  )
-  .reset_index()
-)
-
-price_of_risk = (risk_premia
-  .melt(id_vars="date", var_name="factor", value_name="estimate")
-  .groupby("factor")["estimate"]
-  .apply(lambda x: pd.Series({
-      "risk_premium": 100*x.mean(),
-      "t_statistic": x.mean()/x.std()*np.sqrt(len(x))
-    })
-  )
-  .reset_index()
-  .pivot(index="factor", columns="level_1", values="estimate")
-  .reset_index()
-)
-
-price_of_risk_newey_west = (risk_premia
-  .melt(id_vars="date", var_name="factor", value_name="estimate")
-  .groupby("factor")
-  .apply(lambda x: (
-      x["estimate"].mean()/ 
-        smf.ols("estimate ~ 1", x)
-        .fit(cov_type="HAC", cov_kwds={"maxlags": 6}).bse
-    )
-  )
-  .reset_index()
-  .rename(columns={"Intercept": "t_statistic_newey_west"})
-)
