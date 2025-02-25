@@ -1,6 +1,7 @@
 """
 Get factors data: FF3, LTW3
 """
+
 import ssl
 import pandas as pd
 from environ.constants import DATA_PATH, PROCESSED_DATA_PATH
@@ -24,24 +25,26 @@ df_ff3 = pd.read_csv(
 
 # rename the columns
 df_ff3.columns = ["Date", "Mkt-RF", "SMB", "HML", "RF"]
-df_ff3.rename(columns={"Mkt-RF": "MKT"}, 
-              inplace=True)
+df_ff3.rename(columns={"Mkt-RF": "MKT"}, inplace=True)
 # convert the date to datetime
 df_ff3["Date"] = pd.to_datetime(df_ff3["Date"], format="%Y%m%d")
-df_ff3['Week'] = df_ff3['Date'].dt.isocalendar().week
-df_ff3['Year'] = df_ff3['Date'].dt.isocalendar().year
+df_ff3["Week"] = df_ff3["Date"].dt.isocalendar().week
+df_ff3["Year"] = df_ff3["Date"].dt.isocalendar().year
 df_ff3[["MKT", "SMB", "HML", "RF"]] = df_ff3[["MKT", "SMB", "HML", "RF"]] / 100
 # save the DataFrame
 df_ff3.to_csv(PROCESSED_DATA_PATH / "FF3.csv", index=False)
 
 # LTW 3 factors
-ltw3 = pd.read_excel(PROCESSED_DATA_PATH/'LTW3_original.xlsx',
+ltw3 = pd.read_excel(
+    PROCESSED_DATA_PATH / "LTW3_original.xlsx",
     skiprows=5,
     engine="openpyxl",
-    )
-ltw3.rename(columns={'cmkt':'CMKT', 'csize':'CSIZE', 'cmom':'CMOM'}, inplace=True)
-ltw3['yyww'] = ltw3['yyww'].astype(str)
-ltw3['Year'] = ltw3['yyww'].str[:4].astype(int)
-ltw3['Week'] = ltw3['yyww'].str[4:].astype(int) # 0x 2-digit number is converted into single digit x
-ltw3.drop(['yyww'], axis=1, inplace=True)
-ltw3.to_csv(PROCESSED_DATA_PATH/'LTW3.csv', index=False)
+)
+ltw3.rename(columns={"cmkt": "CMKT", "csize": "CSIZE", "cmom": "CMOM"}, inplace=True)
+ltw3["yyww"] = ltw3["yyww"].astype(str)
+ltw3["Year"] = ltw3["yyww"].str[:4].astype(int)
+ltw3["Week"] = (
+    ltw3["yyww"].str[4:].astype(int)
+)  # 0x 2-digit number is converted into single digit x
+ltw3.drop(["yyww"], axis=1, inplace=True)
+ltw3.to_csv(PROCESSED_DATA_PATH / "LTW3.csv", index=False)
