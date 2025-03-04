@@ -80,7 +80,7 @@ def clean_weekly_panel(reg_panel, dom_variable, is_stablecoin= 0, is_boom=-1):
     reg_panel = reg_panel[reg_panel[dom_variable] > 0]
 
     # Filter out tokens without enough data
-    reg_panel = reg_panel[reg_panel['Token'].map(reg_panel['Token'].value_counts()) >= 120]
+    reg_panel = reg_panel[reg_panel['Token'].map(reg_panel['Token'].value_counts()) >= 100]
 
     # Filter out tokens with low market capitalization
     reg_panel = reg_panel.groupby('Token').filter(lambda group: group['mcap'].max() >= 5e6)
@@ -91,6 +91,12 @@ def clean_weekly_panel(reg_panel, dom_variable, is_stablecoin= 0, is_boom=-1):
     df_panel = calculate_period_return(
         df_panel=reg_panel, freq=1, simple_dollar_ret=True
     )
+
+        # winsorize returns
+    df_panel['ret'] = df_panel.groupby(['Date'])['ret'].transform(
+            lambda x: x.clip(lower=x.quantile(0.025), upper=x.quantile(0.975))
+    )
+
     # Add columns for the week and year
     df_panel['Week'] = df_panel['Date'].dt.isocalendar().week.replace(53, 52)
     df_panel['Year'] = df_panel['Date'].dt.isocalendar().year
@@ -103,13 +109,7 @@ def clean_weekly_panel(reg_panel, dom_variable, is_stablecoin= 0, is_boom=-1):
 
     df_panel = df_panel.groupby(['Token', 'WeekYear']).agg(**agg_dict).reset_index()
 
-    # winsorize returns
-    df_panel['ret'] = df_panel.groupby(['WeekYear'])['ret'].transform(
-            lambda x: x.clip(lower=x.quantile(0.05), upper=x.quantile(0.95))
-    )
-
     return df_panel
-
 
 def calculate_weekly_returns(df_panel: pd.DataFrame, other_variables = True
 ) -> pd.DataFrame:
