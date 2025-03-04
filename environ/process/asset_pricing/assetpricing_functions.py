@@ -76,10 +76,14 @@ def clean_weekly_panel(reg_panel, dom_variable, is_stablecoin= 0, is_boom=-1):
     else:   
         pass
         
-    # only keep tokens with market cap above one million
-    reg_panel = reg_panel[reg_panel['mcap'] >= 1e6]
     # reg_panel = reg_panel[reg_panel['Volume'] > 0]
     reg_panel = reg_panel[reg_panel[dom_variable] > 0]
+
+    # Filter out tokens without enough data
+    reg_panel = reg_panel[reg_panel['Token'].map(reg_panel['Token'].value_counts()) >= 120]
+
+    # Filter out tokens with low market capitalization
+    reg_panel = reg_panel.groupby('Token').filter(lambda group: group['mcap'].max() >= 5e6)
 
     # add supply rates
     reg_panel["daily_supply_return"] = reg_panel["supply_rates"] / 365.2425
@@ -101,7 +105,7 @@ def clean_weekly_panel(reg_panel, dom_variable, is_stablecoin= 0, is_boom=-1):
 
     # winsorize returns
     df_panel['ret'] = df_panel.groupby(['WeekYear'])['ret'].transform(
-            lambda x: x.clip(lower=x.quantile(0.01), upper=x.quantile(0.99))
+            lambda x: x.clip(lower=x.quantile(0.05), upper=x.quantile(0.95))
     )
 
     return df_panel
@@ -177,7 +181,7 @@ def create_portfolios(
     return pd.DataFrame(ret_dict)
 
 
-def univariate_sort(df_panel,dom_variable, n_quantiles=3):
+def univariate_sort(df_panel,dom_variable, n_quantiles=3, ret_agg = 'mean'):
     df_panel['portfolio'] = df_panel.groupby('WeekYear')[dom_variable].transform(
         lambda x: pd.qcut(x, q=n_quantiles, labels=[f'P{i}' for i in range(1, n_quantiles+1)])
     )
@@ -188,7 +192,7 @@ def univariate_sort(df_panel,dom_variable, n_quantiles=3):
     # Group by portfolio and compute statistics
     for port, group in df_panel.groupby('portfolio'):
         returns = group['ret'] 
-        mean_return = returns.mean()
+        mean_return = returns.mean() if ret_agg == 'mean' else returns.median()
         std_return = returns.std(ddof=1)  # Sample standard deviation
         # Compute t-statistic using ttest_1samp with population mean = 0
         t_stat, p_val = ttest_1samp(returns, popmean=0)
@@ -197,7 +201,7 @@ def univariate_sort(df_panel,dom_variable, n_quantiles=3):
         results[f'{port}'] = {
             'Mean': mean_return,
             't-Stat': t_stat,
-            'p-value': p_val,
+            # 'p-value': p_val,
             'StdDev': std_return,
             'Sharpe':  np.sqrt(365/7) * mean_return / std_return
         }
@@ -209,7 +213,7 @@ def univariate_sort(df_panel,dom_variable, n_quantiles=3):
 
 
     
-def double_sort(df_panel,dom_variable,secondary_variable, n_quantiles=3):
+def double_sort(df_panel,dom_variable,secondary_variable, n_quantiles=3, ret_agg = 'mean'):
     df_panel['primary_portfolio'] = df_panel.groupby('WeekYear')[dom_variable].transform(
         lambda x: pd.qcut(x, q=n_quantiles, labels=[f'P{i}' for i in range(1, n_quantiles+1)])
     )
@@ -223,7 +227,7 @@ def double_sort(df_panel,dom_variable,secondary_variable, n_quantiles=3):
         index='secondary_portfolio', 
         columns='primary_portfolio', 
         values='ret', 
-        aggfunc='mean'
+        aggfunc= 'mean' if ret_agg == 'mean' else 'median'
     )
 
     return mean_returns_table
