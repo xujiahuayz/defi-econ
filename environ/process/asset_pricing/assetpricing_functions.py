@@ -79,12 +79,12 @@ def clean_weekly_panel(reg_panel, dom_variable, is_stablecoin= 0, is_boom=-1):
     # reg_panel = reg_panel[reg_panel['Volume'] > 0]
     reg_panel = reg_panel[reg_panel[dom_variable] > 0]
 
-    # Filter out tokens without enough data
-    reg_panel = reg_panel[reg_panel['Token'].map(reg_panel['Token'].value_counts()) >= 100]
-
     # Filter out tokens with low market capitalization
-    reg_panel = reg_panel.groupby('Token').filter(lambda group: group['mcap'].max() >= 5e6)
-
+    reg_panel = reg_panel.groupby('Token').filter(lambda group: group['mcap'].max() >= 1e6)
+    
+    # Filter out tokens without enough data
+    # reg_panel = reg_panel[reg_panel['Token'].map(reg_panel['Token'].value_counts()) >= 50]
+    
     # add supply rates
     reg_panel["daily_supply_return"] = reg_panel["supply_rates"] / 365.2425
     # add daily returns
@@ -92,19 +92,21 @@ def clean_weekly_panel(reg_panel, dom_variable, is_stablecoin= 0, is_boom=-1):
         df_panel=reg_panel, freq=1, simple_dollar_ret=True
     )
 
-        # winsorize returns
+    # winsorize returns
     df_panel['ret'] = df_panel.groupby(['Date'])['ret'].transform(
-            lambda x: x.clip(lower=x.quantile(0.025), upper=x.quantile(0.975))
+            lambda x: x.clip(lower=x.quantile(0.01), upper=x.quantile(0.99))
     )
+    df_panel['amihud'] = df_panel['ret'].abs() / df_panel['Volume']
 
     # Add columns for the week and year
     df_panel['Week'] = df_panel['Date'].dt.isocalendar().week.replace(53, 52)
     df_panel['Year'] = df_panel['Date'].dt.isocalendar().year
     df_panel["WeekYear"] = df_panel["Year"].astype(str) + '-' + df_panel["Week"].astype(str)
+    
     agg_dict = {
-        'ret':('ret', lambda x: (1 + x).prod() - 1),
+        'ret':('ret', lambda x: (1 + x).prod() - 1)
     }
-    for col in DEPENDENT_VARIABLES+['mcap']:
+    for col in DEPENDENT_VARIABLES+['mcap', 'amihud']:
         agg_dict[col] = (col, 'mean')
 
     df_panel = df_panel.groupby(['Token', 'WeekYear']).agg(**agg_dict).reset_index()
@@ -242,5 +244,30 @@ def vw_univariate_sort(df_panel,dom_variable, n_quantiles=3):
     ).reset_index(name='vw_ret')
 
     # Step 2: Compute the average of these weekly weighted returns for each portfolio
-    portfolio_avg = weekly_weighted.groupby('portfolio')['vw_ret'].mean().reset_index()
-    return portfolio_avg
+    df_panel = weekly_weighted.groupby('portfolio')['vw_ret'].mean().reset_index()
+
+    
+    # Create a dictionary to store the results for each portfolio
+    results = {}
+
+    # Group by portfolio and compute statistics
+    for port, group in df_panel.groupby('portfolio'):
+        returns = group['vw_ret'] 
+        mean_return = returns.mean() if ret_agg == 'mean' else returns.median()
+        std_return = returns.std(ddof=1)  # Sample standard deviation
+        # Compute t-statistic using ttest_1samp with population mean = 0
+        t_stat, p_val = ttest_1samp(returns, popmean=0)
+        
+        # Save the results in the dictionary
+        results[f'{port}'] = {
+            'Mean': mean_return,
+            't-Stat': t_stat,
+            # 'p-value': p_val,
+            'StdDev': std_return,
+            'Sharpe':  np.sqrt(365/7) * mean_return / std_return
+        }
+
+    # Create the summary table DataFrame with portfolio names as columns
+    summary_table = pd.DataFrame(results)
+
+    return summary_table

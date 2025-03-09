@@ -204,6 +204,8 @@ DEPENDENT_VARIABLES = [
     "betweenness_centrality_count",
     "total_eigen_centrality_undirected",
     "Volume_share",
+    "volume_in_share",
+    "volume_out_share"
 ]
 
 # Aave pool deployment time
