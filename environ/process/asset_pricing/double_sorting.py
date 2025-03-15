@@ -51,6 +51,11 @@ def calculate_period_return(
 
     if simple_dollar_ret:
         df_panel["ret"] = df_panel["dollar_ret"]
+    elif simple_dollar_ret == -1:
+        # convenience + dollar return
+        df_panel["ret"] = (1 + df_panel["cum_supply_rates"]) * (
+            df_panel["dollar_ret"] + 1
+        ) - 1
     else:
         # calculate only the convenience yield
         df_panel["ret"] = (

@@ -205,7 +205,7 @@ DEPENDENT_VARIABLES = [
     "total_eigen_centrality_undirected",
     "Volume_share",
     "volume_in_share",
-    "volume_out_share"
+    "volume_out_share",
 ]
 
 # For asset pricing tests, only using a subset of variables that have enough data
@@ -215,7 +215,8 @@ DEPENDENT_VARIABLES_ASSETPRICING = [
     "total_eigen_centrality_undirected",
     "Volume_share",
     "volume_in_share",
-    "volume_out_share"
+    "volume_out_share",
+    "amihud",
 ]
 
 # Aave pool deployment time
