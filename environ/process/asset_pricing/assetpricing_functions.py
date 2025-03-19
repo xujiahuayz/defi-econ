@@ -390,7 +390,7 @@ def vw_univariate_sort(
     return summary_table
 
 
-def get_dominance_factor(df_panel, ret_agg="mean") -> pd.DataFrame:
+def get_dominance_portfolios(df_panel, ret_agg="mean") -> pd.DataFrame:
     if ret_agg == "mean":
         portfolio_ts = (
             df_panel.groupby(["WeekYear", "portfolio"])["ret_lead_1"].mean().unstack()
@@ -405,5 +405,22 @@ def get_dominance_factor(df_panel, ret_agg="mean") -> pd.DataFrame:
     high_port = portfolio_ts[f"P{n_quantiles}"]
     low_port = portfolio_ts["P1"]
     spread_ts = high_port - low_port
-    portfolio_ts["CDOM"] = spread_ts
-    return portfolio_ts[["CDOM"]]
+    portfolio_ts[f"P{n_quantiles}-P1"] = spread_ts
+    return portfolio_ts
+
+
+def significance_stars(pval):
+    """
+    Return significance stars based on p-value:
+        *** if p < 0.01
+        **  if p < 0.05
+        *   if p < 0.10
+    """
+    if pval < 0.01:
+        return "***"
+    elif pval < 0.05:
+        return "**"
+    elif pval < 0.1:
+        return "*"
+    else:
+        return ""
