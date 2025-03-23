@@ -252,7 +252,7 @@ def univariate_sort(
     return df_panel
 
 
-def univariate_sort_table(df_panel, ret_agg="mean") -> pd.DataFrame:
+def univariate_sort_table(df_panel, ret_agg="mean", annualized=False) -> pd.DataFrame:
     # First, compute the time-series of aggregated returns for each portfolio by WeekYear.
     # This calculates the mean (or median) for each portfolio in each time period.
     if ret_agg == "mean":
@@ -277,10 +277,10 @@ def univariate_sort_table(df_panel, ret_agg="mean") -> pd.DataFrame:
         )
 
         results[port] = {
-            "Mean": mean_return,
-            "t-Stat": t_stat,
-            "StdDev": std_return,
-            "Sharpe": sharpe,
+            "E[R]--Rf": mean_return * 52 if annualized else mean_return,
+            "t": t_stat,
+            "Std": std_return,
+            "SR": sharpe,
         }
 
     # Determine the number of portfolios (assumes portfolios are labeled like P1, P2, ..., Pn)
@@ -297,10 +297,10 @@ def univariate_sort_table(df_panel, ret_agg="mean") -> pd.DataFrame:
     sharpe_diff = np.sqrt(365 / 7) * mean_diff / std_diff if std_diff != 0 else np.nan
 
     results[f"P{n_quantiles}-P1"] = {
-        "Mean": mean_diff,
-        "t-Stat": t_stat_diff,
-        "StdDev": std_diff,
-        "Sharpe": sharpe_diff,
+        "E[R]--Rf": mean_diff,
+        "t": t_stat_diff,
+        "Std": std_diff,
+        "SR": sharpe_diff,
     }
 
     summary_table = pd.DataFrame(results)
@@ -334,7 +334,7 @@ def double_sort(
     return df_panel
 
 
-def double_sort_table(df_panel, ret_agg="mean") -> pd.DataFrame:
+def double_sort_table(df_panel, ret_agg="mean", annualized=False) -> pd.DataFrame:
     # Pivot the table to show average (or median) returns for each combination
     # of secondary and primary portfolios.
     mean_returns_table = df_panel.pivot_table(
@@ -343,6 +343,7 @@ def double_sort_table(df_panel, ret_agg="mean") -> pd.DataFrame:
         values="ret_lead_1",
         aggfunc="mean" if ret_agg == "mean" else "median",
     )
+    mean_returns_table = mean_returns_table * 52 if annualized else mean_returns_table
     return mean_returns_table
 
 
@@ -377,11 +378,11 @@ def vw_univariate_sort(
 
         # Save the results in the dictionary
         results[f"{port}"] = {
-            "Mean": mean_return,
-            "t-Stat": t_stat,
+            "E[R]-Rf": mean_return,
+            "t": t_stat,
             # 'p-value': p_val,
-            "StdDev": std_return,
-            "Sharpe": np.sqrt(365 / 7) * mean_return / std_return,
+            "Std": std_return,
+            "SR": np.sqrt(365 / 7) * mean_return / std_return,
         }
 
     # Create the summary table DataFrame with portfolio names as columns

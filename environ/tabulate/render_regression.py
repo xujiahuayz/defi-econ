@@ -171,9 +171,11 @@ def construct_regress_vars(
         iv_chunk_list = [
             [
                 [
-                    name_lag_variable(v)
-                    if v in (set(ALL_NAMING_DICT) - {"Stable", "is_boom", "const"})
-                    else v
+                    (
+                        name_lag_variable(v)
+                        if v in (set(ALL_NAMING_DICT) - {"Stable", "is_boom", "const"})
+                        else v
+                    )
                     for v in iv
                 ]
                 for iv in iv_chunk
@@ -185,10 +187,7 @@ def construct_regress_vars(
     for dv in dependent_variables:
         for iv_combi in product(
             *(
-                [
-                    [([name_lag_variable(dv)] if with_lag_dv else [])]
-                    + without_lag_dv_part
-                ]
+                [[[name_lag_variable(dv)] if with_lag_dv else []] + without_lag_dv_part]
                 + iv_chunk_list
             )
         ):
@@ -298,9 +297,9 @@ def render_regress_table_latex(
     # for each cell from row 2 to 4th last row, add \makecell{xx} to make the cell wrap
     for row in result_table_latex.index[1:iv_end]:
         for col in result_table_latex.columns:
-            result_table_latex.loc[
-                row, col
-            ] = f"\\makecell{{{result_table_latex.loc[row, col]}}}"
+            result_table_latex.loc[row, col] = (
+                f"\\makecell{{{result_table_latex.loc[row, col]}}}"
+            )
 
     original_index = result_table_latex.index[iv_end]
     result_table_latex = result_table_latex.rename(
