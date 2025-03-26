@@ -29,11 +29,12 @@ def render_unisort_table_latex(
     unisort_tab.to_latex(
         f"{file_name}.tex",
         index=True,
-        header=False,
+        header=True,
         # Some options that help remove extra lines
         longtable=False,
         caption="",
         label="",
+        float_format="%.3f",
         # "escape=False" if you have special LaTeX chars in your data
     )
     return

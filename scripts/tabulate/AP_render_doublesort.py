@@ -31,9 +31,7 @@ def render_doublesort_table_latex(
 
     # generate the latex table for doublesort_tab
     doublesort_tab.to_latex(
-        f"{file_name}.tex",
-        index=True,
-        escape=False,
+        f"{file_name}.tex", index=True, escape=False, float_format="%.3f"
     )
 
     return doublesort_tab
@@ -68,8 +66,9 @@ if __name__ == "__main__":
                     secondary_quantiles=secondary_quantiles,
                     separate_zero_value=False,
                 )
-                summary_table = double_sort_table(df_panel, ret_agg=ret_agg)
-
+                summary_table = double_sort_table(df_panel, ret_agg=ret_agg).round(3)
+                summary_table.index.name = "MarketCap"
+                summary_table.columns.name = "Dominance"
                 # generate the summary table
                 table_name = "doublesort_" + dom_variable
                 res = render_doublesort_table_latex(
