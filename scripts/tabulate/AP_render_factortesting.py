@@ -17,7 +17,6 @@ from environ.process.asset_pricing.assetpricing_functions import (
 
 
 if __name__ == "__main__":
-    DEPENDENT_VARIABLES_ASSETPRICING = DEPENDENT_VARIABLES_ASSETPRICING[:1]
     factor_models = ["MKT", "CMKT", "CMKT+CMOM+CSIZE"]
     factor_models_names = ["MKT", "CMKT", "LTW3"]
     factor_dict = dict(zip(factor_models, factor_models_names))
