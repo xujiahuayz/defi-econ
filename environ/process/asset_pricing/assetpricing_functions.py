@@ -70,43 +70,8 @@ def reg_fama_macbeth(
 
 
 def clean_weekly_panel(reg_panel, is_stablecoin=0, is_boom=-1):
-    # add supply rates
-    reg_panel["daily_supply_return"] = reg_panel["supply_rates"] / 365.2425
-    # add daily returns
-    df_panel = calculate_period_return(
-        df_panel=reg_panel, freq=1, simple_dollar_ret=True
-    )
 
-    # winsorize returns
-    df_panel["ret"] = df_panel.groupby(["Date"])["ret"].transform(
-        lambda x: x.clip(lower=x.quantile(0.025), upper=x.quantile(0.975))
-    )
-
-    df_panel["amihud"] = np.where(
-        df_panel["Volume"] == 0, np.nan, df_panel["ret"].abs() / df_panel["Volume"]
-    )
-
-    # Add columns for the week and year
-    df_panel["Week"] = df_panel["Date"].dt.isocalendar().week.replace(53, 52)
-    df_panel["Year"] = df_panel["Date"].dt.isocalendar().year
-    df_panel["WeekYear"] = (
-        df_panel["Year"].astype(str) + "-" + df_panel["Week"].astype(str)
-    )
-
-    agg_dict = {"ret": ("ret", lambda x: (1 + x).prod() - 1)}
-    for col in DEPENDENT_VARIABLES + ["mcap", "amihud"]:
-        agg_dict[col] = (col, "mean")
-
-    df_panel = df_panel.groupby(["Token", "WeekYear"]).agg(**agg_dict).reset_index()
-
-    # Ensure the DataFrame is sorted by Token and WeekYear
-    df_panel = df_panel.sort_values(["Token", "WeekYear"])
-
-    # Create the lead returns, i.e. returns one week ahead
-    df_panel["ret_lead_1"] = df_panel.groupby("Token")["ret"].shift(-1)
-    df_panel = df_panel.dropna(subset=["ret_lead_1"])
-
-    # Data filtering needs to be done at the end, to prevent wrong shifting in returns
+    # Filter for stablecoins
     if is_stablecoin == 1:
         reg_panel = reg_panel[reg_panel["stableshare"] > 0]
     elif is_stablecoin == 0:
@@ -114,23 +79,89 @@ def clean_weekly_panel(reg_panel, is_stablecoin=0, is_boom=-1):
     else:
         pass
 
+    ## Filter out tokens that existed for less than 2 months
+    # reg_panel = reg_panel[
+    #     reg_panel["Token"].map(reg_panel["Token"].value_counts()) >= 60
+    # ]
+
+    ## Filter out tokens with low peak market capitalization
+    # reg_panel = reg_panel.groupby("Token").filter(
+    #     lambda group: group["mcap"].max() >= 50e6
+    # )
+
+    # add supply rates
+    reg_panel["daily_supply_return"] = reg_panel["supply_rates"] / 365.2425
+    reg_panel.sort_values(by=["Token", "Date"], ascending=True, inplace=True)
+
+    # calculate daily returns
+    reg_panel["ret"] = reg_panel.groupby("Token")["dollar_exchange_rate"].pct_change(
+        fill_method=None
+    )
+    # np.clip(     ,-0.5,1)
+
+    # compute amihud illiquidity measure
+    reg_panel["amihud"] = np.where(
+        reg_panel["Volume"] == 0, np.nan, reg_panel["ret"].abs() / reg_panel["Volume"]
+    )
+
+    # winsorize returns
+    # reg_panel["ret"] = reg_panel.groupby(["Date"])["ret"].transform(
+    #     lambda x: x.clip(lower=x.quantile(0.025), upper=x.quantile(0.975))
+    # )
+    # Add columns for the week and year
+    reg_panel["Week"] = reg_panel["Date"].dt.isocalendar().week.replace(53, 52)
+    reg_panel["Year"] = reg_panel["Date"].dt.isocalendar().year
+    reg_panel["WeekYear"] = (
+        reg_panel["Year"].astype(str) + "-" + reg_panel["Week"].astype(str)
+    )
+
+    agg_dict = {
+        "ret": ("ret", lambda x: (1 + x).prod() - 1),
+        "is_boom": ("is_boom", "last"),
+    }
+    for col in DEPENDENT_VARIABLES + ["mcap", "amihud"]:
+        agg_dict[col] = (col, "mean")
+
+    reg_panel = reg_panel.groupby(["Token", "WeekYear"]).agg(**agg_dict).reset_index()
+
+    # Ensure the DataFrame is sorted by Token and WeekYear
+    reg_panel = reg_panel.sort_values(["Token", "WeekYear"])
+
+    # Create the lead returns, i.e. returns one week ahead
+    reg_panel["ret_lead_1"] = reg_panel.groupby("Token")["ret"].shift(-1)
+    reg_panel = reg_panel.dropna(subset=["ret_lead_1"])
+
+    # Filter out tokens with low peak market capitalization
+    # reg_panel = reg_panel.groupby("Token").filter(
+    #     lambda group: group["mcap"].max() >= 100e6
+    # )
+
+    # remove observations with low market cap (not the token)
+    # reg_panel = reg_panel[reg_panel["mcap"] > 1e6]
+
+    ############################################################
+    # Calculate the mean market cap for each token
+    # mean_market_cap = reg_panel.groupby("Token")["mcap"].median()
+
+    # # Identify tokens with an average market cap above 1 million
+    # tokens_above_1m = mean_market_cap[mean_market_cap > 1e6].index
+
+    # # Filter the original DataFrame to keep only these tokens
+    # reg_panel = reg_panel[reg_panel["Token"].isin(tokens_above_1m)]
+    ############################################################
+
+    reg_panel["ret_lead_1"] = reg_panel.groupby(["WeekYear"])["ret_lead_1"].transform(
+        lambda x: x.clip(lower=x.quantile(0.01), upper=x.quantile(0.99))
+    )
+
+    # Boom and bust filtering needs to be done at the end, to prevent wrong shifting in returns
     if is_boom == 1:
         reg_panel = reg_panel[reg_panel["is_boom"] == 1]
     elif is_boom == 0:
         reg_panel = reg_panel[reg_panel["is_boom"] == 0]
     else:
         pass
-
-    # Filter out tokens without enough data
-    # reg_panel = reg_panel[reg_panel['Token'].map(reg_panel['Token'].value_counts()) >= 50]
-
-    ## Filter out tokens with low market capitalization
-    df_panel = df_panel.groupby("Token").filter(
-        lambda group: group["mcap"].max() >= 5e6
-    )
-    # df_panel = df_panel[df_panel["mcap"] > 1e6]
-
-    return df_panel
+    return reg_panel
 
 
 def calculate_weekly_returns(
@@ -145,21 +176,6 @@ def calculate_weekly_returns(
             agg_dict[col] = (col, "mean")
 
     return df_panel.groupby(["Token", "Year", "Week"]).agg(**agg_dict).reset_index()
-
-
-def get_weekly_panel(reg_panel, other_variables=False) -> pd.DataFrame:
-    # add daily simple returns and convenience yield
-    # reg_panel = calculate_period_return(df_panel=reg_panel, freq=1, simple_dollar_ret=False)
-
-    # Change into weekly returns
-    reg_panel = calculate_weekly_returns(
-        df_panel=reg_panel, other_variables=other_variables
-    )
-
-    reg_panel["weekly_dollar_ret"] = reg_panel.groupby(["Year", "Week"])[
-        "weekly_dollar_ret"
-    ].transform(lambda x: x.clip(lower=x.quantile(0.01), upper=x.quantile(0.99)))
-    return reg_panel
 
 
 def create_portfolios(
@@ -212,10 +228,9 @@ def assign_portfolio(x, quantiles, prefix="P", separate_zero_value=True):
     result = pd.Series(index=x.index, dtype=object)
 
     # combine zero values with bottom portfolio
-
     # Identify rows where the value is 0.
     zero_mask = x == 0
-    if (zero_mask).sum() == 0:
+    if zero_mask.sum() == 0:
         result = pd.qcut(
             x,
             q=quantiles,
@@ -241,7 +256,7 @@ def assign_portfolio(x, quantiles, prefix="P", separate_zero_value=True):
 
 
 def univariate_sort(
-    df_panel, dom_variable, quantiles=[0, 0.3, 0.7, 1], separate_zero_value=True
+    df_panel, dom_variable, quantiles=[0, 0.33, 0.67, 1], separate_zero_value=True
 ) -> pd.DataFrame:
     # Assign portfolio for each WeekYear group.
     df_panel["portfolio"] = df_panel.groupby("WeekYear")[dom_variable].transform(
@@ -252,17 +267,40 @@ def univariate_sort(
     return df_panel
 
 
-def univariate_sort_table(df_panel, ret_agg="mean", annualized=False) -> pd.DataFrame:
-    # First, compute the time-series of aggregated returns for each portfolio by WeekYear.
-    # This calculates the mean (or median) for each portfolio in each time period.
+def weighted_average_return(group):
+    """
+    Compute the value-weighted return for a group using the token market capitalization.
+    The weighted return is defined as: sum(ret * mcap) / sum(mcap)
+    """
+    return np.average(group["ret_lead_1"], weights=group["mcap"])
+
+
+def univariate_sort_table(
+    df_panel, ret_agg="value_weight", annualized=False
+) -> pd.DataFrame:
+    """
+    Compute the time-series of aggregated portfolio returns for each WeekYear.
+
+    Parameters:
+    - ret_agg: choose among "mean", "median", or "value_weight" (for value-weighted returns).
+    - annualized: if True, annualize the average return.
+    """
     if ret_agg == "mean":
         portfolio_ts = (
             df_panel.groupby(["WeekYear", "portfolio"])["ret_lead_1"].mean().unstack()
         )
-    else:
+    elif ret_agg == "median":
         portfolio_ts = (
             df_panel.groupby(["WeekYear", "portfolio"])["ret_lead_1"].median().unstack()
         )
+    elif ret_agg == "value_weight":
+        portfolio_ts = (
+            df_panel.groupby(["WeekYear", "portfolio"])
+            .apply(weighted_average_return)
+            .unstack()
+        )
+    else:
+        raise ValueError("ret_agg must be one of 'mean', 'median', or 'value_weight'")
 
     results = {}
 
@@ -271,7 +309,7 @@ def univariate_sort_table(df_panel, ret_agg="mean", annualized=False) -> pd.Data
         ret_ts = portfolio_ts[port].dropna()  # drop missing values if any
         mean_return = ret_ts.mean()
         std_return = ret_ts.std(ddof=1)
-        t_stat, p_val = ttest_1samp(ret_ts, popmean=0)
+        t_stat, _ = ttest_1samp(ret_ts, popmean=0)
         sharpe = (
             np.sqrt(365 / 7) * mean_return / std_return if std_return != 0 else np.nan
         )
@@ -287,7 +325,6 @@ def univariate_sort_table(df_panel, ret_agg="mean", annualized=False) -> pd.Data
     n_quantiles = portfolio_ts.shape[1]
 
     # Compute the spread portfolio as the time series difference: P{n_quantiles} - P1.
-    # This means for each WeekYear, we subtract the mean of portfolio P1 from P{n_quantiles}.
     high_port = portfolio_ts[f"P{n_quantiles}"]
     low_port = portfolio_ts["P1"]
     spread_ts = high_port - low_port
@@ -311,7 +348,8 @@ def double_sort(
     df_panel,
     dom_variable,
     secondary_variable,
-    quantiles=[0, 0.3, 0.7, 1],
+    quantiles=[0, 0.33, 0.67, 1],
+    secondary_quantiles=[0, 0.33, 0.67, 1],
     separate_zero_value=True,
 ) -> pd.DataFrame:
     # For the primary sort, assign portfolio labels with prefix "P".
@@ -328,78 +366,100 @@ def double_sort(
         ["WeekYear", "primary_portfolio"]
     )[secondary_variable].transform(
         lambda x: assign_portfolio(
-            x, quantiles=quantiles, prefix="Q", separate_zero_value=False
+            x, quantiles=secondary_quantiles, prefix="Q", separate_zero_value=False
         )
     )
     return df_panel
 
 
-def double_sort_table(df_panel, ret_agg="mean", annualized=False) -> pd.DataFrame:
-    # Pivot the table to show average (or median) returns for each combination
-    # of secondary and primary portfolios.
-    mean_returns_table = df_panel.pivot_table(
-        index="secondary_portfolio",
-        columns="primary_portfolio",
-        values="ret_lead_1",
-        aggfunc="mean" if ret_agg == "mean" else "median",
-    )
-    mean_returns_table = mean_returns_table * 52 if annualized else mean_returns_table
+def double_sort_table(
+    df_panel, ret_agg="value_weight", annualized=False
+) -> pd.DataFrame:
+    """
+    Create a pivot table of portfolio returns for each combination of secondary and primary portfolios.
+    If ret_agg is "value_weight", returns are computed as the value‐weighted average using "mcap".
+    """
+    if ret_agg == "value_weight":
+        # Group by both secondary and primary portfolio and compute weighted average returns.
+        mean_returns_table = (
+            df_panel.groupby(["secondary_portfolio", "primary_portfolio"])
+            .apply(weighted_average_return)
+            .unstack()
+        )
+    else:
+        agg_func = "mean" if ret_agg == "mean" else "median"
+        mean_returns_table = df_panel.pivot_table(
+            index="secondary_portfolio",
+            columns="primary_portfolio",
+            values="ret_lead_1",
+            aggfunc=agg_func,
+        )
+
+    if annualized:
+        mean_returns_table = mean_returns_table * 52
+
     return mean_returns_table
 
 
-def vw_univariate_sort(
-    df_panel, dom_variable, quantiles=[0, 0.3, 0.7, 1], ret_agg="mean"
+def independent_sort(
+    df_panel,
+    dom_variable,
+    secondary_variable,
+    quantiles=[0, 0.3, 0.7, 1],
+    secondary_quantiles=[0, 0.3, 0.7, 1],
+    separate_zero_value=True,
 ) -> pd.DataFrame:
-    df_panel["portfolio"] = df_panel.groupby("WeekYear")[dom_variable].transform(
-        lambda x: pd.qcut(
-            x, q=quantiles, labels=[f"P{i}" for i in range(1, len(quantiles) - 1)]
+    """
+    Perform an independent double sort on df_panel.
+
+    For each WeekYear:
+      1) Sort on 'dom_variable' to create 'primary_portfolio'
+      2) Sort (independently) on 'secondary_variable' to create 'secondary_portfolio'.
+
+    Returns the df_panel with two new columns: 'primary_portfolio' and 'secondary_portfolio'.
+    """
+
+    # 1) Assign primary portfolios based on dom_variable for each WeekYear.
+    df_panel["primary_portfolio"] = df_panel.groupby("WeekYear")[
+        dom_variable
+    ].transform(
+        lambda x: assign_portfolio(
+            x, quantiles=quantiles, prefix="P", separate_zero_value=separate_zero_value
         )
     )
 
-    weekly_weighted = (
-        df_panel.groupby(["WeekYear", "portfolio"])
-        .apply(lambda x: (x["ret"] * x["mcap"]).sum() / x["mcap"].sum())
-        .reset_index(name="vw_ret")
+    # 2) Independently assign secondary portfolios based on secondary_variable for each WeekYear.
+    df_panel["secondary_portfolio"] = df_panel.groupby("WeekYear")[
+        secondary_variable
+    ].transform(
+        lambda x: assign_portfolio(
+            x,
+            quantiles=secondary_quantiles,
+            prefix="Q",
+            separate_zero_value=separate_zero_value,
+        )
     )
 
-    # Step 2: Compute the average of these weekly weighted returns for each portfolio
-    df_panel = weekly_weighted.groupby("portfolio")["vw_ret"].mean().reset_index()
-
-    # Create a dictionary to store the results for each portfolio
-    results = {}
-
-    # Group by portfolio and compute statistics
-    for port, group in df_panel.groupby("portfolio"):
-        returns = group["vw_ret"]
-        mean_return = returns.mean() if ret_agg == "mean" else returns.median()
-        std_return = returns.std(ddof=1, skipna=True)  # Sample standard deviation
-        # Compute t-statistic using ttest_1samp with population mean = 0
-        t_stat, p_val = ttest_1samp(returns, popmean=0)
-
-        # Save the results in the dictionary
-        results[f"{port}"] = {
-            "E[R]-Rf": mean_return,
-            "t": t_stat,
-            # 'p-value': p_val,
-            "Std": std_return,
-            "SR": np.sqrt(365 / 7) * mean_return / std_return,
-        }
-
-    # Create the summary table DataFrame with portfolio names as columns
-    summary_table = pd.DataFrame(results)
-
-    return summary_table
+    return df_panel
 
 
-def get_dominance_portfolios(df_panel, ret_agg="mean") -> pd.DataFrame:
+def get_dominance_portfolios(df_panel, ret_agg="value_weight") -> pd.DataFrame:
     if ret_agg == "mean":
         portfolio_ts = (
             df_panel.groupby(["WeekYear", "portfolio"])["ret_lead_1"].mean().unstack()
         )
-    else:
+    elif ret_agg == "median":
         portfolio_ts = (
             df_panel.groupby(["WeekYear", "portfolio"])["ret_lead_1"].median().unstack()
         )
+    elif ret_agg == "value_weight":
+        portfolio_ts = (
+            df_panel.groupby(["WeekYear", "portfolio"])
+            .apply(weighted_average_return)
+            .unstack()
+        )
+    else:
+        raise ValueError("ret_agg must be one of 'mean', 'median', or 'value_weight'")
 
     # Compute the spread portfolio as the time series difference: P{n_quantiles} - P1.
     n_quantiles = portfolio_ts.shape[1]

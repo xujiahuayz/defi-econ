@@ -550,3 +550,7 @@ ALL_NAMING_DICT = {
     "vol_inter_full_len_share": "{\it VShare}^{\it Betw}",
     "dollar_exchange_rate_log_return_1": "\ln R",
 }
+
+# Asset pricing quantiles
+QUANTILES = [0, 0.33, 0.67, 1]
+QUANTILES_2 = [0, 0.33, 0.67, 1]
