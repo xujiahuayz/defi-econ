@@ -34,7 +34,7 @@ def render_unisort_table_latex(
         longtable=False,
         caption="",
         label="",
-        float_format="%.3f",
+        float_format="%.4f",
         # "escape=False" if you have special LaTeX chars in your data
     )
     return
@@ -74,7 +74,7 @@ if __name__ == "__main__":
                 summary_table = univariate_sort_table(
                     df_panel, ret_agg=ret_agg, annualized=annualized
                 )
-                summary_table = summary_table.round(3)
+                summary_table = summary_table.round(4)
 
                 # generate the summary table
                 table_name = "unisort_" + dom_variable

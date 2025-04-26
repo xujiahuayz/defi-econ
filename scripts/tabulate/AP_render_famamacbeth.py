@@ -91,4 +91,5 @@ if __name__ == "__main__":
             f"{file_name}.tex",
             index=True,
             escape=False,
+            float_format="%.3f",
         )

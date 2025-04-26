@@ -103,7 +103,9 @@ def clean_weekly_panel(reg_panel, is_stablecoin=0, is_boom=-1):
     reg_panel["amihud"] = np.where(
         reg_panel["Volume"] == 0, np.nan, reg_panel["ret"].abs() / reg_panel["Volume"]
     )
-
+    reg_panel["is_stablecoin"] = (
+        reg_panel.groupby("Token")["stableshare"].transform("max") > 0
+    ).astype(int)
     # winsorize returns
     # reg_panel["ret"] = reg_panel.groupby(["Date"])["ret"].transform(
     #     lambda x: x.clip(lower=x.quantile(0.025), upper=x.quantile(0.975))
@@ -117,9 +119,32 @@ def clean_weekly_panel(reg_panel, is_stablecoin=0, is_boom=-1):
 
     agg_dict = {
         "ret": ("ret", lambda x: (1 + x).prod() - 1),
+        "volatility": ("ret", lambda x: np.std(x, ddof=1) * np.sqrt(365 / 7)),
+        "mcap": ("mcap", "mean"),
+        "mcap_share": ("mcap_share", "mean"),
+        "amihud": ("amihud", "mean"),
         "is_boom": ("is_boom", "last"),
+        "is_stablecoin": ("is_stablecoin", "last"),
+        "gas_price_usd": ("gas_price_usd", "mean"),
+        "stableshare": ("stableshare", "mean"),
+        "gas_price_usd_log_return_vol_1_30": (
+            "gas_price_usd_log_return_vol_1_30",
+            "mean",
+        ),
+        "ether_price_usd_log_return_1": (
+            "ether_price_usd_log_return_1",
+            "mean",
+        ),
+        "ether_price_usd_log_return_vol_1_30": (
+            "ether_price_usd_log_return_vol_1_30",
+            "mean",
+        ),
+        "S&P_log_return_vol_1_30": ("S&P_log_return_vol_1_30", "mean"),
+        "Supply_share": ("Supply_share", "mean"),
+        "supply_rates": ("supply_rates", "mean"),
+        "TVL": ("TVL", "mean"),
     }
-    for col in DEPENDENT_VARIABLES + ["mcap", "amihud"]:
+    for col in DEPENDENT_VARIABLES:
         agg_dict[col] = (col, "mean")
 
     reg_panel = reg_panel.groupby(["Token", "WeekYear"]).agg(**agg_dict).reset_index()
@@ -127,10 +152,19 @@ def clean_weekly_panel(reg_panel, is_stablecoin=0, is_boom=-1):
     # Ensure the DataFrame is sorted by Token and WeekYear
     reg_panel = reg_panel.sort_values(["Token", "WeekYear"])
 
+    # Compute rolling 4-week returns (including current week) for each token.
+    # For a given week, ret_rolling_4 = (1 + ret[t-3])*(1 + ret[t-2])*(1 + ret[t-1])*(1 + ret[t]) - 1
+
+    # Winsorize returns to limit extreme values
+    reg_panel["ret"] = reg_panel.groupby(["WeekYear"])["ret"].transform(
+        lambda x: x.clip(lower=x.quantile(0.01), upper=x.quantile(0.99))
+    )
     # Create the lead returns, i.e. returns one week ahead
     reg_panel["ret_lead_1"] = reg_panel.groupby("Token")["ret"].shift(-1)
-    reg_panel = reg_panel.dropna(subset=["ret_lead_1"])
 
+    reg_panel["ret_rolling_4"] = reg_panel.groupby("Token")["ret"].transform(
+        lambda x: (1 + x).rolling(window=4, min_periods=1).apply(np.prod, raw=True) - 1
+    )
     # Filter out tokens with low peak market capitalization
     # reg_panel = reg_panel.groupby("Token").filter(
     #     lambda group: group["mcap"].max() >= 100e6
@@ -149,10 +183,6 @@ def clean_weekly_panel(reg_panel, is_stablecoin=0, is_boom=-1):
     # # Filter the original DataFrame to keep only these tokens
     # reg_panel = reg_panel[reg_panel["Token"].isin(tokens_above_1m)]
     ############################################################
-
-    reg_panel["ret_lead_1"] = reg_panel.groupby(["WeekYear"])["ret_lead_1"].transform(
-        lambda x: x.clip(lower=x.quantile(0.01), upper=x.quantile(0.99))
-    )
 
     # Boom and bust filtering needs to be done at the end, to prevent wrong shifting in returns
     if is_boom == 1:
@@ -176,51 +206,6 @@ def calculate_weekly_returns(
             agg_dict[col] = (col, "mean")
 
     return df_panel.groupby(["Token", "Year", "Week"]).agg(**agg_dict).reset_index()
-
-
-def create_portfolios(
-    df_panel: pd.DataFrame,
-    brk_pt_lst: list[float],
-    dominance_var: str = "volume_ultimate_share",
-    zero_value_portfolio: bool = True,
-    simple_dollar_ret: bool = False,
-) -> pd.DataFrame:
-    """
-    Aggregate function to create portfolios
-    """
-
-    n_port = len(brk_pt_lst) + 2 if zero_value_portfolio else len(brk_pt_lst) + 1
-
-    # Prepare a list of week/year pairs sorted in time
-    weekyear_list = (
-        df_panel[["WeekYear"]].drop_duplicates().sort_values(by=["WeekYear"])
-    )
-
-    # dict to store portfolio return
-    ret_dict = {f"P{port}": [] for port in range(1, n_port + 1)}
-    ret_dict["WeekYear"] = []
-
-    df_panel = lag_variable_columns(
-        data=df_panel,
-        variable=[dominance_var, REFERENCE_DOM],
-        time_variable="WeekYear",
-        entity_variable="Token",
-    )
-
-    # loop through the week and year
-    for weekyear in weekyear_list:
-        # Select data for the current week
-        df_panel_period = df_panel[(df_panel["WeekYear"] == weekyear)].copy()
-        ret_dict = _sorting(
-            df_panel_period=df_panel_period,
-            risk_factor=dominance_var,
-            zero_value_portfolio=zero_value_portfolio,
-            ret_dict=ret_dict,
-            brk_pt_lst=brk_pt_lst,
-        )
-        ret_dict["WeekYear"].append(f"{weekyear}")
-
-    return pd.DataFrame(ret_dict)
 
 
 def assign_portfolio(x, quantiles, prefix="P", separate_zero_value=True):
