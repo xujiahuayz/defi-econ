@@ -191,3 +191,9 @@ The most important rules above all:
 1. Do not upload big files > 100 MB.
 1. Do not upload log files.
 1. Do not declare constant variables in the MIDDLE of a function
+
+
+## Fetch and process data (Subgraph query now deprecated)
+```
+python scripts/fetch/fetch_main.py --start 2020-05-18 -end 2023-01-31
+```

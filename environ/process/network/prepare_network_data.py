@@ -2,7 +2,7 @@
 """
 Prepare the dataset for the network graph
 """
-
+import os
 from os import path
 import datetime
 import pandas as pd
@@ -134,6 +134,7 @@ def prepare_network_data(target_date: datetime.datetime, uniswap_version: str) -
         + target_date_str
         + ".csv",
     )
+
     df_node_list.to_csv(node_file_name)
 
     df_edge_list = get_node_flow(target_date, uniswap_version)
@@ -147,4 +148,5 @@ def prepare_network_data(target_date: datetime.datetime, uniswap_version: str) -
         + target_date_str
         + ".csv",
     )
+
     df_edge_list.to_csv(edge_file_name)

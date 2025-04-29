@@ -1,12 +1,5 @@
 """
-
-University College London
-Project : defi_econ
-Topic   : args_parser.py
-Author  : Yichen Luo
-Date    : 2022-12-17
-Desc    : Parse the info from the terminal.
-
+Parse command line arguments for the script.
 """
 
 # Import python modules
@@ -14,7 +7,6 @@ import argparse
 
 
 def arg_parse_cmd() -> argparse.ArgumentParser:
-
     """
     Function for user to interact with terminal.
     """
