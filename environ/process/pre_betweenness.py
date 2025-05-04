@@ -1,5 +1,5 @@
 """
-Script to preprocess the betweenness data
+Script to preprocess the betweenness data: renaming files
 """
 
 import glob
@@ -9,7 +9,8 @@ import pandas as pd
 
 from environ import constants
 
-if __name__ == "__main__":
+
+def prepare_betweenness_data() -> None:
     # check if the processed data folder exists
     for version in ["v2", "v3", "merged"]:
         if not os.path.exists(f"{constants.NETWORK_DATA_PATH}/{version}/betweenness"):
@@ -42,3 +43,4 @@ if __name__ == "__main__":
                 f"{constants.NETWORK_DATA_PATH}/{version}/betweenness/{file_name.split('/')[-1]}",
                 index=False,
             )
+    return

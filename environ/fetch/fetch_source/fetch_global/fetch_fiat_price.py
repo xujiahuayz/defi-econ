@@ -27,8 +27,8 @@ def get_fiat_usd_price(
     return url
 
 
-if __name__ == "__main__":
-    # download the price for each fiat
-    for fiat in FIAT_LIST:
-        if fiat != "USD":
-            get_fiat_usd_price(fiat)
+# if __name__ == "__main__":
+#     # download the price for each fiat
+#     for fiat in FIAT_LIST:
+#         if fiat != "USD":
+#             get_fiat_usd_price(fiat)

@@ -8,7 +8,7 @@ import datetime
 from dateutil import relativedelta
 from tqdm import tqdm
 import pandas as pd
-from multiprocessing import Pool
+from multiprocessing import Pool, cpu_count
 from functools import partial
 
 # Import internal modules
@@ -72,13 +72,14 @@ def process_data(uni_version="v2"):
     # # Initialize argument parser
     args = arg_parse_cmd()
     parsed_args = args.parse_args()
-
-    if uni_version == "v2" or uni_version == "merged":
-        parsed_args.start = "2020-05-18"
-        parsed_args.end = "2023-01-31"
-    elif uni_version == "v3":
-        parsed_args.start = "2021-05-05"
-        parsed_args.end = "2023-01-31"
+    parsed_args.start = "2021-06-01"
+    parsed_args.end = "2021-06-03"
+    # if uni_version == "v2" or uni_version == "merged":
+    #     parsed_args.start = "2020-05-18"
+    #     parsed_args.end = "2023-01-31"
+    # elif uni_version == "v3":
+    #     parsed_args.start = "2021-05-05"
+    #     parsed_args.end = "2023-01-31"
     # # Input start date and end date
     start_date = datetime.datetime.strptime(parsed_args.start, "%Y-%m-%d")
     end_date = datetime.datetime.strptime(parsed_args.end, "%Y-%m-%d")
@@ -89,71 +90,63 @@ def process_data(uni_version="v2"):
         date = start_date + datetime.timedelta(i)
         date_list.append(date)
 
-    # Generate data list for volume data
-    date_list_volume = []
-    for i in range((end_date - start_date).days):
-        date = start_date + datetime.timedelta(i)
-        date_list_volume.append(date)
+    # # Process inout flow data
+    # print_info_log(
+    #     f"Process In and Out Flow {uni_version} Data from {parsed_args.start} to {parsed_args.end}",
+    #     "progress",
+    # )
 
-    # Process inout flow data
-    print_info_log(
-        f"Process In and Out Flow Data from {parsed_args.start} to {parsed_args.end}",
-        "progress",
-    )
+    # for date in tqdm(date_list, total=len(date_list)):
+    #     prepare_network_data(date, uni_version)
+    #     # prepare_network_data(date, "v3")
 
-    for date in tqdm(date_list, total=len(date_list)):
-        prepare_network_data(date, uni_version)
-        # prepare_network_data(date, "v3")
+    # # Prepare eigenvector centrality data
+    # print_info_log(
+    #     f"Process Eigenvector Centrality {uni_version} Data from {parsed_args.start} to {parsed_args.end}",
+    #     "progress",
+    # )
 
-    # Prepare eigenvector centrality data
-    print_info_log(
-        f"Process Eigenvector Centrality Data from {parsed_args.start} to {parsed_args.end}",
-        "progress",
-    )
+    # for date in tqdm(date_list, total=len(date_list)):
+    #     prepare_network_graph(date, uni_version, directed=True)
+    #     # prepare_network_graph(date, "v3", directed=True)
+    #     # prepare_network_graph(date, "merged", directed=True)
 
-    for date in tqdm(date_list_volume, total=len(date_list)):
-        prepare_network_graph(date, uni_version, directed=True)
-        # prepare_network_graph(date, "v3", directed=True)
-        # prepare_network_graph(date, "merged", directed=True)
+    # # Prepare betweenness centrality data
+    # print_info_log(
+    #     f"Process Betweenness Centrality {uni_version} Data from {parsed_args.start} to {parsed_args.end}",
+    #     "progress",
+    # )
 
-    # Prepare betweenness centrality data
-    print_info_log(
-        f"Process Betweenness Centrality Data from {parsed_args.start} to {parsed_args.end}",
-        "progress",
-    )
+    # start_date_input = parsed_args.start
+    # end_date_input = parsed_args.end
+    # # Split into months then compute betweenness centrality for all days in the month
+    # for month in tqdm(pd.date_range(start_date_input, end_date_input, freq="MS")):
+    #     start_date = datetime.datetime.strptime(month.strftime("%Y-%m-%d"), "%Y-%m-%d")
+    #     end_date = datetime.datetime.strptime(
+    #         (month + relativedelta.relativedelta(months=1)).strftime("%Y-%m-%d"),
+    #         "%Y-%m-%d",
+    #     )
 
-    # Update the data monthly
-    start_date_input = parsed_args.start
-    end_date_input = parsed_args.end
+    #     label_year = month.strftime("%Y")
+    #     label_month = month.strftime("%b").upper()
+    #     label = label_year + label_month
 
-    for month in tqdm(pd.date_range(start_date_input, end_date_input, freq="MS")):
-        start_date = datetime.datetime.strptime(month.strftime("%Y-%m-%d"), "%Y-%m-%d")
-        end_date = datetime.datetime.strptime(
-            (month + relativedelta.relativedelta(months=1)).strftime("%Y-%m-%d"),
-            "%Y-%m-%d",
-        )
-
-        label_year = month.strftime("%Y")
-        label_month = month.strftime("%b").upper()
-        label = label_year + label_month
-
-        # list for multiple dates
-        date_list_betweenness = []
-        for i in range((end_date - start_date).days):
-            date = start_date + datetime.timedelta(i)
-            date_str = date.strftime("%Y%m%d")
-            date_list_betweenness.append(date_str)
-
-        # Multiprocess
-        p = Pool()
-        p.map(
-            partial(
-                get_betweenness_centrality,
-                top_list_label=label,
-                uniswap_version=uni_version,
-            ),
-            date_list_betweenness,
-        )
+    #     # list for multiple dates
+    #     date_list_betweenness = []
+    #     for i in range((end_date - start_date).days):
+    #         date = start_date + datetime.timedelta(i)
+    #         date_str = date.strftime("%Y%m%d")
+    #         date_list_betweenness.append(date_str)
+    #     # Multiprocess
+    #     p = Pool(processes=cpu_count() // 2)
+    #     p.map(
+    #         partial(
+    #             get_betweenness_centrality,
+    #             top_list_label=label,
+    #             uniswap_version=uni_version,
+    #         ),
+    #         date_list_betweenness,
+    #     )
 
     # Process volume data
     print_info_log(
@@ -161,7 +154,5 @@ def process_data(uni_version="v2"):
         "progress",
     )
 
-    for date in tqdm(date_list_volume, total=len(date_list_volume)):
+    for date in tqdm(date_list, total=len(date_list)):
         prepare_volume(date, uni_version)
-        # prepare_volume(date, "v3")
-        # prepare_volume(date, "merged")

@@ -16,7 +16,7 @@ from environ.utils.config_parser import Config
 config = Config()
 
 
-def prepare_volume(date: datetime.datetime, data_srouce: str) -> None:
+def prepare_volume(date: datetime.datetime, data_source: str) -> None:
     """
     Function to calculate volume-related independent variables
     """
@@ -27,7 +27,7 @@ def prepare_volume(date: datetime.datetime, data_srouce: str) -> None:
     # Edge data
     edge_data = []
 
-    if (data_srouce == "v2") | (data_srouce == "merged"):
+    if (data_source == "v2") | (data_source == "merged"):
         edge_data_v2 = pd.read_csv(
             path.join(
                 config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
@@ -54,7 +54,7 @@ def prepare_volume(date: datetime.datetime, data_srouce: str) -> None:
 
         edge_data.append(edge_data_v2)
 
-    if (data_srouce == "v3") | (data_srouce == "merged"):
+    if (data_source == "v3") | (data_source == "merged"):
         # List for the token data of v3
         edge_data_v3_path = os.listdir(
             path.join(
@@ -86,7 +86,7 @@ def prepare_volume(date: datetime.datetime, data_srouce: str) -> None:
     edge_data.to_csv(
         path.join(
             config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
-            data_srouce + "/volume/volume_" + data_srouce + "_" + date_str + ".csv",
+            data_source + "/volume/volume_" + data_source + "_" + date_str + ".csv",
         )
     )
 
@@ -101,9 +101,9 @@ def prepare_volume(date: datetime.datetime, data_srouce: str) -> None:
     volume_in_data.to_csv(
         path.join(
             config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
-            data_srouce
+            data_source
             + "/volume_in/volume_in_"
-            + data_srouce
+            + data_source
             + "_"
             + date_str
             + ".csv",
@@ -118,9 +118,9 @@ def prepare_volume(date: datetime.datetime, data_srouce: str) -> None:
     volume_in_share_data.to_csv(
         path.join(
             config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
-            data_srouce
+            data_source
             + "/volume_in_share/volume_in_share_"
-            + data_srouce
+            + data_source
             + "_"
             + date_str
             + ".csv",
@@ -138,9 +138,9 @@ def prepare_volume(date: datetime.datetime, data_srouce: str) -> None:
     volume_out_data.to_csv(
         path.join(
             config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
-            data_srouce
+            data_source
             + "/volume_out/volume_out_"
-            + data_srouce
+            + data_source
             + "_"
             + date_str
             + ".csv",
@@ -155,9 +155,9 @@ def prepare_volume(date: datetime.datetime, data_srouce: str) -> None:
     volume_out_share_data.to_csv(
         path.join(
             config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
-            data_srouce
+            data_source
             + "/volume_out_share/volume_out_share_"
-            + data_srouce
+            + data_source
             + "_"
             + date_str
             + ".csv",
@@ -175,9 +175,9 @@ def prepare_volume(date: datetime.datetime, data_srouce: str) -> None:
     volume_total_data.to_csv(
         path.join(
             config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
-            data_srouce
+            data_source
             + "/volume_total/volume_total_"
-            + data_srouce
+            + data_source
             + "_"
             + date_str
             + ".csv",
@@ -192,9 +192,9 @@ def prepare_volume(date: datetime.datetime, data_srouce: str) -> None:
     volume_share_data.to_csv(
         path.join(
             config["dev"]["config"]["data"]["NETWORK_DATA_PATH"],
-            data_srouce
+            data_source
             + "/volume_share/volume_share_"
-            + data_srouce
+            + data_source
             + "_"
             + date_str
             + ".csv",

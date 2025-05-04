@@ -11,9 +11,11 @@ for version in ["v2v3"]:
         filter_name=version,
         edge_col=["ultimate_source", "ultimate_target"],
         weight_col=["volume_usd"],
-        save_root=str(NETWORK_DATA_PATH / version / "eigen_centrality_undirected")
-        if version != "v2v3"
-        else str(NETWORK_DATA_PATH / "merged" / "eigen_centrality_undirected"),
+        save_root=(
+            str(NETWORK_DATA_PATH / version / "eigen_centrality_undirected")
+            if version != "v2v3"
+            else str(NETWORK_DATA_PATH / "merged" / "eigen_centrality_undirected")
+        ),
         save_name="eigen_centrality",
         exclude_special_route=True,
         dict2str=False,

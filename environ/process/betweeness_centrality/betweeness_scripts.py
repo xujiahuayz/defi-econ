@@ -5,12 +5,16 @@ Compute the betweenness centrality
 
 import datetime
 from os import path
-
+import sys
 import pandas as pd
 import numpy as np
 
 from environ.utils.config_parser import Config
 from collections import Counter
+import warnings
+
+warnings.simplefilter("ignore", category=FutureWarning)
+# warnings.filterwarnings("ignore")
 
 
 def manipulate_data(
@@ -191,7 +195,7 @@ def make_routes(swaps_merge: pd.DataFrame) -> pd.DataFrame:
 
         sort_index = 0
 
-        # control the max loop limatation for the parent transactions which can not be sorted like
+        # control the max loop limitation for the parent transactions which can not be sorted like
         # the chain
         iter = 0
 
@@ -338,11 +342,10 @@ def compute_betweenness_count(swaps_tx_route: pd.DataFrame) -> pd.DataFrame:
     # Exclude Error
     count_based_set = count_based_set[count_based_set["intermediary"] != "Error"]
 
-    node_set_count = (
-        count_based_set["ultimate_source"]
-        .append(count_based_set["ultimate_target"])
-        .unique()
-    )
+    node_set_count = pd.concat(
+        [count_based_set["ultimate_source"], count_based_set["ultimate_target"]],
+        ignore_index=True,
+    ).unique()
 
     # Initialize the betweenness centrality dataframe
     betweenness_score_count = pd.DataFrame(
@@ -379,11 +382,10 @@ def compute_betweenness_volume(swaps_tx_route: pd.DataFrame) -> pd.DataFrame:
     # Exclude Error
     volume_based_set = volume_based_set[volume_based_set["intermediary"] != "Error"]
 
-    node_set_count = (
-        volume_based_set["ultimate_source"]
-        .append(volume_based_set["ultimate_target"])
-        .unique()
-    )
+    node_set_count = pd.concat(
+        [volume_based_set["ultimate_source"], volume_based_set["ultimate_target"]],
+        ignore_index=True,
+    ).unique()
 
     # Initialize the betweenness centrality dataframe
     betweenness_score_volume = pd.DataFrame(
@@ -464,32 +466,32 @@ def get_betweenness_centrality(
     compare_table.to_csv(betweenness_file_name)
 
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
 
-    from multiprocessing import Pool
-    from functools import partial
+#     from multiprocessing import Pool
+#     from functools import partial
 
-    involve_version = "v2"  # candidate: v2, v3, v2v3
+#     involve_version = "v2"  # candidate: v2, v3, v2v3
 
-    top50_list_label = "2020JUN"
-    # Data output include start_date, exclude end_date
-    start_date = datetime.datetime(2020, 6, 1, 0, 0)
-    end_date = datetime.datetime(2020, 7, 1, 0, 0)
+#     top50_list_label = "2020JUN"
+#     # Data output include start_date, exclude end_date
+#     start_date = datetime.datetime(2020, 6, 1, 0, 0)
+#     end_date = datetime.datetime(2020, 7, 1, 0, 0)
 
-    # list for multiple dates
-    date_list = []
-    for i in range((end_date - start_date).days):
-        date = start_date + datetime.timedelta(i)
-        date_str = date.strftime("%Y%m%d")
-        date_list.append(date_str)
+#     # list for multiple dates
+#     date_list = []
+#     for i in range((end_date - start_date).days):
+#         date = start_date + datetime.timedelta(i)
+#         date_str = date.strftime("%Y%m%d")
+#         date_list.append(date_str)
 
-    # Multiprocess
-    p = Pool()
-    p.map(
-        partial(
-            get_betweenness_centrality,
-            top_list_label=top50_list_label,
-            uniswap_version=involve_version,
-        ),
-        date_list,
-    )
+#     # Multiprocess
+#     p = Pool()
+#     p.map(
+#         partial(
+#             get_betweenness_centrality,
+#             top_list_label=top50_list_label,
+#             uniswap_version=involve_version,
+#         ),
+#         date_list,
+#     )

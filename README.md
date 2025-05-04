@@ -90,13 +90,12 @@ mkdir data_compound
 cd ..
 ```
 
-- run the following command to fetch defi-related data:
-
+- run the following command to fetch defi-related data (Subgraph query now deprecated):
 ```zsh
 python scripts/fetch_main.py --start "YYYY-MM-DD" --end "YYYY-MM-DD"
 ```
 
-Notes: This script runs on a montly basis. This script will fetch defi-related data from the first day of the month specified by the --start to the end of the day of the month of specified by the --end. For example python scripts/fetch_main.py --start "2022-05-01" -- end "2022-12-01" will fetch the data from May 2022 to Dec 2022. Meanwhile, the script will automatically detect the unfinished fetching dates during the specified period. The data generated will be placed under ['data'](data)
+Notes: This script runs on a montly basis. This script will fetch defi-related data from the first day of the month specified by the --start to the end of the day of the month of specified by the --end. For example python scripts/fetch_main.py --start "2020-05-18" -- end "2023-01-31" will fetch the data from May 2020 to Jan 2023. Meanwhile, the script will automatically detect the unfinished fetching dates during the specified period. The data generated will be placed under ['data'](data)
 
 - Second, run the following command to plot defi-related graphs:
 
@@ -104,7 +103,7 @@ Notes: This script runs on a montly basis. This script will fetch defi-related d
 python scripts/plot_main.py --start "YYYY-MM-DD" --end "YYYY-MM-DD"
 ```
 
-Notes: This script runs on a daily basis. This script will plot defi-related data from the date specified by the --start to the the day specified by the --end (different from fetch_main.py). For example python scripts/fetch_main.py --start "2022-05-01" -- end "2022-12-01" will plot the data from 2022-05-01 to 2022-12-01. The graphs generated will be placed under ['data/data_network'](data/data_network)
+Notes: This script runs on a daily basis. This script will plot defi-related data from the date specified by the --start to the the day specified by the --end (different from fetch_main.py). For example python scripts/fetch_main.py --start "2020-05-18" -- end "2023-01-31" will plot the data from 2020-05-18 to 2023-01-31. The graphs generated will be placed under ['data/data_network'](data/data_network)
 
 - Third, run the following command to generate results
 
@@ -113,7 +112,7 @@ python scripts/result_main.py
 ```
 
 Notes: This scripts will generate analytical graphs and tables based on existing data.
-
+<!-- 
 ## Python Project Documentation
 
 python project documentation is save in [`doc/`](doc/)
@@ -128,9 +127,9 @@ pip install pdoc3
 
 ```bash
 pdoc --html /your_scripts_path --output-dir ./doc
-```
+``` -->
 
-## Data Fetch Instructions
+<!-- ## Data Fetch Instructions
 
 Guide in [`fetch_data_instruction.md`](fetch_data_instruction.md)
 
@@ -190,10 +189,6 @@ The most important rules above all:
 1. Do not place .py files at root level (besides setup.py)!
 1. Do not upload big files > 100 MB.
 1. Do not upload log files.
-1. Do not declare constant variables in the MIDDLE of a function
+1. Do not declare constant variables in the MIDDLE of a function -->
 
 
-## Fetch and process data (Subgraph query now deprecated)
-```
-python scripts/fetch/fetch_main.py --start 2020-05-18 -end 2023-01-31
-```
