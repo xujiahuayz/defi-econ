@@ -5,7 +5,13 @@ from environ.fetch.fetch_subgraph_swaps_v3 import fetch_uniswap_v3
 if __name__ == "__main__":
     try:
         # Standard way to run asyncio program
-        asyncio.run(fetch_uniswap_v3())
+        asyncio.run(
+            fetch_uniswap_v3(
+                overall_start_date_str="2021-05-04",
+                overall_end_date_str="2023-01-31",  # Inclusive
+                max_concurrent_days=8,
+            )
+        )
     except RuntimeError as e:
         if "cannot be called from a running event loop" in str(e):
             # Fallback for environments like Jupyter where a loop is already running

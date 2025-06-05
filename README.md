@@ -79,10 +79,7 @@ Please import the data folder `dominant_defi/data` from Dropbox (authorization r
 
 ## Run scripts
 
-- Create an .env file for API keys. Replace with actual keys.
-```
-GRAPH_API_KEY = "YOUR_API_KEY"
-```
+
 
 To trigger scripts, please run the following commands:
 

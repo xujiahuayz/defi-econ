@@ -3,6 +3,7 @@ import csv
 import json
 import os
 from datetime import datetime, timedelta, timezone
+import ssl
 
 import aiohttp
 
@@ -143,7 +144,7 @@ async def fetch_all_swaps_for_period_async(
 # --- CSV Export Logic (Synchronous, called from async context) ---
 
 
-def save_swaps_to_csv(swaps_data: list[dict], filename: str = "swaps.csv") -> None:
+def save_swaps_to_file(swaps_data: list[dict], filename: str) -> None:
     """
     Saves a list of swap data to a CSV file. This function remains synchronous.
     Uses user-preferred simplified column names.
@@ -151,90 +152,15 @@ def save_swaps_to_csv(swaps_data: list[dict], filename: str = "swaps.csv") -> No
     if not swaps_data:
         return
 
-    # User-preferred simplified headers
-    headers = [
-        "swap_id",
-        "transaction",
-        "block_number",
-        "timestamp",
-        "datetime_utc",
-        "pool",
-        "token0_id",
-        "token0_symbol",
-        "token0_name",
-        "token0_decimals",  # For pool's token0
-        "token1_id",
-        "token1_symbol",
-        "token1_name",
-        "token1_decimals",  # For pool's token1
-        "sender",
-        "recipient",
-        "origin",
-        "amount0",
-        "amount1",
-        "amountUSD",
-        "sqrtPriceX96",
-        "tick",
-        "logIndex",
-    ]
-
     output_dir = os.path.dirname(filename)
     if output_dir:
         os.makedirs(output_dir, exist_ok=True)
 
     print(f"  Saving {len(swaps_data)} swaps to {os.path.basename(filename)}.")
     try:
-        with open(filename, "w", newline="", encoding="utf-8") as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=headers)
-            writer.writeheader()
-            for swap in swaps_data:
-                transaction_timestamp_str = swap.get("transaction", {}).get("timestamp")
-                transaction_timestamp = (
-                    int(transaction_timestamp_str) if transaction_timestamp_str else 0
-                )
-
-                row = {
-                    "swap_id": swap.get("id"),
-                    "transaction": swap.get("transaction", {}).get("id"),
-                    "block_number": swap.get("transaction", {}).get("blockNumber"),
-                    "timestamp": transaction_timestamp,
-                    "datetime_utc": (
-                        datetime.fromtimestamp(
-                            transaction_timestamp, timezone.utc
-                        ).strftime("%Y-%m-%d %H:%M:%S %Z")
-                        if transaction_timestamp
-                        else ""
-                    ),
-                    "pool": swap.get("pool", {}).get("id"),  # Pool ID
-                    # Pool's token0 details
-                    "token0_id": swap.get("pool", {}).get("token0", {}).get("id"),
-                    "token0_symbol": swap.get("pool", {})
-                    .get("token0", {})
-                    .get("symbol"),
-                    "token0_name": swap.get("pool", {}).get("token0", {}).get("name"),
-                    "token0_decimals": swap.get("pool", {})
-                    .get("token0", {})
-                    .get("decimals"),
-                    # Pool's token1 details
-                    "token1_id": swap.get("pool", {}).get("token1", {}).get("id"),
-                    "token1_symbol": swap.get("pool", {})
-                    .get("token1", {})
-                    .get("symbol"),
-                    "token1_name": swap.get("pool", {}).get("token1", {}).get("name"),
-                    "token1_decimals": swap.get("pool", {})
-                    .get("token1", {})
-                    .get("decimals"),
-                    "sender": swap.get("sender"),
-                    "recipient": swap.get("recipient"),
-                    "origin": swap.get("origin"),
-                    "amount0": swap.get("amount0"),
-                    "amount1": swap.get("amount1"),
-                    "amountUSD": swap.get("amountUSD", ""),
-                    "sqrtPriceX96": swap.get("sqrtPriceX96"),
-                    "tick": swap.get("tick"),
-                    "logIndex": swap.get("logIndex"),
-                }
-                writer.writerow(row)
+        # save as json
+        with open(filename.with_suffix(".json"), "w", encoding="utf-8") as jsonfile:
+            json.dump(swaps_data, jsonfile, indent=2, ensure_ascii=False)
     except IOError as e:
         print(f"  I/O error writing to {os.path.basename(filename)}: {e}")
     except Exception as e:
@@ -270,11 +196,11 @@ async def process_day_async(
 
             print(f"  Fetched {len(daily_swaps)} swaps for {day_str}.")
             if daily_swaps:
-                csv_filename = DATA_PATH / "uniswap_v3_swaps_{day_str}.csv"
+                file_name = DATA_PATH / "uniswap" / f"uniswap_v3_swaps_{day_str}.json"
 
                 loop = asyncio.get_running_loop()
                 await loop.run_in_executor(
-                    None, save_swaps_to_csv, daily_swaps, csv_filename
+                    None, save_swaps_to_file, daily_swaps, file_name
                 )
         except Exception as e:
             print(f"Error processing day {day_str}: {e}")
@@ -321,7 +247,15 @@ async def fetch_uniswap_v3(
     tasks = []
     semaphore = asyncio.Semaphore(max_concurrent_days)
 
-    async with aiohttp.ClientSession() as session:
+    ssl_context = ssl.SSLContext(
+        ssl.PROTOCOL_TLS_CLIENT
+    )  # or ssl.create_default_context()
+    ssl_context.check_hostname = False
+    ssl_context.verify_mode = ssl.CERT_NONE
+
+    connector = aiohttp.TCPConnector(ssl=ssl_context)
+
+    async with aiohttp.ClientSession(connector=connector) as session:
         current_dt = overall_start_dt
         while current_dt <= overall_end_dt:
             # Pass the semaphore to each task
@@ -334,4 +268,23 @@ async def fetch_uniswap_v3(
 
 
 if __name__ == "__main__":
-    pass
+    try:
+        # Standard way to run asyncio program
+        asyncio.run(
+            fetch_uniswap_v3(
+                overall_start_date_str="2024-05-04",
+                overall_end_date_str="2024-05-04",  # Inclusive
+                max_concurrent_days=8,
+            )
+        )
+    except RuntimeError as e:
+        if "cannot be called from a running event loop" in str(e):
+            # Fallback for environments like Jupyter where a loop is already running
+            print(
+                "Detected a running event loop. Attempting to use it to run main_async()."
+            )
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(fetch_uniswap_v3())
+        else:
+            # Re-raise other RuntimeError exceptions
+            raise
