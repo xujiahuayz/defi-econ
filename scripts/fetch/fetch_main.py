@@ -36,8 +36,8 @@ if __name__ == "__main__":
     # create_data_folders()
     # print_info_log("processing v2", "progress")
     # process_data("v2")
-    # print_info_log("processing v3", "progress")
-    # process_data("v3")
+    print_info_log("processing v3", "progress")
+    process_data("v3")
     # print_info_log("processing v2v3 merged", "progress")
     # process_data("merged")
 

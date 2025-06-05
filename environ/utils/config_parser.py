@@ -9,8 +9,6 @@ import logging
 
 # Import other python modules
 from collections import UserDict
-
-
 import yaml
 from yaml import YAMLError
 

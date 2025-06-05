@@ -8,50 +8,284 @@ API_KEY = "placeholder"
 
 ### KAIKO market cap endpoint only provides data for the following tokens
 tokens = [
-    "1inch", "AAVE", "ACH", "ADA", "AGIX", "AGLD", "ALGO", "ALICE", "AMP", "ANKR",
-    "ANT", "API3", "APT", "AR", "ARB", "ARPA", "ATOM", "AUDIO", "AURA", "AVAX",
-    "AXS", "BAL", "BAND", "BAT", "BCH", "BETA", "BICO", "BIT", "BLEO", "BLUR",
-    "BNB", "BNT", "BOND", "BORA", "BSV", "BTC", "BTG", "BTRFLY", "BTSE", "BTT",
-    "BUSD", "BZZ", "C98", "CAKE", "CDAI", "CEL", "CELO", "CELR", "CFX", "CHSB",
-    "CHZ", "CKB", "COCOS", "COMP", "COTI", "CQT", "CRON", "CRV", "CSPR", "CTSI",
-    "CUSDC", "CVC", "CVX", "CVXCRV", "DAI", "DAO", "DASH", "DCR", "DEXE", "DFI",
-    "DGB", "DOGE", "DOT", "DPX", "DYDX", "EFI", "EGLD", "ELON", "ENJ", "ENS",
-    "EOS", "ETC", "ETH", "EURS", "EVER", "FET", "FIL", "FLOKI", "FLOW", "FLUX",
-    "FRAX", "FRXETH", "FTM", "FXS", "GAL", "GALA", "GFARM2", "GLM", "GLMR", "GMX",
-    "GNO", "GOG", "GRT", "GTC", "GTX", "GUSD", "HBAR", "HBTC", "HFT", "HIVE",
-    "HLM", "HOT", "HT", "ICP", "ID", "ILV", "IMX", "INJ", "INST", "IOST", "IOTA",
-    "IOTX", "JASMY", "JST", "KAVA", "KCS", "KDA", "KEEP", "KLAY", "KNC", "KSM",
-    "LDO", "LEVER", "LINK", "LOOKS", "LPT", "LQTY", "LRC", "LSK", "LTC", "LUNA",
-    "LYXE", "MANA", "MASK", "MATIC", "MBOX", "MC", "MEME", "MIM", "MINA", "MIR",
-    "MKR", "MLK", "MULTI", "NANO", "NEAR", "NEO", "NEST", "NEXO", "NFT", "NMR",
-    "NOIA", "NU", "NXRA", "OCEAN", "OGN", "OHM", "OKB", "OKT", "OMG", "ONE",
-    "ONT", "OP", "OPUL", "ORBS", "OSMO", "PAXG", "PEOPLE", "PHA", "PLA", "POLY",
-    "POND", "PUNDIX", "QNT", "QTUM", "RAD", "RAIL", "RBN", "RDPX", "REN", "REQ",
-    "RIF", "RLC", "RLY", "RNDR", "RON", "ROSE", "RPETH", "RPL", "RSR", "RUNE",
-    "RVN", "SAITO", "SAND", "SC", "SCRT", "SETH", "SFP", "SFRXETH", "SHIB", "SKL",
-    "SNT", "SNX", "SOL", "SPELL", "SSV", "STETH", "STG", "STORJ", "STX", "SURE",
-    "SUSD", "SUSHI", "SX", "SXP", "SYN", "SYS", "TEL", "TFUEL", "THETA", "TRAC",
-    "TRIBE", "TRX", "TUSD", "TWT", "UMA", "UNI", "USDC", "USDP", "USDT", "UST",
-    "VEN", "VENUS", "VGX", "VTHO", "WAVES", "WAX", "WBTC", "WEMIX", "WOO", "XAUT",
-    "XCH", "XDCE", "XEC", "XEM", "XLM", "XMR", "XRD", "XRP", "XTZ", "YFI", "YFII",
-    "YGG", "ZEC", "ZEN", "ZRX"
+    "1inch",
+    "AAVE",
+    "ACH",
+    "ADA",
+    "AGIX",
+    "AGLD",
+    "ALGO",
+    "ALICE",
+    "AMP",
+    "ANKR",
+    "ANT",
+    "API3",
+    "APT",
+    "AR",
+    "ARB",
+    "ARPA",
+    "ATOM",
+    "AUDIO",
+    "AURA",
+    "AVAX",
+    "AXS",
+    "BAL",
+    "BAND",
+    "BAT",
+    "BCH",
+    "BETA",
+    "BICO",
+    "BIT",
+    "BLEO",
+    "BLUR",
+    "BNB",
+    "BNT",
+    "BOND",
+    "BORA",
+    "BSV",
+    "BTC",
+    "BTG",
+    "BTRFLY",
+    "BTSE",
+    "BTT",
+    "BUSD",
+    "BZZ",
+    "C98",
+    "CAKE",
+    "CDAI",
+    "CEL",
+    "CELO",
+    "CELR",
+    "CFX",
+    "CHSB",
+    "CHZ",
+    "CKB",
+    "COCOS",
+    "COMP",
+    "COTI",
+    "CQT",
+    "CRON",
+    "CRV",
+    "CSPR",
+    "CTSI",
+    "CUSDC",
+    "CVC",
+    "CVX",
+    "CVXCRV",
+    "DAI",
+    "DAO",
+    "DASH",
+    "DCR",
+    "DEXE",
+    "DFI",
+    "DGB",
+    "DOGE",
+    "DOT",
+    "DPX",
+    "DYDX",
+    "EFI",
+    "EGLD",
+    "ELON",
+    "ENJ",
+    "ENS",
+    "EOS",
+    "ETC",
+    "ETH",
+    "EURS",
+    "EVER",
+    "FET",
+    "FIL",
+    "FLOKI",
+    "FLOW",
+    "FLUX",
+    "FRAX",
+    "FRXETH",
+    "FTM",
+    "FXS",
+    "GAL",
+    "GALA",
+    "GFARM2",
+    "GLM",
+    "GLMR",
+    "GMX",
+    "GNO",
+    "GOG",
+    "GRT",
+    "GTC",
+    "GTX",
+    "GUSD",
+    "HBAR",
+    "HBTC",
+    "HFT",
+    "HIVE",
+    "HLM",
+    "HOT",
+    "HT",
+    "ICP",
+    "ID",
+    "ILV",
+    "IMX",
+    "INJ",
+    "INST",
+    "IOST",
+    "IOTA",
+    "IOTX",
+    "JASMY",
+    "JST",
+    "KAVA",
+    "KCS",
+    "KDA",
+    "KEEP",
+    "KLAY",
+    "KNC",
+    "KSM",
+    "LDO",
+    "LEVER",
+    "LINK",
+    "LOOKS",
+    "LPT",
+    "LQTY",
+    "LRC",
+    "LSK",
+    "LTC",
+    "LUNA",
+    "LYXE",
+    "MANA",
+    "MASK",
+    "MATIC",
+    "MBOX",
+    "MC",
+    "MEME",
+    "MIM",
+    "MINA",
+    "MIR",
+    "MKR",
+    "MLK",
+    "MULTI",
+    "NANO",
+    "NEAR",
+    "NEO",
+    "NEST",
+    "NEXO",
+    "NFT",
+    "NMR",
+    "NOIA",
+    "NU",
+    "NXRA",
+    "OCEAN",
+    "OGN",
+    "OHM",
+    "OKB",
+    "OKT",
+    "OMG",
+    "ONE",
+    "ONT",
+    "OP",
+    "OPUL",
+    "ORBS",
+    "OSMO",
+    "PAXG",
+    "PEOPLE",
+    "PHA",
+    "PLA",
+    "POLY",
+    "POND",
+    "PUNDIX",
+    "QNT",
+    "QTUM",
+    "RAD",
+    "RAIL",
+    "RBN",
+    "RDPX",
+    "REN",
+    "REQ",
+    "RIF",
+    "RLC",
+    "RLY",
+    "RNDR",
+    "RON",
+    "ROSE",
+    "RPETH",
+    "RPL",
+    "RSR",
+    "RUNE",
+    "RVN",
+    "SAITO",
+    "SAND",
+    "SC",
+    "SCRT",
+    "SETH",
+    "SFP",
+    "SFRXETH",
+    "SHIB",
+    "SKL",
+    "SNT",
+    "SNX",
+    "SOL",
+    "SPELL",
+    "SSV",
+    "STETH",
+    "STG",
+    "STORJ",
+    "STX",
+    "SURE",
+    "SUSD",
+    "SUSHI",
+    "SX",
+    "SXP",
+    "SYN",
+    "SYS",
+    "TEL",
+    "TFUEL",
+    "THETA",
+    "TRAC",
+    "TRIBE",
+    "TRX",
+    "TUSD",
+    "TWT",
+    "UMA",
+    "UNI",
+    "USDC",
+    "USDP",
+    "USDT",
+    "UST",
+    "VEN",
+    "VENUS",
+    "VGX",
+    "VTHO",
+    "WAVES",
+    "WAX",
+    "WBTC",
+    "WEMIX",
+    "WOO",
+    "XAUT",
+    "XCH",
+    "XDCE",
+    "XEC",
+    "XEM",
+    "XLM",
+    "XMR",
+    "XRD",
+    "XRP",
+    "XTZ",
+    "YFI",
+    "YFII",
+    "YGG",
+    "ZEC",
+    "ZEN",
+    "ZRX",
 ]
 
-headers_trades = {
-    "X-Api-Key": API_KEY,
-    "Accept": "application/json"
-}
-headers_supply = {
-    "X-Api-Key": API_KEY,
-    "Accept": "application/json"
-}
+headers_trades = {"X-Api-Key": API_KEY, "Accept": "application/json"}
+headers_supply = {"X-Api-Key": API_KEY, "Accept": "application/json"}
 
 # Time range and other query parameters
 start_time = "2014-01-01T00:00:00.000Z"
-end_time   = "2024-12-31T23:59:59.000Z"
-interval   = "1d"
-sort       = "asc"
-page_size  = 100
+end_time = "2024-12-31T23:59:59.000Z"
+interval = "1d"
+sort = "asc"
+page_size = 100
+
 
 def fetch_ohlcv_data(token):
     """
@@ -60,18 +294,18 @@ def fetch_ohlcv_data(token):
     """
     instrument = f"{token.lower()}-usd"
     base_url = f"https://us.market-api.kaiko.io/v2/data/trades.v1/exchanges/cbse/spot/{instrument}/aggregations/ohlcv"
-    
+
     params = {
         "start_time": start_time,
         "end_time": end_time,
         "interval": interval,
         "sort": sort,
-        "page_size": page_size
+        "page_size": page_size,
     }
-    
+
     query_string = "&".join(f"{k}={v}" for k, v in params.items())
     next_url = f"{base_url}?{query_string}"
-    
+
     all_ohlcv = []
     while next_url:
         r = requests.get(next_url, headers=headers_trades)
@@ -81,10 +315,13 @@ def fetch_ohlcv_data(token):
         data_json = r.json()
         records = data_json.get("data", [])
         all_ohlcv.extend(records)
-        print(f"{token.upper()} OHLCV: Fetched {len(records)} datapoints (total so far: {len(all_ohlcv)})")
+        print(
+            f"{token.upper()} OHLCV: Fetched {len(records)} datapoints (total so far: {len(all_ohlcv)})"
+        )
         next_url = data_json.get("next_url")
         time.sleep(1)  # Respect rate limits
     return all_ohlcv
+
 
 def fetch_supply_data(token):
     """
@@ -93,18 +330,18 @@ def fetch_supply_data(token):
     """
     asset = token.lower()
     base_url = f"https://eu.market-api.kaiko.io/v2/data/supply.v1/{asset}"
-    
+
     params = {
         "start_time": start_time,
         "end_time": end_time,
         "interval": interval,
         "sort": sort,
-        "page_size": page_size
+        "page_size": page_size,
     }
-    
+
     query_string = "&".join(f"{k}={v}" for k, v in params.items())
     next_url = f"{base_url}?{query_string}"
-    
+
     all_supply = []
     while next_url:
         r = requests.get(next_url, headers=headers_supply)
@@ -114,10 +351,13 @@ def fetch_supply_data(token):
         data_json = r.json()
         records = data_json.get("data", [])
         all_supply.extend(records)
-        print(f"{token.upper()} Supply: Fetched {len(records)} datapoints (total so far: {len(all_supply)})")
+        print(
+            f"{token.upper()} Supply: Fetched {len(records)} datapoints (total so far: {len(all_supply)})"
+        )
         next_url = data_json.get("next_url")
         time.sleep(1)
     return all_supply
+
 
 def merge_ohlcv_and_supply(ohlcv_data, supply_data):
     """
@@ -142,6 +382,7 @@ def merge_ohlcv_and_supply(ohlcv_data, supply_data):
         merged.append(merged_entry)
     return merged
 
+
 # Gather data for all tokens and merge them into one final dataset.
 all_tokens_data = []
 
@@ -149,11 +390,11 @@ for token in tokens:
     print(f"\nProcessing token: {token.upper()}")
     ohlcv_data = fetch_ohlcv_data(token)
     supply_data = fetch_supply_data(token)
-    
+
     if not ohlcv_data:
         print(f"No OHLCV data for {token.upper()}, skipping.")
         continue
-    
+
     merged_data = merge_ohlcv_and_supply(ohlcv_data, supply_data)
     # Append token identifier for later reference.
     for record in merged_data:
@@ -166,4 +407,4 @@ final_df = pd.DataFrame(all_tokens_data)
 # Save the final DataFrame to a CSV file.
 final_csv = "kaiko_alltokens.csv"
 final_df.to_csv(final_csv, index=False)
-print(f"\nFinal dataframe with all tokens saved to {final_csv}")
+print(f"\n Final dataframe with all tokens saved to {final_csv}")
