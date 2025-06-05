@@ -1,6 +1,7 @@
 """
 Get factors data: FF3, LTW3
 """
+
 import ssl
 import pandas as pd
 from environ.constants import DATA_PATH, PROCESSED_DATA_PATH
@@ -36,7 +37,8 @@ ff3[["MKT", "SMB", "HML", "RF"]] = ff3[["MKT", "SMB", "HML", "RF"]] / 100
 ff3.to_csv(PROCESSED_DATA_PATH / "FF3.csv", index=False)
 
 # LTW 3 factors
-ltw3 = pd.read_excel(PROCESSED_DATA_PATH/'LTW3_original.xlsx',
+ltw3 = pd.read_excel(
+    PROCESSED_DATA_PATH / "LTW3_original.xlsx",
     skiprows=5,
     engine="openpyxl",
     )
