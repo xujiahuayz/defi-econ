@@ -1,4 +1,5 @@
 import asyncio
+
 from environ.fetch.fetch_subgraph_swaps_v3 import fetch_uniswap_v3
 
 if __name__ == "__main__":
