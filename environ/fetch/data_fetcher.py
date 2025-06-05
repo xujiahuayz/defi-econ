@@ -1,13 +1,7 @@
 """
-
-University College London
-Project : defi_econ
-Topic   : data_fetcher.py
-Author  : Yichen Luo
-Date    : 2022-12-18
-Desc    : Fetch DeFi data.
-
+Fetch PLF data
 """
+
 # Import python modules
 from datetime import datetime
 
@@ -19,10 +13,13 @@ from environ.utils.args_parser import arg_parse_cmd
 # Import internal modules
 from environ.utils.info_logger import print_info_log
 
-from .fetch_source.compound import fetch_comp
 from .fetch_source.uniswap import fetch_uni
-
-# from .fetch_source.aave import fetch_aave
+from environ.fetch.fetch_source.fetch_aave.download_aave_historical_data import (
+    fetch_aave_historical_data,
+)
+from environ.fetch.fetch_source.fetch_comp.fetch_compound_historical_data import (
+    fetch_comp_historical_data,
+)
 
 
 def fetch_data():
@@ -65,15 +62,15 @@ def fetch_data():
             f"Fetch Uniswap Data from {start_date_str} to {end_date_str}",
             "progress",
         )
-        # fetch_uni(label, start_date, end_date)
+        fetch_uni(label, start_date, end_date)
 
-        # # Fetch compound-related data
-        # print_info_log(
-        #     f"Fetch Compound Data from {start_date_str} to {end_date_str}",
-        #     "progress",
-        # )
-        # fetch_comp(start_date, end_date)
+        # Fetch compound-related data
+        print_info_log(
+            f"Fetch Compound Data from {start_date_str} to {end_date_str}",
+            "progress",
+        )
+        fetch_comp_historical_data(start_date, end_date)
 
         # Fetch aave-related data
-        # print_info_log("Fetch AAVE Data", "progress")
-        # fetch_aave()
+        print_info_log("Fetch AAVE Data", "progress")
+        fetch_aave_historical_data()

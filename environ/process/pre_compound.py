@@ -43,7 +43,7 @@ def calculate_borrow_supply(file_name: str) -> pd.DataFrame:
     return compound_info
 
 
-if __name__ == "__main__":
+def prepare_compound_data() -> None:
     # check if the processed data folder exists
     if not os.path.exists(str(COMPOUND_DATA_PATH / "processed")):
         os.makedirs(str(COMPOUND_DATA_PATH / "processed"))
@@ -137,3 +137,4 @@ if __name__ == "__main__":
             str(COMPOUND_DATA_PATH / "processed" / f"compound_{date}.csv"),
             index=False,
         )
+    return

@@ -48,7 +48,7 @@ def construct_herfin(
     ]
 
 
-if __name__ == "__main__":
+def prepare_herfin_data() -> None:
     # read in the main panel
     df_main = pd.read_pickle(
         PROCESSED_DATA_PATH / "panel_main.pickle.zip", compression="zip"
@@ -61,3 +61,4 @@ if __name__ == "__main__":
     df_herfin.to_pickle(
         PROCESSED_DATA_PATH / "herf_panel_merged.pickle.zip", compression="zip"
     )
+    return

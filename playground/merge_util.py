@@ -9,7 +9,7 @@ from typing import Optional, Literal
 import pandas as pd
 from tqdm import tqdm
 
-from data.constants import NETWORK_DATA_PATH, TABLE_PATH, DATA_PATH
+from environ.constants import NETWORK_DATA_PATH, TABLE_PATH, DATA_PATH
 
 
 def merge_util(

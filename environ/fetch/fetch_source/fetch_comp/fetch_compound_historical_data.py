@@ -77,7 +77,6 @@ def fetch_asset_historical_data(
 
 
 def fetch_comp_historical_data(start_date: datetime, end_date: datetime) -> None:
-
     """
     Fetch compound historical data.
     """

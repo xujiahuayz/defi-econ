@@ -142,5 +142,5 @@ def fetch_coingecko() -> None:
     )
 
 
-if __name__ == "__main__":
-    fetch_coingecko()
+# if __name__ == "__main__":
+#     fetch_coingecko()

@@ -50,7 +50,6 @@ def download_dune_data(dune_id: int) -> dict:
 
 
 def fetch_aave_historical_data() -> None:
-
     """
     Fetch AAVE historical data.
     """

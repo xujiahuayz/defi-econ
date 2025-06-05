@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 
 from environ.constants import UNISWAP_V2_DATA_PATH, DATA_PATH, TABLE_PATH
-from environ.utils.data_loarder import (
+from environ.utils.data_loader import (
     _generate_node_edge,
     _load_in_folder_data_lst,
     _preprocessing,

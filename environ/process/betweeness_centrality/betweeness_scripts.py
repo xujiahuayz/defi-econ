@@ -5,12 +5,16 @@ Compute the betweenness centrality
 
 import datetime
 from os import path
-
+import sys
 import pandas as pd
 import numpy as np
-
+import yaml
 from environ.utils.config_parser import Config
-from collections import Counter
+import warnings
+from collections import Counter, deque
+
+warnings.simplefilter("ignore", category=FutureWarning)
+# warnings.filterwarnings("ignore")
 
 
 def manipulate_data(
@@ -116,6 +120,46 @@ def manipulate_data(
         drop_tx_id_list_v3 = drop_tx_list_v3["transaction"]
         drop_tx_id_list_v3 = drop_tx_id_list_v3.unique()
 
+    if uniswap_version == "subgraph_v3":
+        # Path
+        # data_file_v3 = path.join(
+        #     UNISWAP_V3_DATA_PATH, str("swap/uniswap_v3_swaps_" + date_label + ".csv")
+        # )
+        data_file_v3 = path.join(
+            config["dev"]["config"]["data"]["UNISWAP_V3_DATA_PATH"],
+            str("subgraph_swap/uniswap_v3_swaps_" + date_label + ".csv"),
+        )
+        # Load
+        data_v3 = pd.read_csv(data_file_v3, index_col=0)
+
+        # Add attribute as "Source" and "Target" for the trading direction
+        data_v3["Source"] = data_v3.apply(
+            lambda x: x.token0_symbol if float(x.amount0) > 0 else x.token1_symbol,
+            axis=1,
+        )
+        data_v3["Pool_Out_Volume"] = data_v3.apply(
+            lambda x: x.amount0 if x.Source == x.token0_symbol else x.amount1, axis=1
+        )
+        data_v3["Target"] = data_v3.apply(
+            lambda x: x.token1_symbol if float(x.amount0) > 0 else x.token0_symbol,
+            axis=1,
+        )
+        data_v3["Pool_In_Volume"] = data_v3.apply(
+            lambda x: x.amount0 if x.Target == x.token0_symbol else x.amount1, axis=1
+        )
+        data_v3 = data_v3.drop(
+            [
+                "sender",
+                "recipient",
+                "origin",
+                "logIndex",
+                "tick",
+                "sqrtPriceX96",
+            ],
+            axis=1,
+        )
+        data_v3["Version"] = "V3"
+        drop_tx_id_list_v3 = []
     # Step 2: Merge data file
     if uniswap_version == "v2v3":
         # Merge
@@ -130,23 +174,30 @@ def manipulate_data(
         data_merge = data_v2
         drop_tx_id_list_merge = drop_tx_id_list_v2
 
-    elif uniswap_version == "v3":
+    elif uniswap_version == "v3" or uniswap_version == "subgraph_v3":
         data_merge = data_v3
         drop_tx_id_list_merge = drop_tx_id_list_v3
 
     # group by parent transactions
     swaps_merge = data_merge.set_index(["transaction", "pool"])
 
-    # Filter transactions within top 50 pools
-    swaps_merge.drop(drop_tx_id_list_merge, level=0, axis=0, inplace=True)
+    if uniswap_version != "subgraph_v3":
+        # Filter transactions within top 50 pools
+        swaps_merge.drop(drop_tx_id_list_merge, level=0, axis=0, inplace=True)
 
     # Add the attribute as "Distance" to present the number of sub-transactions
-    swaps_merge["Distance"] = swaps_merge.apply(
-        lambda x: len(swaps_merge.loc[x.name[0]]), axis=1
-    )
+    # swaps_merge["Distance"] = swaps_merge.apply(
+    #     lambda x: len(swaps_merge.loc[x.name[0]]), axis=1
+    # )
 
-    swaps_merge = swaps_merge.dropna()
+    sizes = swaps_merge.groupby(level=0).size()  # Series: tx-id → count
+    swaps_merge["Distance"] = swaps_merge.index.get_level_values(
+        0
+    ).map(  # 0 == 'transaction'
+        sizes
+    )  # ← every row gets its size
 
+    # swaps_merge = swaps_merge.dropna()
     return swaps_merge
 
 
@@ -191,7 +242,7 @@ def make_routes(swaps_merge: pd.DataFrame) -> pd.DataFrame:
 
         sort_index = 0
 
-        # control the max loop limatation for the parent transactions which can not be sorted like
+        # control the max loop limitation for the parent transactions which can not be sorted like
         # the chain
         iter = 0
 
@@ -327,6 +378,369 @@ def make_routes(swaps_merge: pd.DataFrame) -> pd.DataFrame:
     return swaps_tx_route
 
 
+def make_routes_DAG(swaps_merge: pd.DataFrame) -> pd.DataFrame:
+    """
+    Computes transaction routes efficiently using a graph-based approach.
+    Nodes in the graph are individual swaps.
+    """
+
+    processed_routes = []
+    unique_parent_tx_ids = swaps_merge.index.get_level_values(0).unique()
+
+    for p_tx_index in unique_parent_tx_ids:
+        parent_tx_df = swaps_merge.loc[p_tx_index]
+
+        # If only one sub-transaction, it's a direct swap (or part of a larger tx if index is just pool)
+        # To be consistent with multi-hop, we'll process it to get the route list
+        # If parent_tx_df is a Series (single row), convert to DataFrame
+        if isinstance(parent_tx_df, pd.Series):
+            parent_tx_df = parent_tx_df.to_frame().T
+            # Need to restore the original index name if it was lost
+            parent_tx_df.index.name = (
+                swaps_merge.index.names[1] if len(swaps_merge.index.names) > 1 else None
+            )
+
+        # Convert sub-swaps to list of dicts for easier processing
+        # Add an original_id to map back if needed, or use list index
+        sub_swaps_records = []
+        for i, (idx, row) in enumerate(parent_tx_df.iterrows()):
+            record = row.to_dict()
+            record["original_swap_id"] = i  # Using list index as id
+            sub_swaps_records.append(record)
+
+        num_swaps = len(sub_swaps_records)
+
+        if num_swaps == 0:
+            processed_routes.append(
+                {
+                    "id": p_tx_index,
+                    "route": "Error",
+                    "ultimate_source": "Error",
+                    "ultimate_target": "Error",
+                    "intermediary": "Error",
+                    "pair": "Error",
+                    "pair_str": "Error",
+                    "volume_usd": 0,
+                    "chain_length": 0,
+                    "label": "Error",
+                    "new_list": "Error",
+                }
+            )
+            continue
+
+        # --- Handle single swap transaction ---
+        if num_swaps == 1:
+            s = sub_swaps_records[0]
+            route_list = [s["Source"], s["Target"]]
+            avg_volume = s["amountUSD"]
+            processed_routes.append(
+                {
+                    "id": p_tx_index,
+                    "route": route_list,
+                    "ultimate_source": route_list[0],
+                    "ultimate_target": route_list[-1],
+                    "intermediary": [],
+                    "pair": [route_list[0], route_list[-1]],
+                    "pair_str": str([route_list[0], route_list[-1]]),
+                    "volume_usd": avg_volume,
+                    "chain_length": len(route_list),
+                }
+            )
+            continue
+
+        # --- Graph-based approach for multi-swap transactions ---
+        adj = [[] for _ in range(num_swaps)]
+        in_degree = [0] * num_swaps
+        tolerance = 1e-9  # For float comparisons of volumes
+
+        # 1. Build the Swap Graph
+        for i in range(num_swaps):
+            for j in range(num_swaps):
+                if i == j:
+                    continue
+
+                s_i = sub_swaps_records[i]
+                s_j = sub_swaps_records[j]
+
+                # Check for connection: s_i -> s_j
+                # Target of s_i must be Source of s_j
+                # Pool_In_Volume of s_i (what s_i outputs to user/next step)
+                # must match Pool_Out_Volume of s_j (what s_j takes as input from user/previous step)
+                # The definition of Pool_In_Volume and Pool_Out_Volume implies one is positive and one negative for a link.
+                if (
+                    str(s_i["Target"]) == str(s_j["Source"])
+                    and abs(
+                        float(s_i["Pool_In_Volume"]) + float(s_j["Pool_Out_Volume"])
+                    )
+                    < tolerance
+                ):
+                    adj[i].append(j)
+                    in_degree[j] += 1
+
+        # 2. Find the Start of the Route(s)
+        start_nodes_indices = [i for i, degree in enumerate(in_degree) if degree == 0]
+
+        route_indices = []
+        error_occurred = False
+
+        if not start_nodes_indices:
+            # print(f"Error: No start node (cycle or disjoint) for transaction {p_tx_index}")
+            error_occurred = True
+        elif len(start_nodes_indices) > 1:
+            # This implies multiple independent chains or a complex structure not forming a single path.
+            # The original code implicitly tries to form one chain.
+            # For simplicity, we can try to process the first one, or mark as error/complex.
+            # print(f"Warning: Multiple start nodes for transaction {p_tx_index}. Attempting to find longest chain or first valid.")
+
+            # Attempt to find the longest valid chain starting from any of the start nodes
+            best_route_indices = []
+            for start_node_idx_candidate in start_nodes_indices:
+                current_path = []
+                q = deque(
+                    [(start_node_idx_candidate, [start_node_idx_candidate])]
+                )  # (current_node, path_so_far)
+
+                temp_longest_path = [start_node_idx_candidate]
+
+                while q:
+                    curr, path = q.popleft()
+
+                    if len(path) > len(temp_longest_path):
+                        temp_longest_path = list(path)
+
+                    found_next = False
+                    for neighbor_idx in adj[curr]:
+                        if neighbor_idx not in path:  # Avoid simple cycles in path
+                            new_path = list(path)  # Make a copy
+                            new_path.append(neighbor_idx)
+                            q.append((neighbor_idx, new_path))
+                            found_next = True
+
+                if len(temp_longest_path) > len(best_route_indices):
+                    best_route_indices = temp_longest_path
+
+            if len(best_route_indices) == num_swaps:  # Found a path covering all swaps
+                route_indices = best_route_indices
+            elif (
+                best_route_indices
+            ):  # Partial path, might be an error or complex structure
+                # print(f"Warning: Could only form partial chain of length {len(best_route_indices)} for {p_tx_index}")
+                route_indices = best_route_indices  # Or mark as error
+                if (
+                    len(route_indices) != num_swaps
+                ):  # If not all swaps are covered, it's an error for simple chain assumption
+                    error_occurred = True
+            else:  # No valid chain found
+                error_occurred = True
+
+        else:  # Exactly one start node
+            start_node_idx = start_nodes_indices[0]
+
+            # 3. Reconstruct the Route (Path Traversal)
+            # We expect a simple path covering all N nodes for a typical multi-hop.
+            # This traversal assumes a mostly linear chain from the single start_node.
+            current_swap_idx = start_node_idx
+            route_indices.append(current_swap_idx)
+
+            visited_in_current_path = {current_swap_idx}
+
+            while len(route_indices) < num_swaps:
+                possible_next_swaps = [
+                    n for n in adj[current_swap_idx] if n not in visited_in_current_path
+                ]
+
+                if not possible_next_swaps:
+                    # print(f"Error: Path broken at swap {current_swap_idx} for transaction {p_tx_index}")
+                    error_occurred = True
+                    break
+
+                if len(possible_next_swaps) > 1:
+                    # Branching path. The original algorithm implicitly picked one.
+                    # Here, we can pick the first, or implement more complex logic if needed.
+                    # print(f"Warning: Branching path at swap {current_swap_idx} for transaction {p_tx_index}. Taking first branch.")
+                    # For now, let's consider this an error if we expect a single chain covering all swaps
+                    error_occurred = True
+                    break
+
+                next_swap_idx = possible_next_swaps[0]
+
+                route_indices.append(next_swap_idx)
+                visited_in_current_path.add(next_swap_idx)
+                current_swap_idx = next_swap_idx
+
+            if (
+                len(route_indices) != num_swaps and not error_occurred
+            ):  # Path didn't cover all swaps
+                # print(f"Error: Reconstructed path length {len(route_indices)} does not match num_swaps {num_swaps} for {p_tx_index}")
+                error_occurred = True
+
+        # 4. Format Output
+        if not error_occurred and len(route_indices) == num_swaps:
+            final_ordered_swaps = [sub_swaps_records[i] for i in route_indices]
+
+            route_list_tokens = [s["Source"] for s in final_ordered_swaps] + [
+                final_ordered_swaps[-1]["Target"]
+            ]
+            sum_volume_usd = sum(s["amountUSD"] for s in final_ordered_swaps)
+            avg_volume_usd = sum_volume_usd / num_swaps if num_swaps > 0 else 0
+
+            intermediary_tokens = (
+                route_list_tokens[1:-1] if len(route_list_tokens) > 2 else []
+            )
+
+            processed_routes.append(
+                {
+                    "id": p_tx_index,
+                    "route": route_list_tokens,
+                    "ultimate_source": route_list_tokens[0],
+                    "ultimate_target": route_list_tokens[-1],
+                    "intermediary": intermediary_tokens,
+                    "pair": [route_list_tokens[0], route_list_tokens[-1]],
+                    "pair_str": str([route_list_tokens[0], route_list_tokens[-1]]),
+                    "volume_usd": avg_volume_usd,
+                    "chain_length": len(route_list_tokens),
+                }
+            )
+        else:
+            # Error occurred or path is incomplete
+            processed_routes.append(
+                {
+                    "id": p_tx_index,
+                    "route": "Error",
+                    "ultimate_source": "Error",
+                    "ultimate_target": "Error",
+                    "intermediary": "Error",
+                    "pair": "Error",
+                    "pair_str": "Error",
+                    "volume_usd": 0,
+                    "chain_length": 0,
+                }
+            )
+
+    # Convert list of dicts to DataFrame
+    swaps_tx_route_df = pd.DataFrame(processed_routes)
+
+    if swaps_tx_route_df.empty:
+        # Ensure columns exist even if no routes were processed, matching original structure
+        return pd.DataFrame(
+            columns=[
+                "id",
+                "route",
+                "ultimate_source",
+                "ultimate_target",
+                "intermediary",
+                "pair",
+                "pair_str",
+                "volume_usd",
+                "chain_length",
+                "label",
+                "new_list",
+            ]
+        )
+
+    # Step: make label (loop, spoon, error)
+    swaps_tx_route_df["label"] = 0  # Default label
+    swaps_tx_route_df["new_list"] = ""  # Default
+
+    for index, tx_info in swaps_tx_route_df.iterrows():
+        route_data = tx_info["route"]
+
+        if route_data == "Error":
+            swaps_tx_route_df.loc[index, "label"] = "Error"
+            swaps_tx_route_df.loc[index, "new_list"] = "Error"
+            continue
+
+        # Label the loop transactions
+        if len(route_data) - len(set(route_data)) != 0:  # Duplicate element exists
+            swaps_tx_route_df.loc[index, "label"] = "loop"
+
+            # Identify "SPOON"
+            duplicate_counter = Counter(route_data)
+            # Elements that appear more than once and could form the core of a loop
+            loop_core_candidates = {k: v for k, v in duplicate_counter.items() if v > 1}
+
+            parsed_spoon_list = []
+            temp_route = list(route_data)  # Make a mutable copy
+
+            # This logic tries to find the first occurring loop and segment it.
+            # More complex overlapping loops might need more sophisticated parsing.
+            processed_loop_segment = False
+            for loop_node_candidate in route_data:  # Iterate in order of appearance
+                if loop_node_candidate not in loop_core_candidates:
+                    continue
+
+                if (
+                    loop_core_candidates[loop_node_candidate] < 2
+                ):  # Already processed enough instances
+                    continue
+
+                try:
+                    first_occurrence = temp_route.index(loop_node_candidate)
+                    # Find the next occurrence of this node to form the loop
+                    second_occurrence = temp_route.index(
+                        loop_node_candidate, first_occurrence + 1
+                    )
+
+                    # We found a loop segment
+                    # Part before loop
+                    if first_occurrence > 0:
+                        parsed_spoon_list.append(temp_route[:first_occurrence])
+
+                    # The loop itself
+                    loop_segment = temp_route[first_occurrence : second_occurrence + 1]
+                    parsed_spoon_list.append(loop_segment)
+
+                    # Part after loop
+                    remaining_after_loop = temp_route[second_occurrence + 1 :]
+                    if remaining_after_loop:
+                        parsed_spoon_list.append(remaining_after_loop)
+
+                    processed_loop_segment = True
+                    break  # Processed the first significant loop for spoon structure
+
+                except (
+                    ValueError
+                ):  # Node not found again, shouldn't happen if count > 1
+                    continue
+
+            if processed_loop_segment and len(parsed_spoon_list) > 1:
+                # Check if there's content before or after the identified primary loop segment
+                is_spoon = False
+                if len(parsed_spoon_list[0]) > 0 and isinstance(
+                    parsed_spoon_list[0][0], str
+                ):  # Content before loop
+                    is_spoon = True
+                if (
+                    len(parsed_spoon_list) > 1
+                    and isinstance(parsed_spoon_list[-1], list)
+                    and len(parsed_spoon_list[-1]) > 0
+                ):  # Content after loop
+                    is_spoon = True
+
+                # A simple check: if the parsed list has more than one segment (the loop itself, and something before/after)
+                if len(parsed_spoon_list) > 1 and any(
+                    isinstance(seg, list) and len(seg) > 0
+                    for seg_idx, seg in enumerate(parsed_spoon_list)
+                    if seg != loop_segment
+                ):
+                    is_spoon = True
+
+                if is_spoon:
+                    swaps_tx_route_df.loc[index, "label"] = "spoon"
+                    swaps_tx_route_df.loc[index, "new_list"] = str(parsed_spoon_list)
+                else:  # It's a loop, but not clearly a spoon by this logic
+                    swaps_tx_route_df.loc[index, "new_list"] = str(
+                        [route_data]
+                    )  # Store original loop
+
+            elif (
+                swaps_tx_route_df.loc[index, "label"] == "loop"
+            ):  # It's a loop, but not parsed as spoon
+                swaps_tx_route_df.loc[index, "new_list"] = str([route_data])
+
+    return swaps_tx_route_df
+
+
 def compute_betweenness_count(swaps_tx_route: pd.DataFrame) -> pd.DataFrame:
     """
     Compute the betweenness centrality (count based) and return the results as dataframe
@@ -338,11 +752,10 @@ def compute_betweenness_count(swaps_tx_route: pd.DataFrame) -> pd.DataFrame:
     # Exclude Error
     count_based_set = count_based_set[count_based_set["intermediary"] != "Error"]
 
-    node_set_count = (
-        count_based_set["ultimate_source"]
-        .append(count_based_set["ultimate_target"])
-        .unique()
-    )
+    node_set_count = pd.concat(
+        [count_based_set["ultimate_source"], count_based_set["ultimate_target"]],
+        ignore_index=True,
+    ).unique()
 
     # Initialize the betweenness centrality dataframe
     betweenness_score_count = pd.DataFrame(
@@ -379,11 +792,10 @@ def compute_betweenness_volume(swaps_tx_route: pd.DataFrame) -> pd.DataFrame:
     # Exclude Error
     volume_based_set = volume_based_set[volume_based_set["intermediary"] != "Error"]
 
-    node_set_count = (
-        volume_based_set["ultimate_source"]
-        .append(volume_based_set["ultimate_target"])
-        .unique()
-    )
+    node_set_count = pd.concat(
+        [volume_based_set["ultimate_source"], volume_based_set["ultimate_target"]],
+        ignore_index=True,
+    ).unique()
 
     # Initialize the betweenness centrality dataframe
     betweenness_score_volume = pd.DataFrame(
@@ -427,12 +839,12 @@ def get_betweenness_centrality(
     config = Config()
 
     swaps_merge = manipulate_data(date_label, top_list_label, uniswap_version)
-    swaps_tx_route = make_routes(swaps_merge)
+    swaps_tx_route = make_routes_DAG(swaps_merge)
 
     # Store to file
     tx_route_file_name = path.join(
         config["dev"]["config"]["data"]["BETWEENNESS_DATA_PATH"],
-        "swap_route/swaps_tx_route_" + uniswap_version + "_" + date_label + ".csv",
+        "swap_route/DAG_swaps_tx_route_" + uniswap_version + "_" + date_label + ".csv",
     )
     # Write dataframe to csv
     swaps_tx_route.to_csv(tx_route_file_name)
@@ -464,23 +876,53 @@ def get_betweenness_centrality(
     compare_table.to_csv(betweenness_file_name)
 
 
+# if __name__ == "__main__":
+
+#     from multiprocessing import Pool
+#     from functools import partial
+
+#     involve_version = "v2"  # candidate: v2, v3, v2v3
+
+#     top50_list_label = "2020JUN"
+#     # Data output include start_date, exclude end_date
+#     start_date = datetime.datetime(2020, 6, 1, 0, 0)
+#     end_date = datetime.datetime(2020, 7, 1, 0, 0)
+
+#     # list for multiple dates
+#     date_list = []
+#     for i in range((end_date - start_date).days):
+#         date = start_date + datetime.timedelta(i)
+#         date_str = date.strftime("%Y%m%d")
+#         date_list.append(date_str)
+
+#     # Multiprocess
+#     p = Pool()
+#     p.map(
+#         partial(
+#             get_betweenness_centrality,
+#             top_list_label=top50_list_label,
+#             uniswap_version=involve_version,
+#         ),
+#         date_list,
+#     )
+
 if __name__ == "__main__":
 
     from multiprocessing import Pool
     from functools import partial
 
-    involve_version = "v2"  # candidate: v2, v3, v2v3
+    involve_version = "subgraph_v3"  # candidate: v2, v3, v2v3
 
-    top50_list_label = "2020JUN"
+    top50_list_label = "2021MAY"
     # Data output include start_date, exclude end_date
-    start_date = datetime.datetime(2020, 6, 1, 0, 0)
-    end_date = datetime.datetime(2020, 7, 1, 0, 0)
+    start_date = datetime.datetime(2021, 5, 4, 0, 0)
+    end_date = datetime.datetime(2023, 1, 31, 0, 0)
 
     # list for multiple dates
     date_list = []
     for i in range((end_date - start_date).days):
         date = start_date + datetime.timedelta(i)
-        date_str = date.strftime("%Y%m%d")
+        date_str = date.strftime("%Y-%m-%d")
         date_list.append(date_str)
 
     # Multiprocess

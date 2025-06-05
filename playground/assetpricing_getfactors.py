@@ -16,7 +16,7 @@ FAMA_FRENCH_THREE_FACTORS_DAILY = (
 ssl._create_default_https_context = ssl._create_unverified_context
 
 # read the data and ignore the first and last three rows
-df_ff3 = pd.read_csv(
+ff3 = pd.read_csv(
     FAMA_FRENCH_THREE_FACTORS_DAILY,
     skiprows=3,
     skipfooter=3,
@@ -24,27 +24,28 @@ df_ff3 = pd.read_csv(
 )
 
 # rename the columns
-df_ff3.columns = ["Date", "Mkt-RF", "SMB", "HML", "RF"]
-df_ff3.rename(columns={"Mkt-RF": "MKT"}, inplace=True)
+ff3.columns = ["Date", "Mkt-RF", "SMB", "HML", "RF"]
+ff3.rename(columns={"Mkt-RF": "MKT"}, 
+              inplace=True)
 # convert the date to datetime
-df_ff3["Date"] = pd.to_datetime(df_ff3["Date"], format="%Y%m%d")
-df_ff3["Week"] = df_ff3["Date"].dt.isocalendar().week
-df_ff3["Year"] = df_ff3["Date"].dt.isocalendar().year
-df_ff3[["MKT", "SMB", "HML", "RF"]] = df_ff3[["MKT", "SMB", "HML", "RF"]] / 100
+ff3["Date"] = pd.to_datetime(ff3["Date"], format="%Y%m%d")
+ff3['Week'] = ff3['Date'].dt.isocalendar().week
+ff3['Year'] = ff3['Date'].dt.isocalendar().year
+ff3["WeekYear"] = ff3["Year"].astype(str) + '-' + ff3["Week"].astype(str)
+ff3[["MKT", "SMB", "HML", "RF"]] = ff3[["MKT", "SMB", "HML", "RF"]] / 100
 # save the DataFrame
-df_ff3.to_csv(PROCESSED_DATA_PATH / "FF3.csv", index=False)
+ff3.to_csv(PROCESSED_DATA_PATH / "FF3.csv", index=False)
 
 # LTW 3 factors
 ltw3 = pd.read_excel(
     PROCESSED_DATA_PATH / "LTW3_original.xlsx",
     skiprows=5,
     engine="openpyxl",
-)
-ltw3.rename(columns={"cmkt": "CMKT", "csize": "CSIZE", "cmom": "CMOM"}, inplace=True)
-ltw3["yyww"] = ltw3["yyww"].astype(str)
-ltw3["Year"] = ltw3["yyww"].str[:4].astype(int)
-ltw3["Week"] = (
-    ltw3["yyww"].str[4:].astype(int)
-)  # 0x 2-digit number is converted into single digit x
-ltw3.drop(["yyww"], axis=1, inplace=True)
-ltw3.to_csv(PROCESSED_DATA_PATH / "LTW3.csv", index=False)
+    )
+ltw3.rename(columns={'cmkt':'CMKT', 'csize':'CSIZE', 'cmom':'CMOM'}, inplace=True)
+ltw3['yyww'] = ltw3['yyww'].astype(str)
+ltw3['Year'] = ltw3['yyww'].str[:4].astype(int)
+ltw3['Week'] = ltw3['yyww'].str[4:].astype(int) # 0x 2-digit number is converted into single digit x
+ltw3["WeekYear"] = ltw3["Year"].astype(str) + '-' + ltw3["Week"].astype(str)
+ltw3.drop(['yyww'], axis=1, inplace=True)
+ltw3.to_csv(PROCESSED_DATA_PATH/'LTW3.csv', index=False)

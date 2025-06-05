@@ -162,7 +162,7 @@ def construct_panel(merge_on: list[str]) -> pd.DataFrame:
     ]
 
 
-if __name__ == "__main__":
+def prepare_panel_data() -> None:
     # save the panel as a zip pickle
     construct_panel(merge_on=["Token", "Date"]).to_pickle(
         PROCESSED_DATA_PATH / "panel_main.pickle.zip", compression="zip"

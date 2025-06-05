@@ -47,10 +47,15 @@ def calculate_period_return(
     # calculate simple dollar return
     df_panel["dollar_ret"] = df_panel.groupby("Token")[
         "dollar_exchange_rate"
-    ].pct_change()
+    ].pct_change(fill_method=None)
 
     if simple_dollar_ret:
         df_panel["ret"] = df_panel["dollar_ret"]
+    elif simple_dollar_ret == -1:
+        # convenience + dollar return
+        df_panel["ret"] = (1 + df_panel["cum_supply_rates"]) * (
+            df_panel["dollar_ret"] + 1
+        ) - 1
     else:
         # calculate only the convenience yield
         df_panel["ret"] = (
@@ -237,7 +242,3 @@ def asset_pricing(
 
     # evaluate the performance of the portfolio
     return _eval_port(pd.DataFrame(ret_dict), freq, n_port)
-
-
-
-

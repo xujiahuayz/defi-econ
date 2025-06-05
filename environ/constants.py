@@ -204,6 +204,19 @@ DEPENDENT_VARIABLES = [
     "betweenness_centrality_count",
     "total_eigen_centrality_undirected",
     "Volume_share",
+    "volume_in_share",
+    "volume_out_share",
+]
+
+# For asset pricing tests, only using a subset of variables that have enough data
+DEPENDENT_VARIABLES_ASSETPRICING = [
+    "volume_ultimate_share",
+    "eigen_centrality_undirected",
+    "total_eigen_centrality_undirected",
+    "Volume_share",
+    "volume_in_share",
+    "volume_out_share",
+    "amihud",
 ]
 
 # Aave pool deployment time
@@ -537,3 +550,7 @@ ALL_NAMING_DICT = {
     "vol_inter_full_len_share": "{\it VShare}^{\it Betw}",
     "dollar_exchange_rate_log_return_1": "\ln R",
 }
+
+# Asset pricing quantiles
+QUANTILES = [0, 0.33, 0.67, 1]
+QUANTILES_2 = [0, 0.33, 0.67, 1]
