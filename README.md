@@ -79,6 +79,11 @@ Please import the data folder `dominant_defi/data` from Dropbox (authorization r
 
 ## Run scripts
 
+- Create an .env file for API keys. Replace with actual keys.
+```
+GRAPH_API_KEY = "YOUR_API_KEY"
+```
+
 To trigger scripts, please run the following commands:
 
 - First, create data folders
@@ -90,10 +95,18 @@ mkdir data_compound
 cd ..
 ```
 
-- run the following command to fetch defi-related data (Subgraph query now deprecated):
+
+- To fetch Uniswap data from the Uniswap V3 subgraph, run:
+```zsh
+python scripts/fetch_uni.py --start "YYYY-MM-DD" --end "YYYY-MM-DD
+```
+
+
+- run the following command to fetch defi-related data (coingecko code has been deprecated):
 ```zsh
 python scripts/fetch_main.py --start "YYYY-MM-DD" --end "YYYY-MM-DD"
 ```
+
 
 Notes: This script runs on a montly basis. This script will fetch defi-related data from the first day of the month specified by the --start to the end of the day of the month of specified by the --end. For example python scripts/fetch_main.py --start "2020-05-18" -- end "2023-01-31" will fetch the data from May 2020 to Jan 2023. Meanwhile, the script will automatically detect the unfinished fetching dates during the specified period. The data generated will be placed under ['data'](data)
 
