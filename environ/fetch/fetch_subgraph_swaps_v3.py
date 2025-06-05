@@ -6,6 +6,7 @@ import os
 import time
 import asyncio
 import aiohttp
+from gas.environ.constants import DATA_PATH
 
 # API Key provided by the user
 GRAPH_API_KEY = "YOUR_API_KEY"
@@ -25,8 +26,12 @@ else:
 
 
 async def query_swaps_batch_async(
-    session, start_timestamp, end_timestamp, limit=1000, last_id=None
-):
+    session: aiohttp.ClientSession,
+    start_timestamp: int,
+    end_timestamp: int,
+    limit: int = 1000,
+    last_id: str | None = None,
+) -> list[dict] | None:
     """
     Queries a batch of Uniswap V3 swaps asynchronously using attribute-based pagination (id_gt).
     API key is part of UNISWAP_V3_SUBGRAPH_URL.
@@ -104,7 +109,9 @@ async def query_swaps_batch_async(
         return None
 
 
-async def fetch_all_swaps_for_period_async(session, start_ts, end_ts):
+async def fetch_all_swaps_for_period_async(
+    session: aiohttp.ClientSession, start_ts: int, end_ts: int
+) -> list[dict]:
     """
     Fetches all swaps for a given period asynchronously, handling attribute-based pagination.
     """
@@ -148,7 +155,7 @@ async def fetch_all_swaps_for_period_async(session, start_ts, end_ts):
 # --- CSV Export Logic (Synchronous, called from async context) ---
 
 
-def save_swaps_to_csv(swaps_data, filename="swaps.csv"):
+def save_swaps_to_csv(swaps_data: list[dict], filename: str = "swaps.csv") -> None:
     """
     Saves a list of swap data to a CSV file. This function remains synchronous.
     Uses user-preferred simplified column names.
@@ -249,7 +256,9 @@ def save_swaps_to_csv(swaps_data, filename="swaps.csv"):
 # --- Main Asynchronous Orchestration ---
 
 
-async def process_day_async(session, current_dt, semaphore):
+async def process_day_async(
+    session: aiohttp.ClientSession, current_dt: datetime, semaphore: asyncio.Semaphore
+) -> None:
     """
     Asynchronously fetches and saves swap data for a single day,
     respecting the semaphore to limit concurrency.
@@ -273,10 +282,7 @@ async def process_day_async(session, current_dt, semaphore):
 
             print(f"  Fetched {len(daily_swaps)} swaps for {day_str}.")
             if daily_swaps:
-                output_dir = "uniswap_v3_daily_swaps_csv"
-                csv_filename = os.path.join(
-                    output_dir, f"uniswap_v3_swaps_{day_str}.csv"
-                )
+                csv_filename = DATA_PATH / "uniswap_v3_swaps_{day_str}.csv"
 
                 loop = asyncio.get_running_loop()
                 await loop.run_in_executor(
@@ -289,7 +295,7 @@ async def process_day_async(session, current_dt, semaphore):
             print(f"Finished processing day: {day_str}")
 
 
-async def main_async():
+async def fetch_uniswap_v3() -> None:
     """
     Main asynchronous function to coordinate fetching data for all days.
     """
@@ -340,17 +346,4 @@ async def main_async():
 
 
 if __name__ == "__main__":
-    try:
-        # Standard way to run asyncio program
-        asyncio.run(main_async())
-    except RuntimeError as e:
-        if "cannot be called from a running event loop" in str(e):
-            # Fallback for environments like Jupyter where a loop is already running
-            print(
-                "Detected a running event loop. Attempting to use it to run main_async()."
-            )
-            loop = asyncio.get_event_loop()
-            loop.run_until_complete(main_async())
-        else:
-            # Re-raise other RuntimeError exceptions
-            raise
+    pass
