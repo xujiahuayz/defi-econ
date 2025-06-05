@@ -1,28 +1,17 @@
-import requests  # Keep for potential fallback or type hinting, though aiohttp is primary
-import json
-from datetime import datetime, timezone, timedelta
-import csv
-import os
-import time
 import asyncio
+import csv
+import json
+import os
+from datetime import datetime, timedelta, timezone
+
 import aiohttp
-from gas.environ.constants import DATA_PATH
+
+from environ.constants import DATA_PATH
 
 # API Key provided by the user
-GRAPH_API_KEY = "YOUR_API_KEY"
+GRAPH_API_KEY = os.getenv("GRAPH_API_KEY")
 
-# Updated The Graph API endpoint for Uniswap V3, with API key embedded
-if GRAPH_API_KEY and GRAPH_API_KEY != "YOUR_API_KEY":  # YOUR_API_KEY is a placeholder
-    UNISWAP_V3_SUBGRAPH_URL = f"https://gateway.thegraph.com/api/{GRAPH_API_KEY}/subgraphs/id/5zvR82QoaXYFyDEKLZ9t6v9adgnptxYpKpSbxtgVENFV"
-else:
-    # This case should ideally not be hit if GRAPH_API_KEY is correctly set.
-    UNISWAP_V3_SUBGRAPH_URL = f"https://gateway.thegraph.com/api/YOUR_PLACEHOLDER_API_KEY/subgraphs/id/5zvR82QoaXYFyDEKLZ9t6v9adgnptxYpKpSbxtgVENFV"
-    print(
-        "Warning: GRAPH_API_KEY is not the expected one or is a placeholder. The URL might not be correct."
-    )
-
-
-# --- GraphQL Query and Fetching Logic (Asynchronous) ---
+UNISWAP_V3_SUBGRAPH_URL = f"https://gateway.thegraph.com/api/{GRAPH_API_KEY}/subgraphs/id/5zvR82QoaXYFyDEKLZ9t6v9adgnptxYpKpSbxtgVENFV"
 
 
 async def query_swaps_batch_async(
@@ -110,14 +99,13 @@ async def query_swaps_batch_async(
 
 
 async def fetch_all_swaps_for_period_async(
-    session: aiohttp.ClientSession, start_ts: int, end_ts: int
+    session: aiohttp.ClientSession, start_ts: int, end_ts: int, limit: int = 1000
 ) -> list[dict]:
     """
     Fetches all swaps for a given period asynchronously, handling attribute-based pagination.
     """
     all_swaps_for_period = []
     last_fetched_id = None
-    page_size = 1000
     retries = 3
     retry_delay = 5
 
@@ -125,7 +113,7 @@ async def fetch_all_swaps_for_period_async(
         batch = None
         for attempt in range(retries):
             batch = await query_swaps_batch_async(
-                session, start_ts, end_ts, limit=page_size, last_id=last_fetched_id
+                session, start_ts, end_ts, limit=limit, last_id=last_fetched_id
             )
             if batch is not None:
                 break
@@ -146,7 +134,7 @@ async def fetch_all_swaps_for_period_async(
         all_swaps_for_period.extend(batch)
         last_fetched_id = batch[-1]["id"]
 
-        if len(batch) < page_size:
+        if len(batch) < limit:
             break
 
     return all_swaps_for_period
@@ -295,7 +283,11 @@ async def process_day_async(
             print(f"Finished processing day: {day_str}")
 
 
-async def fetch_uniswap_v3() -> None:
+async def fetch_uniswap_v3(
+    overall_start_date_str: str = "2021-05-04",
+    overall_end_date_str: str = "2023-01-31",  # Inclusive
+    max_concurrent_days: int = 8,  # User-defined limit
+) -> None:
     """
     Main asynchronous function to coordinate fetching data for all days.
     """
@@ -312,10 +304,6 @@ async def fetch_uniswap_v3() -> None:
             "Please ensure GRAPH_API_KEY is valid and UNISWAP_V3_SUBGRAPH_URL is correctly formatted with your API key."
         )
         return
-
-    overall_start_date_str = "2021-05-04"
-    overall_end_date_str = "2023-01-31"  # Inclusive
-    max_concurrent_days = 8  # User-defined limit
 
     try:
         overall_start_dt = datetime.strptime(
