@@ -95,7 +95,13 @@ cd ..
 
 - To fetch Uniswap data from the Uniswap V3 subgraph, run:
 ```zsh
-python scripts/fetch_uni.py --start "YYYY-MM-DD" --end "YYYY-MM-DD
+python -m scripts.fetch.fetch_uni --start_date 2021-05-05 --end_date 2021-05-16 --max_concurrent 8 
+```
+
+- To compute daily betweenness measures then concatenate into a single file, run:
+```zsh
+python -m scripts.process.compute_betw
+python -m scripts.process.concat_betw
 ```
 
 
@@ -104,6 +110,10 @@ python scripts/fetch_uni.py --start "YYYY-MM-DD" --end "YYYY-MM-DD
 python scripts/fetch_main.py --start "YYYY-MM-DD" --end "YYYY-MM-DD"
 ```
 
+- get FF5 factors data from Ken French's website and LTW3 from Yukun Liu's website (manually):
+```zsh
+python -m scripts.fetch.fetch_assetpricing_factors
+```
 
 Notes: This script runs on a montly basis. This script will fetch defi-related data from the first day of the month specified by the --start to the end of the day of the month of specified by the --end. For example python scripts/fetch_main.py --start "2020-05-18" -- end "2023-01-31" will fetch the data from May 2020 to Jan 2023. Meanwhile, the script will automatically detect the unfinished fetching dates during the specified period. The data generated will be placed under ['data'](data)
 

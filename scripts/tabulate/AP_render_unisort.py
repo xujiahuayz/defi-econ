@@ -8,6 +8,7 @@ import numpy as np
 from scipy.stats import ttest_1samp
 from environ.constants import (
     ALL_NAMING_DICT,
+    DEPENDENT_VARIABLES,
     DEPENDENT_VARIABLES_ASSETPRICING,
     PROCESSED_DATA_PATH,
     TABLE_PATH,
@@ -49,10 +50,10 @@ if __name__ == "__main__":
 
     # load the regression panel dataset
     reg_panel = pd.read_pickle(
-        PROCESSED_DATA_PATH / "panel_main.pickle.zip", compression="zip"
+        PROCESSED_DATA_PATH / "panel_main2.pickle.zip", compression="zip"
     )
 
-    for dom_variable in DEPENDENT_VARIABLES_ASSETPRICING:
+    for dom_variable in DEPENDENT_VARIABLES:
         for is_boom in [-1, 0, 1]:
             for annualized in [False, True]:
                 print(f"Processing unisort for {dom_variable}")

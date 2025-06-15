@@ -2,7 +2,7 @@
 """
 Compute the betweenness centrality
 """
-
+import json
 import datetime
 from os import path
 import sys
@@ -125,12 +125,73 @@ def manipulate_data(
         # data_file_v3 = path.join(
         #     UNISWAP_V3_DATA_PATH, str("swap/uniswap_v3_swaps_" + date_label + ".csv")
         # )
-        data_file_v3 = path.join(
-            config["dev"]["config"]["data"]["UNISWAP_V3_DATA_PATH"],
-            str("subgraph_swap/uniswap_v3_swaps_" + date_label + ".csv"),
+        # output_file = "/subgraph_swap/uniswap_v3_swaps_" + date_label + ".csv"
+        # data_file_v3 = config["dev"]["config"]["data"]["UNISWAP_V3_DATA_PATH"] + output_file
+        # # Load
+        # data_v3 = pd.read_csv(data_file_v3, index_col=0)
+
+        json_file_path = config["dev"]["config"]["data"]["UNISWAP_V3_DATA_PATH"] + str("/subgraph_swap/uniswap_v3_swaps_" + date_label + ".json")
+        with open(json_file_path, 'r', encoding='utf-8') as f:
+            json_data = json.load(f)
+
+
+        # Notice we are NOT including the top-level 'token0' and 'token1'.
+        data_v3= pd.json_normalize(
+            json_data,
+            sep='_', # Use our preferred separator
+            meta=[
+                'amount0',
+                'amount1',
+                'amountUSD',
+                'id',
+                'logIndex',
+                'origin',
+                'recipient',
+                'sender',
+                'sqrtPriceX96',
+                'tick',
+                # Keep the detailed token info from the 'pool' object
+                ['pool', 'id'],
+                ['pool', 'token0', 'decimals'],
+                ['pool', 'token0', 'id'],
+                ['pool', 'token0', 'name'],
+                ['pool', 'token0', 'symbol'],
+                ['pool', 'token1', 'decimals'],
+                ['pool', 'token1', 'id'],
+                ['pool', 'token1', 'name'],
+                ['pool', 'token1', 'symbol'],
+                # Keep the transaction info
+                ['transaction', 'blockNumber'],
+                ['transaction', 'id'],
+                ['transaction', 'timestamp']
+            ]
         )
-        # Load
-        data_v3 = pd.read_csv(data_file_v3, index_col=0)
+        columns_to_drop = ['token0_id', 'token0_symbol', 'token1_id', 'token1_symbol']
+        data_v3 = data_v3.drop(columns=columns_to_drop)
+        data_v3 = data_v3.rename(columns={
+            'pool_id': 'pool',
+            'pool_token0_decimals': 'token0_decimals',
+            'pool_token1_decimals': 'token1_decimals',
+            'pool_token0_name': 'token0_name',
+            'pool_token1_name': 'token1_name',
+            'pool_token0_id': 'token0_id',
+            'pool_token1_id': 'token1_id',
+            'pool_token0_symbol': 'token0_symbol',
+            'pool_token1_symbol': 'token1_symbol',
+            'transaction_timestamp': 'timestamp',
+            'transaction_id': 'transaction',
+            'transaction_blockNumber': 'blockNumber',
+        })
+        types_to_change = {
+            'amount0': 'float',
+            'amount1': 'float',
+            'amountUSD': 'float',
+            'logIndex': 'Int64',
+            'tick': 'Int64',
+            'blockNumber': 'Int64',
+            'timestamp': 'Int64',
+        }
+        data_v3 = data_v3.astype(types_to_change)
 
         # Add attribute as "Source" and "Target" for the trading direction
         data_v3["Source"] = data_v3.apply(
