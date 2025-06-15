@@ -1,4 +1,6 @@
-from environ.process.betweeness_centrality.betweeness_scripts import get_betweenness_centrality
+from environ.process.betweeness_centrality.betweeness_scripts import (
+    get_betweenness_centrality,
+)
 import datetime
 
 if __name__ == "__main__":

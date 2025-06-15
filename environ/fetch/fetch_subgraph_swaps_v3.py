@@ -3,7 +3,7 @@ import csv
 import json
 import os
 import ssl
-import argparse # Added for command-line arguments
+import argparse  # Added for command-line arguments
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 import aiohttp
@@ -71,7 +71,9 @@ async def query_swaps_batch_async(
             data = await response.json()
 
             if "errors" in data:
-                error_message = data["errors"][0].get("message", "Unknown GraphQL error")
+                error_message = data["errors"][0].get(
+                    "message", "Unknown GraphQL error"
+                )
                 print(
                     f"  GraphQL Error (period: {start_timestamp}-{end_timestamp}, last_id: {last_id}): {error_message}"
                 )
@@ -185,7 +187,12 @@ async def process_day_async(
 
             print(f"  Fetched {len(daily_swaps)} swaps for {day_str}.")
             if daily_swaps:
-                file_name = DATA_PATH / "uniswap" / f"uniswap_v3_swaps_{day_str}.json"
+                file_name = (
+                    DATA_PATH
+                    / "data_uniswap_v3"
+                    / "subgraph_swap"
+                    / f"uniswap_v3_swaps_{day_str}.json"
+                )
 
                 loop = asyncio.get_running_loop()
                 await loop.run_in_executor(
@@ -224,9 +231,7 @@ async def fetch_uniswap_v3(
             tzinfo=timezone.utc
         )
     except ValueError as ve:
-        print(
-            f"Date parsing error: {ve}. Please use 'YYYY-MM-DD' format."
-        )
+        print(f"Date parsing error: {ve}. Please use 'YYYY-MM-DD' format.")
         return
 
     tasks = []
